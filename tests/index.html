@@ -1,0 +1,26 @@
+<html>
+	<body>
+		<div>
+		<canvas style="background-color:#aacccc" id="_canvas" width="800" height="800"></canvas>
+	</div>
+		<script type="text/javascript" src="../core/canvas.js"></script>
+		<script type="text/javascript" src="../core/events.js"></script>
+		<script type="text/javascript" src="../core/utils.js"></script>
+		<script type="text/javascript" src="../core/objects.js"></script>
+		<script>
+			var canvas = new drawable.Canvas('_canvas');
+
+			var r1 = new Relation({x:20,y:2});
+
+			canvas.add(r1);
+			canvas.renderAll();
+
+			canvas.on('object:select', function(evt){
+				console.log(evt);
+			});
+			canvas.on('canvas:click', function(evt){
+				console.log(evt);
+			});
+		</script>
+	</body>
+</html>
