@@ -1,23 +1,25 @@
 /**
- * Evento que encapsula un click sobre el canvas
+ * Objeto que encapsula un evento sobre el canvas
  * 
- * @event canvas:click
  * @type object
  * @property {integer} x - Posicion x del puntero
  * @property {integer} y - Posicion y del puntero
+ * @property {string} type - Tipo de evento
  */
-var canvasClick = function(options){
+var mouseEvent = function(options){
 	this.x = 'x' in options? options.x : -1;
 	this.y = 'y' in options? options.y : -1;
+	this.type = 'type' in options? options.type : '';
 };
 
 /**
- * Evento que encapsula un click sobre un objeto
+ * Objeto que encapsula un click sobre un objeto
  * 
- * @event object:select
  * @type object
  * @property {object} selected - Objeto seleccionado
+ * @property {string} type - Tipo de evento
  */
-var objectSelect = function(options){
+var objectEvent = function(options){
 	this.selected = 'selected' in options? options.selected : null;
+	this.type = 'type' in options? options.type : '';
 }

@@ -13,8 +13,10 @@ drawable.Canvas = function(canvasId){
 }
 
 drawable.Canvas.prototype = {
+	_selected: null,
 	renderAll: function(){
 		var context = this._canvas.getContext('2d');
+		context.clearRect(0, 0, this._canvas.width, this._canvas.height);
 		this.items.forEach(function(item){
 			item._render(context);
 		});
@@ -36,11 +38,45 @@ drawable.Canvas.prototype = {
 		var _this = this;
 		this._canvas.onmousedown = function(evt){
 			var real = _this._getMouse(evt);
-			_this.emit('canvas:click', new canvasClick({x:real.x, y:real.y}));
+			/**
+			 * Evento que encapsula un click sobre el canvas
+			 * 
+			 * @event mouse:down
+			 * @type { object }
+			 * @property {integer} x - Posicion x del puntero
+			 * @property {integer} y - Posicion y del puntero
+			 * @property {string} type - Tipo de evento
+			 */
+			_this.emit('mouse:down', new mouseEvent({x:real.x, y:real.y, type: 'mousedown'}));
 			_this.items.forEach(function(item){
-				if(item.checkCollision(real.x, real.y))
-					_this.emit('object:select', new objectSelect({selected:item}));
+				if(item.checkCollision(real.x, real.y)){
+					/**
+					 * Evento que encapsula un click sobre un objeto
+					 * 
+					 * @event object:select
+					 * @type { object }
+					 * @property {object} selected - Objeto seleccionado
+					 * @property {string} type - Tipo de evento
+					 */
+					_this.emit('object:select', new objectEvent({selected:item, type: 'objectselect'}));
+					_this._selected = item;
+					return;
+				}
 			});
+		};
+		this._canvas.onmousemove = function(evt){
+			var real = _this._getMouse(evt);
+			if(_this._selected){
+				_this._selected.x = real.x;
+				_this._selected.y = real.y;
+				_this.emit('object:dragging', new objectEvent({selected:_this._selected, type: 'objectdragging'}));
+				_this.renderAll();
+			}
+		}
+		this._canvas.onmouseup = function(evt){
+			var real = _this._getMouse(evt);
+			_this.emit('mouse:up', new mouseEvent({x:real.x, y:real.y, type: 'mouseup'}));
+			_this._selected = null;
 		}
 	},
 	initialize: function(){
