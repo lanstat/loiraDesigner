@@ -11,11 +11,12 @@
 			var canvas = new drawable.Canvas('_canvas');
 
 			var r1 = new Relation({x:20,y:2});
+			var r2 = new Relation({x:40,y:20});
 
-			canvas.add(r1);
+			canvas.add(r1, r2);
 			canvas.renderAll();
 
-			canvas.on('object:select', function(evt){
+			canvas.on('object:selected', function(evt){
 				console.log(evt);
 			});
 			canvas.on('object:dragging', function(evt){

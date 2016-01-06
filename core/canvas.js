@@ -3,17 +3,18 @@ var drawable = {};
 /**
  * Clase que prepara el canvas para su uso
  * 
- * @class object
+ * @class Canvas
  */
 drawable.Canvas = function(canvasId){
 	this.items = [];
 	this._canvas = document.getElementById(canvasId);
-	this.initialize();
 	this._callbacks = {};
+	this.initialize();
 }
 
 drawable.Canvas.prototype = {
 	_selected: null,
+	_tmp: {},
 	renderAll: function(){
 		var context = this._canvas.getContext('2d');
 		context.clearRect(0, 0, this._canvas.width, this._canvas.height);
@@ -24,8 +25,36 @@ drawable.Canvas.prototype = {
 	add: function(){
 		var args = [].splice.call(arguments, 0);
 		var _items = this.items;
+		var _this = this;
 		args.forEach(function(item){
 			_items.push(item);
+			/**
+			 * Evento que encapsula la agregacion de un objeto del canvas
+			 * 
+			 * @event object:added
+			 * @type { object }
+			 * @property {object} selected - Objeto seleccionado
+			 * @property {string} type - Tipo de evento
+			 */
+			_this.emit('object:added', new objectEvent({selected:item, type: 'objectadded'}));
+		});
+	},
+	remove: function(){
+		var args = [].splice.call(arguments, 0);
+		var _items = this.items;
+		var _this = this;
+		args.forEach(function(item){
+			var index = _items.indexOf(item);
+			_items = _items.splice(index, 1);
+			/**
+			 * Evento que encapsula la eliminacion de un objeto del canvas
+			 * 
+			 * @event object:removed
+			 * @type { object }
+			 * @property {object} selected - Objeto seleccionado
+			 * @property {string} type - Tipo de evento
+			 */
+			_this.emit('object:removed', new objectEvent({selected:item, type: 'objectremoved'}));
 		});
 	},
 	on: function(evt, callback){
@@ -36,8 +65,10 @@ drawable.Canvas.prototype = {
 	},
 	bind: function(){
 		var _this = this;
+		var _callbacks = this._callbacks;
 		this._canvas.onmousedown = function(evt){
 			var real = _this._getMouse(evt);
+			_this._tmp.pointer =  real;
 			/**
 			 * Evento que encapsula un click sobre el canvas
 			 * 
@@ -58,7 +89,7 @@ drawable.Canvas.prototype = {
 					 * @property {object} selected - Objeto seleccionado
 					 * @property {string} type - Tipo de evento
 					 */
-					_this.emit('object:select', new objectEvent({selected:item, type: 'objectselect'}));
+					_this.emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
 					_this._selected = item;
 					return;
 				}
@@ -66,17 +97,59 @@ drawable.Canvas.prototype = {
 		};
 		this._canvas.onmousemove = function(evt){
 			var real = _this._getMouse(evt);
+			/**
+			 * Evento que encapsula el movimiento del mouse sobre el canvas
+			 * 
+			 * @event mouse:move
+			 * @type { object }
+			 * @property {integer} x - Posicion x del puntero
+			 * @property {integer} y - Posicion y del puntero
+			 * @property {string} type - Tipo de evento
+			 */
+			_this.emit('mouse:move', new mouseEvent({x:real.x, y:real.y, type: 'mousemove'}));
+			
 			if(_this._selected){
-				_this._selected.x = real.x;
-				_this._selected.y = real.y;
+				_this._selected.x += real.x - _this._tmp.pointer.x;
+				_this._selected.y += real.y - _this._tmp.pointer.y;
+				/**
+				 * Evento que encapsula el arrastre de un objeto
+				 * 
+				 * @event object:dragging
+				 * @type { object }
+				 * @property {object} selected - Objeto seleccionado
+				 * @property {string} type - Tipo de evento
+				 */
 				_this.emit('object:dragging', new objectEvent({selected:_this._selected, type: 'objectdragging'}));
 				_this.renderAll();
+				_this._tmp.pointer = real;
+			}else{
+
 			}
 		}
 		this._canvas.onmouseup = function(evt){
 			var real = _this._getMouse(evt);
+			/**
+			 * Evento que encapsula la liberacion del mouse sobre el canvas
+			 * 
+			 * @event mouse:up
+			 * @type { object }
+			 * @property {integer} x - Posicion x del puntero
+			 * @property {integer} y - Posicion y del puntero
+			 * @property {string} type - Tipo de evento
+			 */
 			_this.emit('mouse:up', new mouseEvent({x:real.x, y:real.y, type: 'mouseup'}));
-			_this._selected = null;
+			if (_this._selected){
+				/**
+				 * Evento que encapsula la liberacion de un objeto
+				 * 
+				 * @event object:released
+				 * @type { object }
+				 * @property {object} selected - Objeto seleccionado
+				 * @property {string} type - Tipo de evento
+				 */
+				_this.emit('object:released', new mouseEvent({selected:_this.selected, type: 'objectreleased'}));
+				_this._selected = null;
+			}
 		}
 	},
 	initialize: function(){

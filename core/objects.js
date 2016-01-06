@@ -35,7 +35,7 @@ var Relation = drawable.util.createClass(drawable.Object, {
 		ctx.beginPath();
 		ctx.lineWidth = 2;
 		ctx.moveTo(this.x, this.y);
-		ctx.lineTo(this.width, this.height);
+		ctx.lineTo(this.x+this.width, this.y+this.height);
 		ctx.stroke();
 	}
 });
