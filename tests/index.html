@@ -7,23 +7,23 @@
 		<script type="text/javascript" src="../core/events.js"></script>
 		<script type="text/javascript" src="../core/utils.js"></script>
 		<script type="text/javascript" src="../core/objects.js"></script>
+		<script type="text/javascript" src="../plugins/usecase.js"></script>
 		<script>
-			var canvas = new drawable.Canvas('_canvas');
+			var canvas = new Loira.Canvas('_canvas');
 
-			var r1 = new Relation({x:20,y:2});
-			var r2 = new Relation({x:40,y:20});
+			var r1 = new Common.Relation({x:100,y:2});
+			var r2 = new UseCase.UseCase({x:200,y:200});
 
 			canvas.add(r1, r2);
 			canvas.renderAll();
 
-			canvas.on('object:selected', function(evt){
-				console.log(evt);
-			});
-			canvas.on('object:dragging', function(evt){
-				console.log(evt);
-			});
-			canvas.on('mouse:down', function(evt){
-				console.log(evt);
+			canvas.on({
+				'object:selected': function(evt){
+					console.log(evt);
+				},
+				'mouse:down': function(evt){
+					console.log(evt);
+				}
 			});
 		</script>
 	</body>

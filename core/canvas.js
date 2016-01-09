@@ -1,18 +1,18 @@
-var drawable = {};
+var Loira = {};
 
 /**
  * Clase que prepara el canvas para su uso
  * 
  * @class Canvas
  */
-drawable.Canvas = function(canvasId){
+Loira.Canvas = function(canvasId){
 	this.items = [];
 	this._canvas = document.getElementById(canvasId);
 	this._callbacks = {};
 	this.initialize();
 }
 
-drawable.Canvas.prototype = {
+Loira.Canvas.prototype = {
 	_selected: null,
 	_tmp: {},
 	renderAll: function(){
@@ -58,10 +58,19 @@ drawable.Canvas.prototype = {
 		});
 	},
 	on: function(evt, callback){
-		if (typeof this._callbacks[evt] === 'undefined'){
-			this._callbacks[evt] = [];
+		if(typeof evt === 'string'){
+			if (typeof this._callbacks[evt] === 'undefined'){
+				this._callbacks[evt] = [];
+			}
+			this._callbacks[evt].push(callback);
+		}else if(typeof evt === 'object'){
+			for (var name in evt){
+				if (typeof this._callbacks[name] === 'undefined'){
+					this._callbacks[name] = [];
+				}
+				this._callbacks[name].push(evt[name]);
+			}
 		}
-		this._callbacks[evt].push(callback);
 	},
 	bind: function(){
 		var _this = this;

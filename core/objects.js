@@ -3,9 +3,13 @@
  * 
  * @class Object
  */
-drawable.Object = {
+Loira.Object = {
 	initialize: function(options){
-		this._uid = drawable.util.createRandom(8);
+		this._uid = Loira.util.createRandom(8);
+
+		if(typeof options === 'undefined'){
+			options = {};
+		}
 		this.x = 'x' in options ? options.x : 0;
 		this.y = 'y' in options ? options.y : 0;
 		this.width = 'width' in options ? options.width : 0;
@@ -13,7 +17,7 @@ drawable.Object = {
 	},
 	callSuper: function(funcName){
 		var args = [].splice.call(arguments, 0);
-		funcName = 'spr_'+ funcName;
+		funcName = '$'+ funcName;
 
 		args = args.length > 1? args.splice(1, args.length): []; 
 
@@ -25,7 +29,9 @@ drawable.Object = {
 	}
 }
 
-var Relation = drawable.util.createClass(drawable.Object, {
+var Common = {};
+
+Common.Relation = Loira.util.createClass(Loira.Object, {
 	initialize : function(options){
 		this.callSuper('initialize', options);
 		this.width = 100;

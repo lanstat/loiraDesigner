@@ -1,20 +1,28 @@
-drawable.util = {
-	createClass: function(base, child){
+Loira.util = {
+	createClass: function(base, child, isAbstract){
+		var obj = {};
+		for (var i in child) {
+			if (child.hasOwnProperty(i)) {
+				obj[i] = child[i];
+			}
+		}
+		for (var i in base) {
+			if (base.hasOwnProperty(i)) {
+				if (obj.hasOwnProperty(i)){
+					obj['$'+i] = base[i];
+				}else{
+					obj[i] = base[i];		
+				}
+			}
+		}
+		if(isAbstract){
+			return obj;
+		}
 		return function(options){
-			for (var i in child) {
-				if (child.hasOwnProperty(i)) {
-					this[i] = child[i];
-				}
+			for (var i in obj) {
+				this[i] = obj[i];
 			}
-			for (var i in base) {
-				if (base.hasOwnProperty(i)) {
-					if (this.hasOwnProperty(i)){
-						this['spr_'+i] = base[i];
-					}else{
-						this[i] = base[i];		
-					}
-				}
-			}
+			
 			this.initialize(options);
 		}
 	},
