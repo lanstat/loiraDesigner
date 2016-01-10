@@ -29,6 +29,59 @@ Loira.Object = {
 	}
 }
 
+Loira.SelectedSquare = {
+	draw: function(ctx, selected){
+		var x = selected.x-2,
+		    y = selected.y-2,
+		    w = selected.width,
+		    h = selected.height;
+
+		ctx.beginPath();
+		ctx.lineWidth=2;
+		ctx.strokeStyle= '#339966';
+		ctx.rect(x, y, w+4, h+4); 
+		ctx.stroke();
+
+		ctx.fillStyle= '#339966';
+
+		ctx.fillRect(x-4, y-4, 8, 8);
+		ctx.fillRect(x+w, y+h, 8, 8);
+		ctx.fillRect(x+w, y-4, 8, 8);
+		ctx.fillRect(x-4, y+h, 8, 8);
+		ctx.fillRect(x+w/2, y-4, 8, 8);
+		ctx.fillRect(x+w/2, y+h, 8, 8);
+		ctx.fillRect(x-4, y+h/2, 8, 8);
+		ctx.fillRect(x+w, y+h/2, 8, 8);
+
+		ctx.strokeStyle= '#000000';
+	},
+	getSelectedCorner: function(pX, pY, selected){
+		var x = selected.x-2,
+		    y = selected.y-2,
+		    w = selected.width,
+		    h = selected.height,
+			mw = w/2,
+			mh = h/2;
+		if(x-4 <= pX && pX <= x+4  && y-4 <= pY && pY <= y+4)
+			return 'tl';
+		if(x+w <= pX && x+w+8 >= pX && y-4 <= pY && y+4 >= pY)
+			return 'tr';
+		if(x+w <= pX && x+w+8 >= pX && y+h <= pY && y+h+8 >= pY)
+			return 'br';
+		if(x-4 <= pX && x+4 >= pX && y+h <= pY && y+h+8 >= pY)
+			return 'bl';
+		if(x+mw <= pX && x+mw+8 >= pX && y-4 <= pY && y+4 >= pY)
+			return 'tc';
+		if(x+mw <= pX && x+mw+8 >= pX && y+h <= pY && y+h+8 >= pY)
+			return 'bc';
+		if(x-4 <= pX && x+4 >= pX && y+mh <= pY && y+mh+8 >= pY)
+			return 'ml';
+		if(x+w <= pX && x+w+8 >= pX && y+mh <= pY && y+mh+8 >= pY)
+			return 'mr';
+		return false;
+	}
+}
+
 var Common = {};
 
 Common.Relation = Loira.util.createClass(Loira.Object, {

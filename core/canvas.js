@@ -14,13 +14,17 @@ Loira.Canvas = function(canvasId){
 
 Loira.Canvas.prototype = {
 	_selected: null,
+	_isDragged: false,
 	_tmp: {},
 	renderAll: function(){
-		var context = this._canvas.getContext('2d');
-		context.clearRect(0, 0, this._canvas.width, this._canvas.height);
+		var ctx = this._canvas.getContext('2d');
+		ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 		this.items.forEach(function(item){
-			item._render(context);
+			item._render(ctx);
 		});
+		if(this._selected){
+			Loira.SelectedSquare.draw(ctx, this._selected);	
+		}
 	},
 	add: function(){
 		var args = [].splice.call(arguments, 0);
@@ -88,6 +92,14 @@ Loira.Canvas.prototype = {
 			 * @property {string} type - Tipo de evento
 			 */
 			_this.emit('mouse:down', new mouseEvent({x:real.x, y:real.y, type: 'mousedown'}));
+			if (_this._selected){
+				_this._tmp.transform = Loira.SelectedSquare.getSelectedCorner(real.x, real.y, _this._selected)
+				if(_this._tmp.transform){
+					return;
+				}else{
+					_this._selected = null;
+				}
+			}
 			_this.items.forEach(function(item){
 				if(item.checkCollision(real.x, real.y)){
 					/**
@@ -100,9 +112,12 @@ Loira.Canvas.prototype = {
 					 */
 					_this.emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
 					_this._selected = item;
+					_this._isDragged = true;
 					return;
 				}
 			});
+
+			_this.renderAll();
 		};
 		this._canvas.onmousemove = function(evt){
 			var real = _this._getMouse(evt);
@@ -118,21 +133,38 @@ Loira.Canvas.prototype = {
 			_this.emit('mouse:move', new mouseEvent({x:real.x, y:real.y, type: 'mousemove'}));
 			
 			if(_this._selected){
-				_this._selected.x += real.x - _this._tmp.pointer.x;
-				_this._selected.y += real.y - _this._tmp.pointer.y;
-				/**
-				 * Evento que encapsula el arrastre de un objeto
-				 * 
-				 * @event object:dragging
-				 * @type { object }
-				 * @property {object} selected - Objeto seleccionado
-				 * @property {string} type - Tipo de evento
-				 */
-				_this.emit('object:dragging', new objectEvent({selected:_this._selected, type: 'objectdragging'}));
+				if(_this._tmp.transform){
+					switch(_this._tmp.transform){
+						case 'tc':
+							_this._selected.y += real.y - _this._tmp.pointer.y;		
+							_this._selected.height -= real.y - _this._tmp.pointer.y;
+							break;
+						case 'bc':
+							_this._selected.height += real.y - _this._tmp.pointer.y;
+							break;
+						case 'ml':
+							_this._selected.x += real.x - _this._tmp.pointer.x;
+							_this._selected.width -= real.x - _this._tmp.pointer.x;
+							break;
+						case 'mr':
+							_this._selected.width += real.x - _this._tmp.pointer.x;
+							break;
+					}
+				}else if(_this._isDragged){
+					_this._selected.x += real.x - _this._tmp.pointer.x;
+					_this._selected.y += real.y - _this._tmp.pointer.y;
+					/**
+					 * Evento que encapsula el arrastre de un objeto
+					 * 
+					 * @event object:dragging
+					 * @type { object }
+					 * @property {object} selected - Objeto seleccionado
+					 * @property {string} type - Tipo de evento
+					 */
+					_this.emit('object:dragging', new objectEvent({selected:_this._selected, type: 'objectdragging'}));
+				}
 				_this.renderAll();
 				_this._tmp.pointer = real;
-			}else{
-
 			}
 		}
 		this._canvas.onmouseup = function(evt){
@@ -157,7 +189,8 @@ Loira.Canvas.prototype = {
 				 * @property {string} type - Tipo de evento
 				 */
 				_this.emit('object:released', new mouseEvent({selected:_this.selected, type: 'objectreleased'}));
-				_this._selected = null;
+				_this._isDragged = false;
+				_this._tmp.transform = false;
 			}
 		}
 	},

@@ -33,5 +33,7 @@ UseCase.UseCase = Loira.util.createClass(Loira.Object, {
 		ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
 		ctx.bezierCurveTo(xm - ox, ye, this.x, ym + oy, this.x, ym);
 		ctx.stroke();
+		ctx.fillStyle = "#fcf5d9";
+		ctx.fill();
 	}
 });
