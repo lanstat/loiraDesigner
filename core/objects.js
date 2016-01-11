@@ -4,6 +4,7 @@
  * @class Object
  */
 Loira.Object = {
+	_buttons: [],
 	initialize: function(options){
 		this._uid = Loira.util.createRandom(8);
 
@@ -26,6 +27,17 @@ Loira.Object = {
 	_render: function(context){},
 	checkCollision: function(x, y){
 		return (x>= this.x && x<= this.x + this.width && y>=this.y && y<=this.y + this.height);
+	},
+	on: function(button){
+		var img = document.createElement('IMG');
+		img.src = button.icon;
+		this._buttons.push({'icon':img, 'click': button.click});
+	},
+	_renderButtons: function(ctx){
+		if(this._buttons.length>0)
+			this._buttons.forEach(function (item){
+				ctx.drawImage(item.icon, 10, 10)
+			});
 	}
 }
 
@@ -38,9 +50,11 @@ Loira.SelectedSquare = {
 
 		ctx.beginPath();
 		ctx.lineWidth=2;
+		ctx.setLineDash([5, 5]);
 		ctx.strokeStyle= '#339966';
 		ctx.rect(x, y, w+4, h+4); 
 		ctx.stroke();
+		ctx.setLineDash([]);
 
 		ctx.fillStyle= '#339966';
 

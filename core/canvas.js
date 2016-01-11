@@ -24,6 +24,7 @@ Loira.Canvas.prototype = {
 		});
 		if(this._selected){
 			Loira.SelectedSquare.draw(ctx, this._selected);	
+			this._selected._renderButtons(ctx);
 		}
 	},
 	add: function(){
