@@ -6,7 +6,7 @@
 var Phase = {};
 
 /**
- * Crea un nuevo Objeto de Estado
+ * Crea un nuevo Objeto de para generar diagramas de Estado
  *
  * @class
  * @memberof Phase
