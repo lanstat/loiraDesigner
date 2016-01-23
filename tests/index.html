@@ -7,26 +7,25 @@
 		<script type="text/javascript" src="../core/events.js"></script>
 		<script type="text/javascript" src="../core/utils.js"></script>
 		<script type="text/javascript" src="../core/objects.js"></script>
+		<script type="text/javascript" src="../core/common.js"></script>
 		<script type="text/javascript" src="../plugins/usecase.js"></script>
-	  	<script type="text/javascript" src="../plugins/phase.js"></script>
 		<script>
 			var canvas = new Loira.Canvas('_canvas');
 
-			var r1 = new Common.Relation({x:100,y:2});
 			var r2 = new UseCase.UseCase({x:200,y:200});
-		  	var r3 = new Phase.Phase({x:400,y:200});
+			var r3 = new UseCase.UseCase({x:300,y:300});
 
-			canvas.add(r1, r2, r3);
+			canvas.add(r2, r3);
 			canvas.renderAll();
 
-			canvas.on({
+			/*canvas.on({
 				'object:selected': function(evt){
 					console.log(evt);
 				},
 				'mouse:down': function(evt){
 					console.log(evt);
 				}
-			});
+			});*/
 		</script>
 	</body>
 </html>

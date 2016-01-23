@@ -11,7 +11,7 @@ var UseCase = {};
  * @class
  * @memberof UseCase
  */
-UseCase.UseCase = Loira.util.createClass(Loira.Object, {
+UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 	initialize : function(options){
 		this.callSuper('initialize', options);
 		this.width = 200;

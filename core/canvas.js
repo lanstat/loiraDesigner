@@ -32,6 +32,7 @@ Loira.Canvas.prototype = {
 		var _items = this.items;
 		var _this = this;
 		args.forEach(function(item){
+			item._canvas = _this;
 			_items.push(item);
 			/**
 			 * Evento que encapsula la agregacion de un objeto del canvas
@@ -43,6 +44,24 @@ Loira.Canvas.prototype = {
 			 */
 			_this.emit('object:added', new objectEvent({selected:item, type: 'objectadded'}));
 		});
+	},
+	addRelation: function(){
+		var args = [].splice.call(arguments, 0);
+		var _items = this.items;
+		var _this = this;
+		args.forEach(function(item){
+			item._canvas = _this;
+			_items.unshift(item);
+			/**
+			 * Evento que encapsula la agregacion de un objeto del canvas
+			 * 
+			 * @event object:added
+			 * @type { object }
+			 * @property {object} selected - Objeto seleccionado
+			 * @property {string} type - Tipo de evento
+			 */
+			_this.emit('object:added', new objectEvent({selected:item, type: 'objectadded'}));
+		});	
 	},
 	remove: function(){
 		var args = [].splice.call(arguments, 0);
@@ -63,11 +82,13 @@ Loira.Canvas.prototype = {
 		});
 	},
 	on: function(evt, callback){
+		var objCallback;
 		if(typeof evt === 'string'){
 			if (typeof this._callbacks[evt] === 'undefined'){
 				this._callbacks[evt] = [];
 			}
 			this._callbacks[evt].push(callback);
+			return callback;
 		}else if(typeof evt === 'object'){
 			for (var name in evt){
 				if (typeof this._callbacks[name] === 'undefined'){
@@ -75,6 +96,12 @@ Loira.Canvas.prototype = {
 				}
 				this._callbacks[name].push(evt[name]);
 			}
+		}
+	},
+	fall: function(evt, callback){
+		var index  = this._callbacks[evt].indexOf(callback);
+		if (index > -1){
+			this._callbacks[evt].splice(index, 1);
 		}
 	},
 	bind: function(){
@@ -97,11 +124,14 @@ Loira.Canvas.prototype = {
 				_this._tmp.transform = Loira.SelectedSquare.getSelectedCorner(real.x, real.y, _this._selected)
 				if(_this._tmp.transform){
 					return;
+				}else if(_this._selected.callCustomButton(real.x, real.y)){
+					return;
 				}else{
 					_this._selected = null;
 				}
 			}
-			_this.items.forEach(function(item){
+			for (var i = 0; i < _this.items.length; i++) {
+				var item = _this.items[i];
 				if(item.checkCollision(real.x, real.y)){
 					/**
 					 * Evento que encapsula un click sobre un objeto
@@ -114,9 +144,9 @@ Loira.Canvas.prototype = {
 					_this.emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
 					_this._selected = item;
 					_this._isDragged = true;
-					return;
+					break;
 				}
-			});
+			};
 
 			_this.renderAll();
 		};
@@ -208,9 +238,10 @@ Loira.Canvas.prototype = {
 	},
 	emit: function(evt, options){
 		if(typeof this._callbacks[evt] !== 'undefined'){
-			this._callbacks[evt].forEach(function (item){
+			for (var i = 0; i < this._callbacks[evt].length; i++) {
+				var item = this._callbacks[evt][i];
 				item.call(this, options);
-			});
+			};
 		}
 	},
 	_getMouse: function(evt){

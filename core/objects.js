@@ -4,6 +4,7 @@
  * @class Object
  */
 Loira.Object = {
+	_canvas: null,
 	_buttons: [],
 	initialize: function(options){
 		this._uid = Loira.util.createRandom(8);
@@ -15,6 +16,9 @@ Loira.Object = {
 		this.y = 'y' in options ? options.y : 0;
 		this.width = 'width' in options ? options.width : 0;
 		this.height = 'height' in options ? options.height : 0;
+		this._buttons = [];
+		this._canvas = null;
+		this._prepare();
 	},
 	callSuper: function(funcName){
 		var args = [].splice.call(arguments, 0);
@@ -24,20 +28,41 @@ Loira.Object = {
 
 		return this[funcName].apply(this, args);
 	},
-	_render: function(context){},
+	_render: function(ctx){},
+	_prepare: function(){},
 	checkCollision: function(x, y){
 		return (x>= this.x && x<= this.x + this.width && y>=this.y && y<=this.y + this.height);
 	},
-	on: function(button){
-		var img = document.createElement('IMG');
-		img.src = button.icon;
-		this._buttons.push({'icon':img, 'click': button.click});
+	on: function(){
+		var args = [].splice.call(arguments, 0);
+		for (var i = 0; i < args.length; i++) {
+			var button = args[i];
+			var img = document.createElement('IMG');
+			img.src = button.icon;
+			this._buttons.push({'icon':img, 'click': button.click});
+		};
 	},
 	_renderButtons: function(ctx){
+		var x = this.x + this.width + 10;
+		var y = this.y;
 		if(this._buttons.length>0)
 			this._buttons.forEach(function (item){
-				ctx.drawImage(item.icon, 10, 10)
+				ctx.drawImage(item.icon, x, y);
+				y += item.icon.height + 4;
 			});
+	},
+	callCustomButton: function(x, y){
+		var _x = this.x + this.width + 10;
+		var _y = this.y;
+		for (var i = 0; i < this._buttons.length; i++) {
+			var item = this._buttons[i];
+			if(_x <= x && x <= _x + item.icon.width && _y <= y && y <= _y + item.icon.height){
+				item.click.call(this);
+				return true;
+			} 
+			_y += item.icon.height + 4;
+		};
+		return false;
 	}
 }
 
@@ -95,20 +120,3 @@ Loira.SelectedSquare = {
 		return false;
 	}
 }
-
-var Common = {};
-
-Common.Relation = Loira.util.createClass(Loira.Object, {
-	initialize : function(options){
-		this.callSuper('initialize', options);
-		this.width = 100;
-		this.height = 100;
-	},
-	_render: function(ctx) {
-		ctx.beginPath();
-		ctx.lineWidth = 2;
-		ctx.moveTo(this.x, this.y);
-		ctx.lineTo(this.x+this.width, this.y+this.height);
-		ctx.stroke();
-	}
-});
