@@ -5,23 +5,23 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
 		this.callSuper('initialize', options);
 		this.start = options.start;
 		this.end = options.end; 
-		this.x = this.start.x < this.end.x? this.start.x : this.end.x;
-		this.y = this.start.y < this.end.y? this.start.y : this.end.y;
-		this.width = Math.abs(this.end.x - this.start.x);
-		this.height = Math.abs(this.end.y - this.start.y);
 	},
 	_render: function(ctx) {
-		var start = this.start;
-		var end = this.end;
+		var start = this.start,
+			end = this.end,
+			x1m = start.x + start.width/2,
+			y1m = start.y + start.height/2,
+			x2m = end.x + end.width/2,
+			y2m = end.y + end.height/2;
 
-		this.x = start.x < end.x? start.x : end.x;
-		this.y = start.y < end.y? start.y : end.y;
+		this.x = x1m < x2m? x1m : x2m;
+		this.y = y1m < y2m? y1m : y2m;
 		this.width = Math.abs(end.x - start.x);
 		this.height = Math.abs(end.y - start.y);
 		ctx.beginPath();
 		ctx.lineWidth = 2;
-		ctx.moveTo(start.x + start.width/2, start.y + start.height/2);
-		ctx.lineTo(end.x + end.width/2, end.y + end.height/2);
+		ctx.moveTo(x1m, y1m);
+		ctx.lineTo(x2m, y2m);
 		ctx.stroke();
 	}
 });

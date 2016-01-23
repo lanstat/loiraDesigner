@@ -130,7 +130,7 @@ Loira.Canvas.prototype = {
 					_this._selected = null;
 				}
 			}
-			for (var i = 0; i < _this.items.length; i++) {
+			for (var i = _this.items.length - 1; i >= 0; i--) {
 				var item = _this.items[i];
 				if(item.checkCollision(real.x, real.y)){
 					/**
