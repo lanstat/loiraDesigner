@@ -63,25 +63,22 @@ Loira.Object = {
 			_y += item.icon.height + 4;
 		};
 		return false;
-	}
-}
-
-Loira.SelectedSquare = {
-	draw: function(ctx, selected){
-		var x = selected.x-2,
-		    y = selected.y-2,
-		    w = selected.width,
-		    h = selected.height;
+	},
+	drawSelected: function(ctx){
+		var x = this.x-2,
+		    y = this.y-2,
+		    w = this.width,
+		    h = this.height;
 
 		ctx.beginPath();
 		ctx.lineWidth=2;
 		ctx.setLineDash([5, 5]);
-		ctx.strokeStyle= '#339966';
+		ctx.strokeStyle= Loira.Config.selected.color;
 		ctx.rect(x, y, w+4, h+4); 
 		ctx.stroke();
 		ctx.setLineDash([]);
 
-		ctx.fillStyle= '#339966';
+		ctx.fillStyle= Loira.Config.selected.color;
 
 		ctx.fillRect(x-4, y-4, 8, 8);
 		ctx.fillRect(x+w, y+h, 8, 8);
@@ -94,11 +91,11 @@ Loira.SelectedSquare = {
 
 		ctx.strokeStyle= '#000000';
 	},
-	getSelectedCorner: function(pX, pY, selected){
-		var x = selected.x-2,
-		    y = selected.y-2,
-		    w = selected.width,
-		    h = selected.height,
+	getSelectedCorner: function(pX, pY){
+		var x = this.x-2,
+		    y = this.y-2,
+		    w = this.width,
+		    h = this.height,
 			mw = w/2,
 			mh = h/2;
 		if(x-4 <= pX && pX <= x+4  && y-4 <= pY && pY <= y+4)

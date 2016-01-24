@@ -23,7 +23,7 @@ Loira.Canvas.prototype = {
 			item._render(ctx);
 		});
 		if(this._selected){
-			Loira.SelectedSquare.draw(ctx, this._selected);	
+			this._selected.drawSelected(ctx);	
 			this._selected._renderButtons(ctx);
 		}
 	},
@@ -121,7 +121,7 @@ Loira.Canvas.prototype = {
 			 */
 			_this.emit('mouse:down', new mouseEvent({x:real.x, y:real.y, type: 'mousedown'}));
 			if (_this._selected){
-				_this._tmp.transform = Loira.SelectedSquare.getSelectedCorner(real.x, real.y, _this._selected)
+				_this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y)
 				if(_this._tmp.transform){
 					return;
 				}else if(_this._selected.callCustomButton(real.x, real.y)){

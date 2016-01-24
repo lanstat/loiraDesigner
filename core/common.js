@@ -8,22 +8,40 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
 	},
 	_render: function(ctx) {
 		var start = this.start,
-			end = this.end,
-			x1m = start.x + start.width/2,
-			y1m = start.y + start.height/2,
-			x2m = end.x + end.width/2,
-			y2m = end.y + end.height/2;
+			end = this.end;
 
-		this.x = x1m < x2m? x1m : x2m;
-		this.y = y1m < y2m? y1m : y2m;
-		this.width = Math.abs(end.x - start.x);
-		this.height = Math.abs(end.y - start.y);
+		this.x1 = start.x + start.width/2,
+		this.y1 = start.y + start.height/2,
+		this.x2 = end.x + end.width/2,
+		this.y2 = end.y + end.height/2;
+
 		ctx.beginPath();
-		ctx.lineWidth = 2;
-		ctx.moveTo(x1m, y1m);
-		ctx.lineTo(x2m, y2m);
+		ctx.lineWidth = 1;
+		ctx.moveTo(this.x1, this.y1);
+		ctx.lineTo(this.x2, this.y2);
 		ctx.stroke();
-	}
+	},
+	checkCollision: function(x, y){
+		var r = Math.abs(y - this.y1);
+		var t = Math.abs((this.y2 - this.y1) / (this.x2 - this.x1) * (x - this.x1));
+
+		return (Math.abs(r - t) <= 5);
+	},
+	drawSelected: function(ctx){
+		var x = this.x-2,
+		    y = this.y-2,
+		    w = this.width,
+		    h = this.height;
+
+		ctx.beginPath();
+
+		ctx.fillStyle= Loira.Config.selected.color;
+
+		ctx.fillRect(this.x1-4, this.y1-4, 8, 8);
+		ctx.fillRect(this.x2-4, this.y2-4, 8, 8);
+
+		ctx.strokeStyle= '#000000';
+	},
 });
 
 /**

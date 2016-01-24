@@ -1,31 +1,21 @@
 <html>
+	<head>
+		<script type="text/javascript" src="../LoiraDesigner.js"></script>
+	</head>
 	<body>
 		<div>
 		<canvas style="background-color:#aacccc" id="_canvas" width="800" height="800"></canvas>
 	</div>
-		<script type="text/javascript" src="../core/canvas.js"></script>
-		<script type="text/javascript" src="../core/events.js"></script>
-		<script type="text/javascript" src="../core/utils.js"></script>
-		<script type="text/javascript" src="../core/objects.js"></script>
-		<script type="text/javascript" src="../core/common.js"></script>
-		<script type="text/javascript" src="../plugins/usecase.js"></script>
 		<script>
-			var canvas = new Loira.Canvas('_canvas');
+			window.onload = function(){
+				var canvas = new Loira.Canvas('_canvas');
 
-			var r2 = new UseCase.UseCase({x:200,y:200});
-			var r3 = new UseCase.UseCase({x:300,y:300});
+				var r1 = new UseCase.UseCase({x:200,y:200, text:'Hola mundo'});
+				var r3 = new UseCase.UseCase({x:300,y:300, text:'parara ti bum'});
 
-			canvas.add(r2, r3);
-			canvas.renderAll();
-
-			/*canvas.on({
-				'object:selected': function(evt){
-					console.log(evt);
-				},
-				'mouse:down': function(evt){
-					console.log(evt);
-				}
-			});*/
+				canvas.add(r1,r3);
+				canvas.renderAll();
+			}
 		</script>
 	</body>
 </html>
