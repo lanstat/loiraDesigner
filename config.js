@@ -1,5 +1,5 @@
 Loira.Config = {
-	fontSize : 14,
+	fontSize : 12,
 	fontType : 'Arial',
 	selected : {
 		color : '#339966'

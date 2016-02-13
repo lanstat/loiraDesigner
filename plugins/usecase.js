@@ -14,18 +14,13 @@ var UseCase = {};
 UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 	initialize : function(options){
 		this.callSuper('initialize', options);
-		this.width = 0;
-		this.height = 0;
+		this.width = 100;
+		this.height = 70;
 		this.text = options.text;
 	},
 	_render: function(ctx) {
 		ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 		if (this.text){
-			var textW = ctx.measureText(this.text).width;
-			if (this.width <= 0 || this.height <= 0){
-				this.width = textW + 40;
-				this.height = this.width * 0.6;
-			}
 			var kappa = .5522848,
 			    ox = (this.width / 2) * kappa, 
 			    oy = (this.height / 2) * kappa, 
@@ -45,9 +40,46 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 			ctx.stroke();
 			ctx.fillStyle = "#fcf5d9";
 			ctx.fill();
-			ctx.fillStyle = "#000000"
+			ctx.fillStyle = "#000000";
 
-			ctx.fillText(this.text, xm - textW/2, ym + 3);
+			var lines = this._splitText(ctx, this.text);
+			
+			this._drawText(ctx, lines)			
+		}
+	},
+	_splitText: function(ctx, text){
+		var words = text.split(' ');
+		var buff = '';
+		var lines = [];
+
+		for (var i = 0; i < words.length; i++) {
+			if (ctx.measureText(buff + words[i]).width > this.width -10){
+				lines.push(buff);
+				buff = words[i] + ' ';
+			}else{
+				buff = buff + ' ' + words[i];
+			}
+		};
+		lines.push(buff);
+
+		return lines;
+	},
+	_drawText : function(ctx, lines, horiAlign, vertAlign){
+		var x = this.x,
+			y = this.y,
+			xm = this.x + this.width / 2,       
+		    ym = this.y + this.height / 2;
+		if (typeof lines === 'string'){
+			var tmp = lines;
+			lines = [tmp];
+		}
+
+		var y = ym + 3 - ((6*lines.length + 3*lines.length) / 2);
+
+		for (var i = 0; i < lines.length; i++){
+			var textW = ctx.measureText(lines[i]).width;
+			ctx.fillText(lines[i], xm - textW/2, y);
+			y = y + Loira.Config.fontSize + 3;
 		}
 	}
 });

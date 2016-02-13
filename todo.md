@@ -4,7 +4,8 @@
 - [x] Soporte para redimension y movimiento de objetos
 - [x] Crear una forma de manejo de eventos personalizados de objetos dibujables
 - [x] Enlazar relaciones UML con artefactos
-- [ ] Agregar texto dentro de un objeto
+- [x] Agregar texto dentro de un objeto
+- [x] Agregar soporte de multilineado de texto segun redimension de objeto
 - [ ] Manejo de relaciones y solapacion
 - [ ] Relaciones personalizadas
 
