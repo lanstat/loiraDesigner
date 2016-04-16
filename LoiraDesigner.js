@@ -6,6 +6,7 @@ var classes = [
 	"../core/utils.js",
 	"../core/objects.js",
 	"../core/common.js",
+    "../core/relations.js",
 	"../plugins/usecase.js",
 	"../config.js"
 ];

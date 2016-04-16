@@ -1,10 +1,13 @@
 var Common = {};
 
 Common.Relation = Loira.util.createClass(Loira.Object, {
-	initialize : function(options){
-		this.callSuper('initialize', options);
-		this.start = options.start;
-		this.end = options.end; 
+	_prepare : function(options){
+        if(typeof options === 'undefined'){
+			options = {};
+		}
+        
+		this.start = options.start? options.start : null;
+		this.end = options.end? options.end : null; 
 	},
 	_render: function(ctx) {
 		var start = this.start,
@@ -21,6 +24,14 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
 		ctx.lineTo(this.x2, this.y2);
 		ctx.stroke();
 	},
+    /**
+     * @chainable
+     */
+    update: function(start, end){
+      this.start = start;
+      this.end = end;
+      return this;
+    },
 	checkCollision: function(x, y){
 		var r = Math.abs(y - this.y1);
 		var t = Math.abs((this.y2 - this.y1) / (this.x2 - this.x1) * (x - this.x1));
@@ -42,7 +53,7 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
 
 		ctx.strokeStyle= '#000000';
 	},
-});
+}, true);
 
 /**
  * Clase base para los simbolos uml
@@ -70,7 +81,8 @@ Common.Symbol = Loira.util.createClass(Loira.Object, {
 				for (var i = 0; i < canvas.items.length; i++) {
 					var item = canvas.items[i];
 					if(item.checkCollision(evt.x, evt.y)){
-						canvas.addRelation(new Common.Relation({start:_this, end:item}));
+						canvas.addRelation(canvas.nextRelation.update(_this, item));
+                        canvas.nextRelation = new Relation.Association();
 						break;
 					}
 				};

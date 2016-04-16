@@ -18,7 +18,7 @@ Loira.Object = {
 		this.height = 'height' in options ? options.height : 0;
 		this._buttons = [];
 		this._canvas = null;
-		this._prepare();
+		this._prepare(options);
 	},
 	callSuper: function(funcName){
 		var args = [].splice.call(arguments, 0);
@@ -29,7 +29,7 @@ Loira.Object = {
 		return this[funcName].apply(this, args);
 	},
 	_render: function(ctx){},
-	_prepare: function(){},
+	_prepare: function(options){},
 	checkCollision: function(x, y){
 		return (x>= this.x && x<= this.x + this.width && y>=this.y && y<=this.y + this.height);
 	},

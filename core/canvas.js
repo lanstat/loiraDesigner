@@ -11,6 +11,10 @@ Loira.Canvas = function(canvasId){
 	this._canvas = document.getElementById(canvasId);
 	this._callbacks = {};
 	this.initialize();
+    /**
+     * @property {Relation}  nextRelation - Es la relacion que se usara cuando se agregue una nueva union
+     */
+    this.nextRelation = new Relation.Association();
 }
 
 Loira.Canvas.prototype = {
@@ -142,23 +146,42 @@ Loira.Canvas.prototype = {
 					_this._selected = null;
 				}
 			}
-			for (var i = _this.items.length - 1; i >= 0; i--) {
-				var item = _this.items[i];
+            for (var i = _this.relations.length - 1; i >= 0; i--) {
+				var item = _this.relations[i];
 				if(item.checkCollision(real.x, real.y)){
 					/**
-					 * Evento que encapsula un click sobre un objeto
+					 * Evento que encapsula un click sobre una relacion
 					 * 
-					 * @event object:select
+					 * @event relation:select
 					 * @type { object }
 					 * @property {object} selected - Objeto seleccionado
 					 * @property {string} type - Tipo de evento
 					 */
-					_this.emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
+					_this.emit('relation:selected', new objectEvent({selected:item, type: 'relationselected'}));
 					_this._selected = item;
 					_this._isDragged = true;
 					break;
 				}
 			};
+            if (!_this._selected){
+                for (var i = _this.items.length - 1; i >= 0; i--) {
+                    var item = _this.items[i];
+                    if(item.checkCollision(real.x, real.y)){
+                        /**
+                         * Evento que encapsula un click sobre un objeto
+                         * 
+                         * @event object:select
+                         * @type { object }
+                         * @property {object} selected - Objeto seleccionado
+                         * @property {string} type - Tipo de evento
+                         */
+                        _this.emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
+                        _this._selected = item;
+                        _this._isDragged = true;
+                        break;
+                    }
+                };   
+            }
 
 			_this.renderAll();
 		};

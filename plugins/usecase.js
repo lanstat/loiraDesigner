@@ -42,9 +42,7 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 			ctx.fill();
 			ctx.fillStyle = "#000000";
 
-			var lines = this._splitText(ctx, this.text);
-			
-			this._drawText(ctx, lines)			
+			this._drawText(ctx, this._splitText(ctx, this.text));
 		}
 	},
 	_splitText: function(ctx, text){
