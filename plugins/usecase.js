@@ -78,7 +78,7 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 
 		for (var i = 0; i < lines.length; i++){
 			var textW = ctx.measureText(lines[i]).width;
-			ctx.fillText(lines[i], xm - textW/2, y);
+			ctx.fillText(lines[i], xm - textW/2, y+3);
 			y = y + Loira.Config.fontSize + 3;
 		}
 	}

@@ -70,7 +70,7 @@ Common.Symbol = Loira.util.createClass(Loira.Object, {
 				for (var i = 0; i < canvas.items.length; i++) {
 					var item = canvas.items[i];
 					if(item.checkCollision(evt.x, evt.y)){
-						canvas.addRelation(new Common.Relation({start:_this, end:item}))
+						canvas.addRelation(new Common.Relation({start:_this, end:item}));
 						break;
 					}
 				};

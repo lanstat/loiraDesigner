@@ -23,3 +23,15 @@ var objectEvent = function(options){
 	this.selected = 'selected' in options? options.selected : null;
 	this.type = 'type' in options? options.type : '';
 }
+
+/**
+ * Objeto que encapsula un evento sobre una relacion
+ *
+ * @type object
+ * @property {object} selected - Relacion seleccionada
+ * @property {string} type - Tipo de evento
+ */
+var relationEvent = function(options){
+	this.selected = 'selected' in options? options.selected : null;
+	this.type = 'type' in options? options.type : '';
+}

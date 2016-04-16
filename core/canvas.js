@@ -6,6 +6,7 @@ var Loira = {};
  * @class Canvas
  */
 Loira.Canvas = function(canvasId){
+    this.relations = [];
 	this.items = [];
 	this._canvas = document.getElementById(canvasId);
 	this._callbacks = {};
@@ -19,9 +20,14 @@ Loira.Canvas.prototype = {
 	renderAll: function(){
 		var ctx = this._canvas.getContext('2d');
 		ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-		this.items.forEach(function(item){
-			item._render(ctx);
-		});
+
+        for (var i = 0; i < this.relations.length; i++) {
+            this.relations[i]._render(ctx);
+        }
+        for (var i = 0; i < this.items.length; i++) {
+            this.items[i]._render(ctx);
+        }
+
 		if(this._selected){
 			this._selected.drawSelected(ctx);	
 			this._selected._renderButtons(ctx);
@@ -47,20 +53,20 @@ Loira.Canvas.prototype = {
 	},
 	addRelation: function(){
 		var args = [].splice.call(arguments, 0);
-		var _items = this.items;
+		var _relations = this.relations;
 		var _this = this;
 		args.forEach(function(item){
 			item._canvas = _this;
-			_items.unshift(item);
+			_relations.push(item);
 			/**
-			 * Evento que encapsula la agregacion de un objeto del canvas
+			 * Evento que encapsula la agregacion de una relacion del canvas
 			 * 
 			 * @event object:added
 			 * @type { object }
 			 * @property {object} selected - Objeto seleccionado
 			 * @property {string} type - Tipo de evento
 			 */
-			_this.emit('object:added', new objectEvent({selected:item, type: 'objectadded'}));
+			_this.emit('relation:added', new relationEvent({selected:item, type: 'relationadded'}));
 		});	
 	},
 	remove: function(){
@@ -98,6 +104,12 @@ Loira.Canvas.prototype = {
 			}
 		}
 	},
+    /**
+     * Desregistra un evento
+     *
+     * @param {string} evt - Nombre del evento
+     * @param {function} callback - Funcion a desregistrar
+     */
 	fall: function(evt, callback){
 		var index  = this._callbacks[evt].indexOf(callback);
 		if (index > -1){

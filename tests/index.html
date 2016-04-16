@@ -4,17 +4,24 @@
 	</head>
 	<body>
 		<div>
-		<canvas style="background-color:#aacccc" id="_canvas" width="800" height="800"></canvas>
-	</div>
+            <canvas style="background-color:#aacccc" id="_canvas" width="800" height="500"></canvas>
+        </div>
+        <button id="addObject">Agregar</button>
 		<script>
 			window.onload = function(){
-				var canvas = new Loira.Canvas('_canvas');
+				window.canvas = new Loira.Canvas('_canvas');
 
 				var r1 = new UseCase.UseCase({x:200,y:200, text:'Hola mundo que hay de nuevo?'});
 				var r3 = new UseCase.UseCase({x:300,y:300, text:'parara ti bum'});
 
-				canvas.add(r1,r3);
-				canvas.renderAll();
+				window.canvas.add(r1,r3);
+				window.canvas.renderAll();
+
+                document.getElementById('addObject').addEventListener('click', function(){
+                    var r = new UseCase.UseCase({x:140,y:140, text:'lorem ipsum'});
+                    window.canvas.add(r);
+                    window.canvas.renderAll();
+                });
 			}
 		</script>
 	</body>
