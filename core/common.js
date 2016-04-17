@@ -97,32 +97,23 @@ Common.Symbol = Loira.util.createClass(Loira.Object, {
  *
  * @class Symbol
  */
-Common.Actor = Loira.util.createClass(Loira.Symbol, {
+Common.Actor = Loira.util.createClass(Common.Symbol, {
+    initialize : function(options){
+		this.callSuper('initialize', options);
+
+        this.img = document.createElement('IMG');
+        this.img.src = '../assets/actor.png';
+        this.img.onload = function() {
+        }
+        this.name = options.name? options.name: 'Actor1';
+        this.width = 58;
+		this.height = 91;
+	},
 	_render: function(ctx) {
-		ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-		if (this.text){
-			var kappa = .5522848,
-			    ox = (this.width / 2) * kappa,
-			    oy = (this.height / 2) * kappa,
-			    xe = this.x + this.width,
-			    ye = this.y + this.height,
-			    xm = this.x + this.width / 2,
-			    ym = this.y + this.height / 2;
-
-			ctx.beginPath();
-			ctx.lineWidth = 2;
-
-			ctx.moveTo(this.x, ym);
-			ctx.bezierCurveTo(this.x, ym - oy, xm - ox, this.y, xm, this.y);
-			ctx.bezierCurveTo(xm + ox, this.y, xe, ym - oy, xe, ym);
-			ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-			ctx.bezierCurveTo(xm - ox, ye, this.x, ym + oy, this.x, ym);
-			ctx.stroke();
-			ctx.fillStyle = "#fcf5d9";
-			ctx.fill();
-			ctx.fillStyle = "#000000";
-
-			this._drawText(ctx, this._splitText(ctx, this.text));
-		}
+        ctx.drawImage(this.img, this.x, this.y);
+        ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+        ctx.fillStyle = "#000000";
+        var textW = ctx.measureText(this.name).width;
+        ctx.fillText(this.name, this.x + 29 - textW/2, this.y+105);
 	}
 });

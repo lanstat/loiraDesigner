@@ -16,23 +16,20 @@ Implementacion
 ```javascript
 var canvas = new Loira.Canvas('_canvas');
 
-var r2 = new UseCase.UseCase({x:200,y:200});
-r2.on({
-	icon: '../assets/clean.png', 
-	click: function(){
-	}
+var case1 = new UseCase.UseCase({x:200,y:200, text:'Registrar usuario'});
+var case2 = new UseCase.UseCase({x:300,y:300, text:'Iniciar sesion'});
+var actor = new Common.Actor({x:20, y:10, name:'Administrador'});
+
+canvas.on('relation:selected', function(event){
+   console.log(event.selected) 
 });
 
-canvas.add(r2);
-canvas.renderAll();
+canvas.add(case1, case2, actor);
 
-canvas.on({
-	'object:selected': function(evt){
-		console.log(evt);
-	},
-	'mouse:down': function(evt){
-		console.log(evt);
-	}
-});
+//Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma
+//solo es en la primera renderizacion
+setTimeout(function(){
+    canvas.renderAll();
+}, 50);
 ```
 
