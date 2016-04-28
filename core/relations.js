@@ -6,10 +6,10 @@
 var Relation = {};
 
 /**
- * Crea un nuevo Objeto de Caso de uso
+ * Contiene las funciones para relacion de asociacion
  * 
  * @class
- * @memberof UseCase
+ * @memberof Relation
  */
 Relation.Association = Loira.util.createClass(Common.Relation, {
 	initialize : function(options){
@@ -19,14 +19,18 @@ Relation.Association = Loira.util.createClass(Common.Relation, {
 
 
 /**
- * Crea un nuevo Objeto de Caso de uso
+ * Contiene las funciones para relacion directa
  *
  * @class
- * @memberof UseCase
+ * @memberof Relation
  */
 Relation.DirectAssociation = Loira.util.createClass(Common.Relation, {
 	initialize : function(options){
 		this.callSuper('initialize', options);
+
+        this.img = document.createElement('IMG');
+        this.img.src = '../assets/spear.png';
+        this.img.onload = function() {}
 	},
 	_render: function(ctx) {
 		var start = this.start,
@@ -36,6 +40,20 @@ Relation.DirectAssociation = Loira.util.createClass(Common.Relation, {
 		this.y1 = start.y + start.height/2,
 		this.x2 = end.x + end.width/2,
 		this.y2 = end.y + end.height/2;
+
+        var xm = this.x2 - this.x1;
+
+        var angle = Math.atan((this.y2 - this.y1) / xm);
+
+        if (xm<0){
+            angle += Math.PI;
+        }
+
+        ctx.translate(this.x1, this.y1);
+        ctx.rotate(angle);
+        ctx.drawImage(this.img, this.y1 , -10);
+        ctx.rotate(-angle);
+        ctx.translate(-this.x1, -this.y1);
 
 		ctx.beginPath();
 		ctx.lineWidth = 1;

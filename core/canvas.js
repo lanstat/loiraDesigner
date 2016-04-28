@@ -136,6 +136,7 @@ Loira.Canvas.prototype = {
 			 * @property {string} type - Tipo de evento
 			 */
 			_this.emit('mouse:down', new mouseEvent({x:real.x, y:real.y, type: 'mousedown'}));
+
 			if (_this._selected){
 				_this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y)
 				if(_this._tmp.transform){
@@ -235,6 +236,7 @@ Loira.Canvas.prototype = {
 		}
 		this._canvas.onmouseup = function(evt){
 			var real = _this._getMouse(evt);
+
 			/**
 			 * Evento que encapsula la liberacion del mouse sobre el canvas
 			 * 

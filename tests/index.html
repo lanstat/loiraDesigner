@@ -1,12 +1,18 @@
 <html>
 	<head>
 		<script type="text/javascript" src="../LoiraDesigner.js"></script>
+        <style>
+            .brake{
+                cursor: move;
+            }
+        </style>
 	</head>
 	<body>
 		<div>
             <canvas style="background-color:#aacccc" id="_canvas" width="800" height="500"></canvas>
         </div>
         <button id="addObject">Agregar</button>
+        <button id="setDirectRelation">Relacion directa</button>
 		<script>
 			window.onload = function(){
 				var canvas = new Loira.Canvas('_canvas');
@@ -31,6 +37,9 @@
                     var case1 = new UseCase.UseCase({x:140,y:140, text:'Mostrar evento'});
                     canvas.add(case1);
                     canvas.renderAll();
+                });
+                document.getElementById('setDirectRelation').addEventListener('click', function(){
+                    canvas.nextRelation = new Relation.DirectAssociation();
                 });
 			}
 		</script>

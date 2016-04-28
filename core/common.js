@@ -103,8 +103,8 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
 
         this.img = document.createElement('IMG');
         this.img.src = '../assets/actor.png';
-        this.img.onload = function() {
-        }
+        this.img.onload = function() {}
+
         this.name = options.name? options.name: 'Actor1';
         this.width = 58;
 		this.height = 91;
