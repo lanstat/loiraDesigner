@@ -7,22 +7,70 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
 		}
         
 		this.start = options.start? options.start : null;
-		this.end = options.end? options.end : null; 
+		this.end = options.end? options.end : null;
+        this.text = options.text? options.text : '';
+        this.isDashed = options.isDashed? options.isDashed : false;
+        this.img = null;
+        if (options.icon){
+            this.img = document.createElement('IMG');
+            this.img.src = '../assets/' + options.icon;
+            this.img.onload = function() {}
+        }
 	},
 	_render: function(ctx) {
-		var start = this.start,
-			end = this.end;
+        var start = this.start,
+            end = this.end;
 
-		this.x1 = start.x + start.width/2;
-		this.y1 = start.y + start.height/2;
-		this.x2 = end.x + end.width/2;
-		this.y2 = end.y + end.height/2;
+        this.x1 = start.x + start.width/2;
+        this.y1 = start.y + start.height/2;
+        this.x2 = end.x + end.width/2;
+        this.y2 = end.y + end.height/2;
 
-		ctx.beginPath();
-		ctx.lineWidth = 1;
-		ctx.moveTo(this.x1, this.y1);
-		ctx.lineTo(this.x2, this.y2);
-		ctx.stroke();
+        var xm = this.x2 - this.x1;
+        var ym = this.y2 - this.y1;
+
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.moveTo(this.x1, this.y1);
+
+        if (this.isDashed)
+            ctx.setLineDash([5, 5]);
+
+        ctx.lineTo(this.x2, this.y2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        if (this.img){
+            var angle = Math.atan(ym / xm);
+
+            if (xm<0){
+                angle += Math.PI;
+            }
+
+            var h = end.obtainBorderPos(xm, ym);
+
+            ctx.translate(this.x2, this.y2);
+            ctx.rotate(angle);
+            ctx.drawImage(this.img, -(15+h), -7);
+            ctx.rotate(-angle);
+            ctx.translate(-this.x2, -this.y2);
+        }
+
+        if (this.text || this.text.length > 0){
+            ctx.font = "10px " + Loira.Config.fontType;
+
+            var textW = ctx.measureText(this.text).width;
+
+            ctx.fillStyle = Loira.Config.background;
+            ctx.fillRect(this.x1 + xm/2 - textW/2, this.y1 + ym/2 - 15, textW, 12);
+            ctx.fillStyle = "#000000";
+
+            ctx.fillText(this.text,
+                this.x1 + xm/2 - textW/2,
+                this.y1 + ym/2 - 5);
+
+            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+        }
 	},
     /**
      * @chainable
@@ -111,14 +159,18 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
         this.img.onload = function() {}
 
         this.name = options.name? options.name: 'Actor1';
-        this.width = 58;
-		this.height = 91;
+        this.width = 30;
+		this.height = 62;
 	},
 	_render: function(ctx) {
+        ctx.fillStyle = Loira.Config.background;
+        ctx.fillRect(this.x-5, this.y-5, this.width+10, this.height+10);
+        ctx.fillStyle = "#000000";
+
         ctx.drawImage(this.img, this.x, this.y);
         ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
         ctx.fillStyle = "#000000";
         var textW = ctx.measureText(this.name).width;
-        ctx.fillText(this.name, this.x + 29 - textW/2, this.y+105);
+        ctx.fillText(this.name, this.x + 15 - textW/2, this.y+80);
 	}
 });

@@ -2,9 +2,6 @@
 	<head>
 		<script type="text/javascript" src="../LoiraDesigner.js"></script>
         <style>
-            .brake{
-                cursor: move;
-            }
         </style>
 	</head>
 	<body>
@@ -27,7 +24,7 @@
 
 				canvas.add(case1, case2, actor);
 
-                var rel = new Relation.DirectAssociation({start:case1, end:case2});
+                var rel = new Relation.Dependency({start:case1, end:case2});
 
                 canvas.addRelation(rel);
 

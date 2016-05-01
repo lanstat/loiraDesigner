@@ -90,6 +90,7 @@ Loira.Object = {
 		ctx.fillRect(x+w, y+h/2, 8, 8);
 
 		ctx.strokeStyle= '#000000';
+		ctx.fillStyle= '#000000';
 	},
 	getSelectedCorner: function(pX, pY){
 		var x = this.x-2,

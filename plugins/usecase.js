@@ -95,3 +95,33 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 		return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
 	}
 });
+/**
+ * Contiene las funciones para relacion de extension
+ *
+ * @class
+ * @memberof UseCase
+ */
+UseCase.Extends = Loira.util.createClass(Common.Relation, {
+    initialize : function(options){
+        options['icon'] = 'spear1.png';
+        options['text'] = '<< extends >>';
+        options['isDashed'] = true;
+
+        this.callSuper('initialize', options);
+    }
+});
+/**
+ * Contiene las funciones para relacion de inclusion
+ *
+ * @class
+ * @memberof UseCase
+ */
+UseCase.Include = Loira.util.createClass(Common.Relation, {
+    initialize : function(options){
+        options['icon'] = 'spear1.png';
+        options['text'] = '<< include >>';
+        options['isDashed'] = true;
+
+        this.callSuper('initialize', options);
+    }
+});
