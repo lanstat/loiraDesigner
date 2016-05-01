@@ -36,24 +36,27 @@ Relation.DirectAssociation = Loira.util.createClass(Common.Relation, {
 		var start = this.start,
 			end = this.end;
 
-		this.x1 = start.x + start.width/2,
-		this.y1 = start.y + start.height/2,
-		this.x2 = end.x + end.width/2,
+		this.x1 = start.x + start.width/2;
+		this.y1 = start.y + start.height/2;
+		this.x2 = end.x + end.width/2;
 		this.y2 = end.y + end.height/2;
 
         var xm = this.x2 - this.x1;
+        var ym = this.y2 - this.y1;
 
-        var angle = Math.atan((this.y2 - this.y1) / xm);
+        var angle = Math.atan(ym / xm);
 
         if (xm<0){
             angle += Math.PI;
         }
 
-        ctx.translate(this.x1, this.y1);
+        var h = end.obtainBorderPos(xm, ym);
+
+        ctx.translate(this.x2, this.y2);
         ctx.rotate(angle);
-        ctx.drawImage(this.img, this.y1 , -10);
+        ctx.drawImage(this.img, -(15+h), -7);
         ctx.rotate(-angle);
-        ctx.translate(-this.x1, -this.y1);
+        ctx.translate(-this.x2, -this.y2);
 
 		ctx.beginPath();
 		ctx.lineWidth = 1;

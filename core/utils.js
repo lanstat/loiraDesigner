@@ -1,4 +1,12 @@
 Loira.util = {
+	/**
+	 * Crea un objeto o funcion que extiende la base con los metodos del hijo
+     *
+	 * @param base Objeto base a extender
+	 * @param child Objecto que agregara sus funciones a la base
+	 * @param isAbstract Determina si lo que se retornara es un objeto (abstracto) o un funcion (clase instanciable)
+     * @returns {*} Retorna un objeto o funcion instanciable
+     */
 	createClass: function(base, child, isAbstract){
 		var obj = {};
 		for (var i in child) {
@@ -20,7 +28,9 @@ Loira.util = {
 		}
 		return function(options){
 			for (var i in obj) {
-				this[i] = obj[i];
+                if (obj.hasOwnProperty(i)){
+                    this[i] = obj[i];
+                }
 			}
 			
 			this.initialize(options);

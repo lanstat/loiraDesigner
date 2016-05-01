@@ -1,12 +1,12 @@
 /**
- * Caso de uso
+ * Diagrama de Caso de uso
  *
  * @namespace
  */
 var UseCase = {};
 
 /**
- * Crea un nuevo Objeto de Caso de uso
+ * Simbolo de Caso de uso
  * 
  * @class
  * @memberof UseCase
@@ -79,5 +79,19 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 			ctx.fillText(lines[i], xm - textW/2, y+3);
 			y = y + Loira.Config.fontSize + 3;
 		}
+	},
+    /**
+     * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
+     *
+     * @param xm Delta x de la relacion
+     * @param ym Delta y de la relacion
+     * @returns {number} Distancia borde del simbolo
+     */
+	obtainBorderPos : function(xm, ym){
+		var a = this.width/2;
+		var b = this.height/2;
+		var ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
+
+		return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
 	}
 });

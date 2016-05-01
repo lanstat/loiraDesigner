@@ -13,9 +13,9 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
 		var start = this.start,
 			end = this.end;
 
-		this.x1 = start.x + start.width/2,
-		this.y1 = start.y + start.height/2,
-		this.x2 = end.x + end.width/2,
+		this.x1 = start.x + start.width/2;
+		this.y1 = start.y + start.height/2;
+		this.x2 = end.x + end.width/2;
 		this.y2 = end.y + end.height/2;
 
 		ctx.beginPath();
@@ -39,11 +39,6 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
 		return (Math.abs(r - t) <= 5);
 	},
 	drawSelected: function(ctx){
-		var x = this.x-2,
-		    y = this.y-2,
-		    w = this.width,
-		    h = this.height;
-
 		ctx.beginPath();
 
 		ctx.fillStyle= Loira.Config.selected.color;
@@ -89,7 +84,17 @@ Common.Symbol = Loira.util.createClass(Loira.Object, {
 				canvas.fall('mouse:down', listener);
 			}
 		);
-	}
+	},
+    /**
+     * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
+     *
+     * @param xm Delta x de la relacion
+     * @param ym Delta y de la relacion
+     * @returns {number} Distancia borde del simbolo
+     */
+	obtainBorderPos : function(xm, ym){
+        return 0;
+    }
 }, true);
 
 /**
