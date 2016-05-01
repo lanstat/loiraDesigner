@@ -73,12 +73,27 @@ Loira.Canvas.prototype = {
 			_this.emit('relation:added', new relationEvent({selected:item, type: 'relationadded'}));
 		});	
 	},
+    /**
+     * Elimina los objetos enviados como argumentos
+     */
 	remove: function(){
 		var args = [].splice.call(arguments, 0);
 		var _items = this.items;
 		var _this = this;
 		args.forEach(function(item){
 			var index = _items.indexOf(item);
+
+            var rels = [];
+
+            for (var i = 0; i < _this.relations.length; i++){
+                if (_this.relations[i].start._uid != item._uid &&
+                    _this.relations[i].end._uid != item._uid){
+                    rels.push(_this.relations[i]);
+                }
+            }
+
+            _this.relations = rels;
+
 			_items = _items.splice(index, 1);
 			/**
 			 * Evento que encapsula la eliminacion de un objeto del canvas
@@ -90,9 +105,11 @@ Loira.Canvas.prototype = {
 			 */
 			_this.emit('object:removed', new objectEvent({selected:item, type: 'objectremoved'}));
 		});
+
+        this._selected = null;
+        this.renderAll();
 	},
 	on: function(evt, callback){
-		var objCallback;
 		if(typeof evt === 'string'){
 			if (typeof this._callbacks[evt] === 'undefined'){
 				this._callbacks[evt] = [];
@@ -122,7 +139,14 @@ Loira.Canvas.prototype = {
 	},
 	bind: function(){
 		var _this = this;
-		var _callbacks = this._callbacks;
+        this._canvas.onkeydown = function(evt){
+            var code = evt.keyCode;
+            if (code == 46){
+                if (_this._selected){
+                    _this.remove(_this._selected);
+                }
+            }
+        };
 		this._canvas.onmousedown = function(evt){
 			var real = _this._getMouse(evt);
 			_this._tmp.pointer =  real;

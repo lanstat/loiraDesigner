@@ -1,0 +1,3 @@
+Loira.Editor = {
+    
+};
