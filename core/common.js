@@ -156,14 +156,15 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
 
         this.img = document.createElement('IMG');
         this.img.src = '../assets/actor.png';
-        this.img.onload = function() {}
+        this.img.onload = function() {};
 
-        this.name = options.name? options.name: 'Actor1';
+        this.text = options.text? options.text: 'Actor1';
         this.width = 30;
 		this.height = 62;
+        this.type = 'actor';
 	},
 	_render: function(ctx) {
-        var textW = ctx.measureText(this.name).width;
+        var textW = ctx.measureText(this.text).width;
         var _x = this.x + 15 - textW/2;
 
         ctx.fillStyle = Loira.Config.background;
@@ -175,6 +176,6 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
         ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
         ctx.fillStyle = "#000000";
 
-        ctx.fillText(this.name, _x, this.y+80);
+        ctx.fillText(this.text, _x, this.y+80);
 	}
 });

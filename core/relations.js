@@ -14,6 +14,7 @@ var Relation = {};
 Relation.Association = Loira.util.createClass(Common.Relation, {
 	initialize : function(options){
 		this.callSuper('initialize', options);
+        this.type = 'association';
 	}
 });
 
@@ -28,6 +29,7 @@ Relation.DirectAssociation = Loira.util.createClass(Common.Relation, {
 	initialize : function(options){
         options['icon'] = 'spear.png';
 		this.callSuper('initialize', options);
+        this.type = 'direct_association';
 	}
 });
 
@@ -41,6 +43,7 @@ Relation.Generalization = Loira.util.createClass(Common.Relation, {
     initialize : function(options){
         options['icon'] = 'spear2.png';
         this.callSuper('initialize', options);
+        this.type = 'generalization';
     }
 });
 
@@ -55,6 +58,7 @@ Relation.Realization = Loira.util.createClass(Common.Relation, {
         options['icon'] = 'spear2.png';
         options['isDashed'] = true;
         this.callSuper('initialize', options);
+        this.type = 'realization';
     }
 });
 
@@ -69,5 +73,6 @@ Relation.Dependency = Loira.util.createClass(Common.Relation, {
         options['icon'] = 'spear1.png';
         options['isDashed'] = true;
         this.callSuper('initialize', options);
+        this.type = 'dependency';
     }
 });

@@ -17,6 +17,7 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 		this.width = 100;
 		this.height = 70;
 		this.text = options.text;
+        this.type = 'use_case';
 	},
 	_render: function(ctx) {
 		ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
@@ -108,6 +109,7 @@ UseCase.Extends = Loira.util.createClass(Common.Relation, {
         options['isDashed'] = true;
 
         this.callSuper('initialize', options);
+        this.type = 'extends';
     }
 });
 /**
@@ -123,5 +125,6 @@ UseCase.Include = Loira.util.createClass(Common.Relation, {
         options['isDashed'] = true;
 
         this.callSuper('initialize', options);
+        this.type = 'include';
     }
 });

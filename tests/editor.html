@@ -1,0 +1,99 @@
+<html>
+<head>
+    <script type="text/javascript" src="../LoiraDesigner.js"></script>
+    <style>
+        #buttons{
+            padding: 5px;
+        }
+        #buttons p{
+            margin: 5px;
+        }
+        #buttons button{
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div style="width: 100%">
+    <div id="buttons" style="width: 10%; float: left">
+        <p>Comunes</p>
+        <button id="actor">Actor</button>
+        <button id="assoc">Asociacion</button>
+        <button id="direct">Directa</button>
+        <button id="gener">Generalizacion</button>
+        <button id="reali">Realizacion</button>
+        <button id="depen">Dependencia</button>
+        <p>Caso de uso</p>
+        <button id="usec">Caso de uso</button>
+        <button id="incl">Inclucion</button>
+        <button id="exten">Extension</button>
+    </div>
+    <div style="width: 85%; float: left">
+        <canvas style="background-color:#aacccc" id="_canvas" width="800" height="500" tabindex="999"></canvas>
+    </div>
+</div>
+<script>
+    window.onload = function(){
+        var canvas = new Loira.Canvas('_canvas');
+
+        var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});
+        var case2 = new UseCase.UseCase({x:500,y:200, text:'Iniciar sesion'});
+        var actor = new Common.Actor({x:20, y:10, text:'Administrador'});
+
+        canvas.on('relation:selected', function(event){
+            console.log(event.selected)
+        });
+
+        canvas.add(case1, case2, actor);
+
+        var rel = new Relation.Dependency({start:case1, end:case2});
+
+        canvas.addRelation(rel);
+
+        //Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma
+        //solo es en la primera renderizacion
+        setTimeout(function(){
+            canvas.renderAll();
+        }, 50);
+
+        document.getElementById('usec').addEventListener('click', function(){
+            canvas.add(new UseCase.UseCase({x:140,y:140, text:' '}));
+            canvas.renderAll();
+        });
+        document.getElementById('actor').addEventListener('click', function(){
+            canvas.add(new Common.Actor({x:150, y:150, text:' '}));
+            canvas.renderAll();
+        });
+        document.getElementById('assoc').addEventListener('click', function(){
+            canvas.nextRelation = new Relation.Association({});
+        });
+        document.getElementById('direct').addEventListener('click', function(){
+            canvas.nextRelation = new Relation.DirectAssociation({});
+        });
+        document.getElementById('gener').addEventListener('click', function(){
+            canvas.nextRelation = new Relation.Generalization({});
+        });
+        document.getElementById('reali').addEventListener('click', function(){
+            canvas.nextRelation = new Relation.Realization({});
+        });
+        document.getElementById('depen').addEventListener('click', function(){
+            canvas.nextRelation = new Relation.Dependency({});
+        });
+        document.getElementById('incl').addEventListener('click', function(){
+            canvas.nextRelation = new UseCase.Include({});
+        });
+        document.getElementById('exten').addEventListener('click', function(){
+            canvas.nextRelation = new UseCase.Extends({});
+        });
+
+        canvas.on('object:added', function(evt){
+            if(evt.selected.type == 'use_case'){
+                evt.selected.text = prompt("Por favor ingrese un texto", "caso de uso");
+            }else if(evt.selected.type == 'actor'){
+                evt.selected.text = prompt("Por favor ingrese un nombre", "actor");
+            }
+        });
+    }
+</script>
+</body>
+</html>

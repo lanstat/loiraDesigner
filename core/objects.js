@@ -18,6 +18,7 @@ Loira.Object = {
 		this.height = 'height' in options ? options.height : 0;
 		this._buttons = [];
 		this._canvas = null;
+        this.type = '';
 		this._prepare(options);
 	},
 	callSuper: function(funcName){
