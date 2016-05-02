@@ -241,6 +241,7 @@ Loira.Canvas.prototype = {
 							_this._selected.width += real.x - _this._tmp.pointer.x;
 							break;
 					}
+                    _this.renderAll();
 				}else if(_this._isDragged){
 					_this._selected.x += real.x - _this._tmp.pointer.x;
 					_this._selected.y += real.y - _this._tmp.pointer.y;
@@ -253,8 +254,8 @@ Loira.Canvas.prototype = {
 					 * @property {string} type - Tipo de evento
 					 */
 					_this.emit('object:dragging', new objectEvent({selected:_this._selected, type: 'objectdragging'}));
+					_this.renderAll();
 				}
-				_this.renderAll();
 				_this._tmp.pointer = real;
 			}
 		}

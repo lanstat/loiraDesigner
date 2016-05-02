@@ -44,5 +44,19 @@ Loira.util = {
 	        text += possible.charAt(Math.floor(Math.random() * possible.length));
 
 	    return text;
+	},
+	intersectPointLine : function (line1, line2){
+		var den = ((line1.y2 - line1.y1) * (line2.x2 - line2.x1)) - ((line1.x2 - line1.x1) * (line2.y2 - line2.y1));
+		if (den == 0) {
+			return 0;
+		}
+		var a = line2.y1 - line1.y1;
+		var b = line2.x1 - line1.x1;
+		var numerator1 = ((line1.x2 - line1.x1) * a) - ((line1.y2 - line1.y1) * b);
+		var numerator2 = ((line2.x2 - line2.x1) * a) - ((line2.y2 - line2.y1) * b);
+		a = numerator1 / den;
+		b = numerator2 / den;
+
+		return {x: line2.x1 + (a * (line2.x2 - line2.x1)), y: line2.y1 + (a * (line2.y2 - line2.y1))};
 	}
-}
+};

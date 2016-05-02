@@ -47,7 +47,7 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
                 angle += Math.PI;
             }
 
-            var h = end.obtainBorderPos(xm, ym);
+            var h = end.obtainBorderPos(xm, ym, {x1:this.x1, y1: this.y1, x2:this.x2, y2:this.y2}, ctx);
 
             ctx.translate(this.x2, this.y2);
             ctx.rotate(angle);
@@ -160,7 +160,7 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
 
         this.text = options.text? options.text: 'Actor1';
         this.width = 30;
-		this.height = 62;
+		this.height = 85;
         this.type = 'actor';
 	},
 	_render: function(ctx) {
@@ -168,14 +168,48 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
         var _x = this.x + 15 - textW/2;
 
         ctx.fillStyle = Loira.Config.background;
-        ctx.fillRect(this.x-5, this.y-5, this.width+10, this.height+20);
-        ctx.fillRect(_x, this.y+70, textW, 10);
+        ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fillStyle = "#000000";
 
-        ctx.drawImage(this.img, this.x, this.y);
+        ctx.drawImage(this.img, this.x + this.width/2 - 15, this.y);
         ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
         ctx.fillStyle = "#000000";
 
-        ctx.fillText(this.text, _x, this.y+80);
-	}
+        ctx.fillText(this.text, this.x, this.y+80);
+	},
+    /**
+     * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
+     *
+     * @param xm Delta x de la relacion
+     * @param ym Delta y de la relacion
+     * @param points Puntos que forman la linea de relacion
+     * @returns {number} Distancia borde del simbolo
+     */
+    obtainBorderPos : function(xm, ym, points, ctx){
+        ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+        var textW = ctx.measureText(this.text).width;
+        if (textW > this.width){
+            this.x = this.x + this.width/2 - textW/2;
+            this.width = textW;
+        }
+
+        var angle = Math.atan(ym / xm);
+
+        if (xm<0){
+            angle += Math.PI;
+        }
+
+        var result = {x:100, y:this.y-10};
+
+        if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)){
+            result = Loira.util.intersectPointLine(points, {x1:this.x, y1:-100, x2:this.x, y2:100});
+        }else{
+            result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
+        }
+        
+        var x = result.x - (this.x + this.width/2);
+        var y = result.y - (this.y + this.height/2);
+
+        return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+    }
 });
