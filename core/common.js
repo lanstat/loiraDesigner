@@ -165,7 +165,10 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
 	},
 	_render: function(ctx) {
         var textW = ctx.measureText(this.text).width;
-        var _x = this.x + 15 - textW/2;
+        if (textW > this.width){
+            this.x = this.x + this.width/2 - textW/2;
+            this.width = textW;
+        }
 
         ctx.fillStyle = Loira.Config.background;
         ctx.fillRect(this.x, this.y, this.width, this.height);
