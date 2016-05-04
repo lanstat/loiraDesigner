@@ -7,6 +7,7 @@ var classes = [
 	"../core/objects.js",
 	"../core/common.js",
     "../core/relations.js",
+	"../plugins/xmiparser.js",
 	"../plugins/usecase.js",
 	"../config.js"
 ];

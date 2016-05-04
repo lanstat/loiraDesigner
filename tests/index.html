@@ -8,13 +8,14 @@
 		<div>
             <canvas style="background-color:#aacccc" id="_canvas" width="800" height="500" tabindex="999"></canvas>
         </div>
+        <div id="dropZone" style="width: 100px; height: 100px; background: #FF0FF0;"></div>
         <button id="addObject">Agregar</button>
         <button id="setDirectRelation">Relacion directa</button>
 		<script>
 			window.onload = function(){
 				var canvas = new Loira.Canvas('_canvas');
 
-				var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});
+				/*var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});
 				var case2 = new UseCase.UseCase({x:500,y:200, text:'Iniciar sesion'});
                 var actor = new Common.Actor({x:20, y:10, name:'Administrador'});
                 
@@ -26,7 +27,7 @@
 
                 var rel = new Relation.Dependency({start:case1, end:case2});
 
-                canvas.addRelation(rel);
+                canvas.addRelation(new Relation.Dependency({start:case1, end:case2}));*/
 
                 //Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma
                 //solo es en la primera renderizacion
@@ -41,6 +42,30 @@
                 });
                 document.getElementById('setDirectRelation').addEventListener('click', function(){
                     canvas.nextRelation = new Relation.DirectAssociation();
+                });
+
+                var dropZone = document.getElementById('dropZone');
+
+                dropZone.addEventListener('dragover', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                });
+
+                // Get file data on drop
+                dropZone.addEventListener('drop', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    var files = e.dataTransfer.files; // Array of all files
+                    for (var i=0, file; file=files[i]; i++) {
+                        if (file.type.match(/text.xml/)) {
+                            var reader = new FileReader();
+                            reader.onload = function(e2) {
+                                Loira.XmiParser.load(e2.target.result);
+                            }
+                            reader.readAsText(file);
+                        }
+                    }
                 });
 			}
 		</script>
