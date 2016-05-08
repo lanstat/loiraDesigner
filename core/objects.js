@@ -1,11 +1,18 @@
 /**
- * Clase base para la creacion de nueos objetos dibujables
+ * Clase base para la creacion de nuevos objetos dibujables
  * 
  * @class Object
  */
 Loira.Object = {
 	_canvas: null,
 	_buttons: [],
+	/**
+	 * Inicializa los valores de la clase
+     *
+     * @memberof Object#
+     * @private
+	 * @param { object } options Conjunto de valores iniciales
+     */
 	initialize: function(options){
 		this._uid = Loira.util.createRandom(8);
 
@@ -21,6 +28,15 @@ Loira.Object = {
         this.type = '';
 		this._prepare(options);
 	},
+    /**
+     * Ejecuta un metodo de la clase padre
+     *
+     * @memberof Object#
+     * @private
+     * @param { string } funcName Nombre de la funcion a ejecutar
+     * @param {Array.<Object>} args Parametros de la funcion
+     * @returns {*} Valores de retorno de la funcion ejecutada
+     */
 	callSuper: function(funcName){
 		var args = [].splice.call(arguments, 0);
 		funcName = '$'+ funcName;
@@ -29,11 +45,42 @@ Loira.Object = {
 
 		return this[funcName].apply(this, args);
 	},
+    /**
+     * Renderiza el objeto
+     *
+     * @memberof Object#
+     * @param ctx Context 2d de canvas
+     * @private
+     * @abstract
+     */
 	_render: function(ctx){},
+    /**
+     * Funcion de preparacion de valores inciales (Es una funcion de ayuda sera borrada cuando se consiga solucionar
+     * el problema con la recursion de funcion heradadas)
+     *
+     * @memberof Object#
+     * @param { object } options Datos con valores inciales
+     * @private
+     * @abstract
+     */
 	_prepare: function(options){},
+    /**
+     * Verifica si el punto dado se encuentra dentro de los limites del objeto
+     *
+     * @memberof Object#
+     * @param x Posicion x del punto
+     * @param y Posicion y del punto
+     * @returns {boolean}
+     */
 	checkCollision: function(x, y){
 		return (x>= this.x && x<= this.x + this.width && y>=this.y && y<=this.y + this.height);
 	},
+    /**
+     * Agrega iconos laterales del objeto con sus respectivos escuchadores
+     *
+     * @memberof Object#
+     * @param {Array.<Object>} args Iconos laterales a agregar
+     */
 	on: function(){
 		var args = [].splice.call(arguments, 0);
 		for (var i = 0; i < args.length; i++) {
@@ -41,17 +88,34 @@ Loira.Object = {
 			var img = document.createElement('IMG');
 			img.src = button.icon;
 			this._buttons.push({'icon':img, 'click': button.click});
-		};
+		}
 	},
+    /**
+     * Renderiza los iconos de los botones laterales
+     *
+     * @memberof Object#
+     * @param ctx Contexto 2d del canvas
+     * @private
+     */
 	_renderButtons: function(ctx){
 		var x = this.x + this.width + 10;
 		var y = this.y;
-		if(this._buttons.length>0)
+		if(this._buttons.length>0){
 			this._buttons.forEach(function (item){
 				ctx.drawImage(item.icon, x, y);
 				y += item.icon.height + 4;
 			});
+        }
 	},
+    /**
+     * Ejecuta el escuchador de algun icono lateral encontrado por el punto
+     *
+     * @memberof Object#
+     * @param x Posicion x del punto
+     * @param y Posicion y del punto
+     * @returns {boolean}
+     * @private
+     */
 	callCustomButton: function(x, y){
 		var _x = this.x + this.width + 10;
 		var _y = this.y;
@@ -62,9 +126,16 @@ Loira.Object = {
 				return true;
 			} 
 			_y += item.icon.height + 4;
-		};
+		}
 		return false;
 	},
+    /**
+     * Dibuja el cuadro punteado que contornea al objeto
+     *
+     * @memberof Object#
+     * @param { Canvas2D } ctx Contexto 2d del canvas
+     * @private
+     */
 	drawSelected: function(ctx){
 		var x = this.x-2,
 		    y = this.y-2,
@@ -118,4 +189,4 @@ Loira.Object = {
 			return 'mr';
 		return false;
 	}
-}
+};
