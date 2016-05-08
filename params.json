@@ -1,6 +1,0 @@
-{
-  "name": "Loira Designer",
-  "tagline": "",
-  "body": "[Loira Designer](http://lanstat.net) - Libreria de diseño de diagramas UML\r\n=========\r\nLoira Designer es una libreria que permite diseñar diagramas UML directamente en un browser, con la ayuda de canvas\r\ny HTML5.\r\n\r\nNavegadores soportados\r\n--------------------------------------\r\n\r\n- Chrome\r\n- Firefox\r\n- IE (Todavia en pruebas)\r\n\r\nImplementacion\r\n--------------------------------------\r\n\r\n```javascript\r\nvar canvas = new Loira.Canvas('_canvas');\r\n\r\nvar case1 = new UseCase.UseCase({x:200,y:200, text:'Registrar usuario'});\r\nvar case2 = new UseCase.UseCase({x:300,y:300, text:'Iniciar sesion'});\r\nvar actor = new Common.Actor({x:20, y:10, name:'Administrador'});\r\n\r\ncanvas.on('relation:selected', function(event){\r\n   console.log(event.selected) \r\n});\r\n\r\ncanvas.add(case1, case2, actor);\r\n\r\n//Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma\r\n//solo es en la primera renderizacion\r\nsetTimeout(function(){\r\n    canvas.renderAll();\r\n}, 50);\r\n```\r\n\r\n",
-  "note": "Don't delete this file! It's used internally to help with page regeneration."
-}

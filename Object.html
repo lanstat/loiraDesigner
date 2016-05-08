@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Documentation Index</title>
+	<title>Documentation Class: Object</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -91,55 +91,552 @@
 		<div id="main">
 			
 
+	<h1 class="page-title">Class: Object</h1>
+<section>
+
+<header>
+    
+        <h2>
+        Object
+        </h2>
+        
+    
+</header>
+
+
+<article>
+    <div class="container-overview">
+    
+        
+<hr>
+<dt>
+    <h4 class="name" id="Object"><span class="type-signature"></span>new Object()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Clase base para la creacion de nuevos objetos dibujables
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
 	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
 	
 
 
 
+	
+
+	
+
+	
+
+	
+</dl>
 
 
+    
 
+    
 
+    
 
+    
+
+    
+
+    
+
+    
+</dd>
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="_render"><span class="type-signature">&lt;abstract, private> </span>_render(ctx)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Renderiza el objeto
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ctx</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
 
 
 
 	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="callSuper"><span class="type-signature">&lt;private> </span>callSuper(funcName, args)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Ejecuta un metodo de la clase padre
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>funcName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Nombre de la funcion a ejecutar</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;<a href="Object.html">Object</a>></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Parametros de la funcion</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
 	
 
 
 
+	
+
+	
+
+	
+
+	
+</dl>
 
 
-    <section class="readme-section">
-        <article><h1><a href="http://lanstat.net">Loira Designer</a> - Libreria de diseño de diagramas UML</h1><p>Loira Designer es una libreria que permite diseñar diagramas UML directamente en un browser, con la ayuda de canvas
-y HTML5.</p>
-<h2>Navegadores soportados</h2><ul>
-<li>Chrome</li>
-<li>Firefox</li>
-<li>IE (Todavia en pruebas)</li>
-</ul>
-<h2>Implementacion</h2><pre class="prettyprint source lang-javascript"><code>var canvas = new Loira.Canvas('_canvas');
+    
 
-var case1 = new UseCase.UseCase({x:200,y:200, text:'Registrar usuario'});
-var case2 = new UseCase.UseCase({x:300,y:300, text:'Iniciar sesion'});
-var actor = new Common.Actor({x:20, y:10, name:'Administrador'});
+    
 
-canvas.on('relation:selected', function(event){
-   console.log(event.selected) 
-});
+    
 
-canvas.add(case1, case2, actor);
+    
 
-//Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma
-//solo es en la primera renderizacion
-setTimeout(function(){
-    canvas.renderAll();
-}, 50);</code></pre></article>
-    </section>
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Valores de retorno de la funcion ejecutada
+</div>
 
 
 
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">*</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="initialize"><span class="type-signature">&lt;private> </span>initialize(options)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Inicializa los valores de la clase
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Conjunto de valores iniciales</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 
