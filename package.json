@@ -1,0 +1,28 @@
+{
+  "name": "loira-designer",
+  "version": "0.1.1",
+  "description": "Libreria de diseño de diagramas UML",
+  "main": "LoiraDesigner.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lanstat/loiraDesigner.git"
+  },
+  "keywords": [
+    "uml",
+    "loira",
+    "designer",
+    "js"
+  ],
+  "author": "Juan Javier Garson Aparicio <lanstat@gmail.com> (http://www.lanstat.net)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/lanstat/loiraDesigner/issues"
+  },
+  "homepage": "https://github.com/lanstat/loiraDesigner#readme"
+}
