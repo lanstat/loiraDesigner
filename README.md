@@ -3,6 +3,8 @@
 Loira Designer es una libreria que permite diseñar diagramas UML directamente en un browser, con la ayuda de canvas
 y HTML5.
 
+[![Build Status](https://travis-ci.org/lanstat/loiraDesigner.svg?branch=master)](https://travis-ci.org/lanstat/loiraDesigner)
+
 Navegadores soportados
 --------------------------------------
 
