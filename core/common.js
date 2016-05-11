@@ -1,6 +1,27 @@
+/**
+ * Conjunto de simbolos y objetos comunes
+ *
+ * @namespace
+ * @license Apache-2.0
+ */
 var Common = {};
 
+/**
+ * Clase base para la creacion de relaciones
+ *
+ * @memberof Common
+ * @class Relation
+ * @augments Loira.Object
+ */
 Common.Relation = Loira.util.createClass(Loira.Object, {
+    /**
+     * Funcion de preparacion de valores inciales (Es una funcion de ayuda sera borrada cuando se consiga solucionar
+     * el problema con la recursion de funcion heradadas)
+     *
+     * @memberof Common.Relation#
+     * @protected
+     * @param { object } options Datos con valores inciales
+     */
 	_prepare : function(options){
         if(typeof options === 'undefined'){
 			options = {};
@@ -13,10 +34,17 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
         this.img = null;
         if (options.icon){
             this.img = document.createElement('IMG');
-            this.img.src = '../assets/' + options.icon;
+            this.img.src = Loira.Config.assetsPath + options.icon;
             this.img.onload = function() {}
         }
 	},
+    /**
+     * Renderiza el objeto
+     *
+     * @memberof Common.Relation#
+     * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+     * @protected
+     */
 	_render: function(ctx) {
         var start = this.start,
             end = this.end;
@@ -73,19 +101,40 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
         }
 	},
     /**
+     * Actualiza los objeto de origen y objetivo de la relacion
+     *
+     * @memberof Common.Relation#
+     * @param { Object } start Objeto origen
+     * @param { Object } end Objeto objetivo
      * @chainable
+     * @returns {Common.Relation}
      */
     update: function(start, end){
       this.start = start;
       this.end = end;
       return this;
     },
+    /**
+     * Verifica si el punto dado se encuentra dentro de los limites del objeto
+     *
+     * @memberof Common.Relation#
+     * @param x Posicion x del punto
+     * @param y Posicion y del punto
+     * @returns {boolean}
+     */
 	checkCollision: function(x, y){
 		var r = Math.abs(y - this.y1);
 		var t = Math.abs((this.y2 - this.y1) / (this.x2 - this.x1) * (x - this.x1));
 
 		return (Math.abs(r - t) <= 5);
 	},
+    /**
+     * Dibuja el cuadro punteado que contornea al objeto
+     *
+     * @memberof Common.Relation#
+     * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
+     * @private
+     */
 	drawSelected: function(ctx){
 		ctx.beginPath();
 
@@ -95,27 +144,43 @@ Common.Relation = Loira.util.createClass(Loira.Object, {
 		ctx.fillRect(this.x2-4, this.y2-4, 8, 8);
 
 		ctx.strokeStyle= '#000000';
-	},
+	}
 }, true);
 
 /**
  * Clase base para los simbolos uml
- * 
+ *
+ * @memberof Common
  * @class Symbol
+ * @augments Loira.Object
  */
 Common.Symbol = Loira.util.createClass(Loira.Object, {
+    /**
+     * Funcion de preparacion de valores inciales (Es una funcion de ayuda sera borrada cuando se consiga solucionar
+     * el problema con la recursion de funcion heradadas)
+     *
+     * @memberof Common.Symbol#
+     * @protected
+     * @param { object } options Datos con valores inciales
+     */
 	_prepare : function(options){
 		var link = this._linkSymbol;
 		this.on({
-			icon: '../assets/arrow.png', 
+			icon: Loira.Config.assetsPath + 'arrow.png',
 			click: link
 		},{
-			icon: '../assets/clean.png', 
+			icon: Loira.Config.assetsPath + 'clean.png',
 			click: function(){
 				console.log('clean');
 			}
 		});
 	},
+    /**
+     * Evento que se ejecuta cuando se realiza una relacion entre simbolos
+     *
+     * @memberof Common.Symbol#
+     * @private
+     */
 	_linkSymbol : function(){
 		var _this = this;
 		var  listener = this._canvas.on(
@@ -128,7 +193,7 @@ Common.Symbol = Loira.util.createClass(Loira.Object, {
                         canvas.nextRelation = new Relation.Association();
 						break;
 					}
-				};
+				}
 				canvas.fall('mouse:down', listener);
 			}
 		);
@@ -136,6 +201,7 @@ Common.Symbol = Loira.util.createClass(Loira.Object, {
     /**
      * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
      *
+     * @memberof Common.Symbol#
      * @param xm Delta x de la relacion
      * @param ym Delta y de la relacion
      * @returns {number} Distancia borde del simbolo
@@ -146,16 +212,25 @@ Common.Symbol = Loira.util.createClass(Loira.Object, {
 }, true);
 
 /**
- * Clase base para los simbolos uml
+ * Clase para generacion de actores uml
  *
- * @class Symbol
+ * @memberof Common
+ * @class Actor
+ * @augments Common.Symbol
  */
 Common.Actor = Loira.util.createClass(Common.Symbol, {
+    /**
+     * Inicializa los valores de la clase
+     *
+     * @memberof Common.Actor#
+     * @protected
+     * @param { object } options Conjunto de valores iniciales
+     */
     initialize : function(options){
 		this.callSuper('initialize', options);
 
         this.img = document.createElement('IMG');
-        this.img.src = '../assets/actor.png';
+        this.img.src = Loira.Config.assetsPath + 'actor.png';
         this.img.onload = function() {};
 
         this.text = options.text? options.text: 'Actor1';
@@ -163,6 +238,13 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
 		this.height = 85;
         this.type = 'actor';
 	},
+    /**
+     * Renderiza el objeto
+     *
+     * @memberof Common.Actor#
+     * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+     * @protected
+     */
 	_render: function(ctx) {
         var textW = ctx.measureText(this.text).width;
         if (textW > this.width){
@@ -183,6 +265,7 @@ Common.Actor = Loira.util.createClass(Common.Symbol, {
     /**
      * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
      *
+     * @memberof Common.Symbol#
      * @param xm Delta x de la relacion
      * @param ym Delta y de la relacion
      * @param points Puntos que forman la linea de relacion

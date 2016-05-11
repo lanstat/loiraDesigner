@@ -1,16 +1,18 @@
 /**
  * Clase base para la creacion de nuevos objetos dibujables
- * 
+ *
+ * @memberof Loira
  * @class Object
  */
-Loira.Object = {
+Loira.Object =
+{
 	_canvas: null,
 	_buttons: [],
 	/**
 	 * Inicializa los valores de la clase
      *
-     * @memberof Object#
-     * @private
+     * @memberof Loira.Object#
+     * @protected
 	 * @param { object } options Conjunto de valores iniciales
      */
 	initialize: function(options){
@@ -31,8 +33,8 @@ Loira.Object = {
     /**
      * Ejecuta un metodo de la clase padre
      *
-     * @memberof Object#
-     * @private
+     * @memberof Loira.Object#
+     * @protected
      * @param { string } funcName Nombre de la funcion a ejecutar
      * @param {Array.<Object>} args Parametros de la funcion
      * @returns {*} Valores de retorno de la funcion ejecutada
@@ -48,9 +50,9 @@ Loira.Object = {
     /**
      * Renderiza el objeto
      *
-     * @memberof Object#
-     * @param ctx Context 2d de canvas
-     * @private
+     * @memberof Loira.Object#
+     * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+     * @protected
      * @abstract
      */
 	_render: function(ctx){},
@@ -58,16 +60,16 @@ Loira.Object = {
      * Funcion de preparacion de valores inciales (Es una funcion de ayuda sera borrada cuando se consiga solucionar
      * el problema con la recursion de funcion heradadas)
      *
-     * @memberof Object#
+     * @memberof Loira.Object#
      * @param { object } options Datos con valores inciales
-     * @private
+     * @protected
      * @abstract
      */
 	_prepare: function(options){},
     /**
      * Verifica si el punto dado se encuentra dentro de los limites del objeto
      *
-     * @memberof Object#
+     * @memberof Loira.Object#
      * @param x Posicion x del punto
      * @param y Posicion y del punto
      * @returns {boolean}
@@ -78,7 +80,7 @@ Loira.Object = {
     /**
      * Agrega iconos laterales del objeto con sus respectivos escuchadores
      *
-     * @memberof Object#
+     * @memberof Loira.Object#
      * @param {Array.<Object>} args Iconos laterales a agregar
      */
 	on: function(){
@@ -93,8 +95,8 @@ Loira.Object = {
     /**
      * Renderiza los iconos de los botones laterales
      *
-     * @memberof Object#
-     * @param ctx Contexto 2d del canvas
+     * @memberof Loira.Object#
+     * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
      * @private
      */
 	_renderButtons: function(ctx){
@@ -110,7 +112,7 @@ Loira.Object = {
     /**
      * Ejecuta el escuchador de algun icono lateral encontrado por el punto
      *
-     * @memberof Object#
+     * @memberof Loira.Object#
      * @param x Posicion x del punto
      * @param y Posicion y del punto
      * @returns {boolean}
@@ -132,8 +134,8 @@ Loira.Object = {
     /**
      * Dibuja el cuadro punteado que contornea al objeto
      *
-     * @memberof Object#
-     * @param { Canvas2D } ctx Contexto 2d del canvas
+     * @memberof Loira.Object#
+     * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
      * @private
      */
 	drawSelected: function(ctx){
@@ -164,6 +166,14 @@ Loira.Object = {
 		ctx.strokeStyle= '#000000';
 		ctx.fillStyle= '#000000';
 	},
+	/**
+	 * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
+     *
+     * @memberof Loira.Object#
+	 * @param pX Posicion x del punto
+	 * @param pY Posicion y del punto
+	 * @returns {*}
+     */
 	getSelectedCorner: function(pX, pY){
 		var x = this.x-2,
 		    y = this.y-2,

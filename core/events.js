@@ -2,8 +2,8 @@
  * Objeto que encapsula un evento sobre el canvas
  * 
  * @type object
- * @property {integer} x - Posicion x del puntero
- * @property {integer} y - Posicion y del puntero
+ * @property {int} x - Posicion x del puntero
+ * @property {int} y - Posicion y del puntero
  * @property {string} type - Tipo de evento
  */
 var mouseEvent = function(options){

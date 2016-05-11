@@ -4,5 +4,6 @@ Loira.Config = {
 	selected : {
 		color: '#339966'
 	},
-	background : '#aacccc'
-}
+	background : '#aacccc',
+	assetsPath : '../assets/'
+};

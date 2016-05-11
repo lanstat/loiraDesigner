@@ -10,6 +10,7 @@ var UseCase = {};
  * 
  * @class
  * @memberof UseCase
+ * @augments Common.Symbol
  */
 UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 	initialize : function(options){
@@ -101,6 +102,7 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
  *
  * @class
  * @memberof UseCase
+ * @augments Common.Relation
  */
 UseCase.Extends = Loira.util.createClass(Common.Relation, {
     initialize : function(options){
@@ -117,6 +119,7 @@ UseCase.Extends = Loira.util.createClass(Common.Relation, {
  *
  * @class
  * @memberof UseCase
+ * @augments Common.Relation
  */
 UseCase.Include = Loira.util.createClass(Common.Relation, {
     initialize : function(options){

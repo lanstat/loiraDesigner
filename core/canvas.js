@@ -1,48 +1,50 @@
 /**
  * Plugin para diseño de diagramas UML
- * @module Loira
+ * @namespace
  * @license Apache-2.0
  */
 var Loira = {};
 
  /**
   * Crea una nueva instancia de canvas
-  * 
-  * @constructs Canvas
-  * @param {string} canvasId Identificador del elemento canvas
+  *
+  * @memberof Loira
+  * @class Canvas
+  * @param {object} canvas Identificador o elemento canvas
   */
-Loira.Canvas = function(canvasId){
-    this.initialize(canvasId);
-}
+Loira.Canvas = function(canvas){
+    this.initialize(canvas);
+};
 
 Loira.Canvas.prototype = 
-/** @lends Canvas.prototype */
+/** @lends Loira.Canvas.prototype */
 {
     /**
-     * @memberof Canvas#
      * @property {Object}  _selected - Objeto que se encuentra seleccionado
      */
     _selected: null,
     /**
-     * @memberof Canvas#
      * @property {Boolean}  _isDragged - Determina si el usuario esta arrastrando un objeto
      */
     _isDragged: false,
     /**
-     * @memberof Canvas#
      * @property {Object}  _tmp - Almacena datos temporales
      */
     _tmp: {},
     /**
      * Inicializa las variables y calcula los bordes del canvas
-     * @memberof Canvas#
-     * @param {string} canvasId Identificador del elemento canvas
+     * @param {object} canvas Identificador o elemento canvas
      * @private
      */
-    initialize: function(canvasId){
+    initialize: function(canvas){
         this.relations = [];
         this.items = [];
-        this._canvas = document.getElementById(canvasId);
+        if (typeof canvas === 'string'){
+            this._canvas = document.getElementById(canvas);
+        }else{
+            this._canvas = canvas;
+        }
+
         this._callbacks = {};
 
         /**
@@ -61,7 +63,7 @@ Loira.Canvas.prototype =
     },
     /**
      * Dibuja las relaciones y simbolos dentro del canvas
-     * @memberof Canvas#
+     * @memberof Loira.Canvas#
      */
     renderAll: function(){
         var ctx = this._canvas.getContext('2d');
@@ -81,7 +83,6 @@ Loira.Canvas.prototype =
     },
     /**
      * Agrega uno o varios elementos al listado de simbolos
-     * @memberof Canvas#
      * @param {Array.<Object>} args Elementos a agregar
      * @fires object:added
      */
@@ -105,7 +106,6 @@ Loira.Canvas.prototype =
     },
     /**
      * Agrega una o varias relaciones al listado de relaciones
-     * @memberof Canvas#
      * @param {Array.<Object>} args Elementos a agregar
      * @fires relation:added
      */
@@ -117,9 +117,9 @@ Loira.Canvas.prototype =
             item._canvas = _this;
             _relations.push(item);
             /**
-             * Evento que encapsula la agregacion de una relacion del canvas
+             * Evento que encapsula la adicion de una relacion del canvas
              * 
-             * @event object:added
+             * @event relation:added
              * @type { object }
              * @property {object} selected - Objeto seleccionado
              * @property {string} type - Tipo de evento
@@ -129,7 +129,7 @@ Loira.Canvas.prototype =
     },
     /**
      * Elimina los objetos enviados como argumentos
-     * @memberof Canvas#
+     *
      * @fires object:removed
      */
     remove: function(){
@@ -168,7 +168,6 @@ Loira.Canvas.prototype =
 	/**
 	 * Agrega un nuevo escuchador al evento especifico
 	 *
-	 * @memberof Canvas#
 	 * @param { string } evt Nombre del evento que se desea capturar
 	 * @param { function } callback Funcion que escucha el evento
 	 * @returns { function } Funcion que escucha el evento
@@ -192,7 +191,6 @@ Loira.Canvas.prototype =
     /**
      * Desregistra un evento
      *
-     * @memberof Canvas#
      * @param {string} evt - Nombre del evento
      * @param {function} callback - Funcion a desregistrar
      */
@@ -205,7 +203,6 @@ Loira.Canvas.prototype =
     /**
      * Enlaza los eventos del canvas al canvas propio del diseñador
      *
-     * @memberof Canvas#
      * @private
      */
     _bind: function(){
@@ -226,11 +223,11 @@ Loira.Canvas.prototype =
              * 
              * @event mouse:down
              * @type { object }
-             * @property {integer} x - Posicion x del puntero
-             * @property {integer} y - Posicion y del puntero
+             * @property {int} x - Posicion x del puntero
+             * @property {int} y - Posicion y del puntero
              * @property {string} type - Tipo de evento
              */
-            _this.emit('mouse:down', new mouseEvent({x:real.x, y:real.y, type: 'mousedown'}));
+            _this._emit('mouse:down', new mouseEvent({x:real.x, y:real.y, type: 'mousedown'}));
 
             if (_this._selected){
                 _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y)
@@ -361,7 +358,6 @@ Loira.Canvas.prototype =
     /**
      * Emite un evento generado
      *
-     * @memberof Canvas#
      * @param evt Nombre del evento a emitir
      * @param options Valores enviados junto al evento
      * @private
@@ -377,7 +373,6 @@ Loira.Canvas.prototype =
     /**
      * Obtiene la posicion del mouse relativa al canvas
      *
-     * @memberof Canvas#
      * @param evt Evento de mouse
      * @returns {{x: number, y: number}} Posicion del mouse relativa
      * @private
