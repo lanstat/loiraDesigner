@@ -1,15 +1,15 @@
 //Esta clase es solo para uso en desarrollo 
 
 var classes = [
-	"../core/canvas.js",
-	"../core/events.js",
-	"../core/utils.js",
-	"../core/objects.js",
-	"../core/common.js",
-    "../core/relations.js",
-	"../plugins/xmiparser.js",
-	"../plugins/usecase.js",
-	"../config.js"
+	"../../core/canvas.js",
+	"../../core/events.js",
+	"../../core/utils.js",
+	"../../core/objects.js",
+	"../../core/common.js",
+    "../../core/relations.js",
+	"../../plugins/xmiparser.js",
+	"../../plugins/usecase.js",
+	"../../config.js"
 ];
 
 

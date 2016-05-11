@@ -210,7 +210,7 @@ Loira.Canvas.prototype =
         this._canvas.onkeydown = function(evt){
             var code = evt.keyCode;
             if (code == 46){
-                if (_this._selected){
+                if (_this._selected && !_this._selected.start ){
                     _this.remove(_this._selected);
                 }
             }
