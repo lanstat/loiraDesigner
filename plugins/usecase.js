@@ -59,7 +59,7 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 			}else{
 				buff = buff + ' ' + words[i];
 			}
-		};
+		}
 		lines.push(buff);
 
 		return lines;
@@ -74,7 +74,7 @@ UseCase.UseCase = Loira.util.createClass(Common.Symbol, {
 			lines = [tmp];
 		}
 
-		var y = ym + 3 - ((6*lines.length + 3*lines.length) / 2);
+		y = ym + 3 - ((6*lines.length + 3*lines.length) / 2);
 
 		for (var i = 0; i < lines.length; i++){
 			var textW = ctx.measureText(lines[i]).width;

@@ -2,7 +2,7 @@
  * Plugin para diseño de diagramas UML
  * @namespace
  * @license Apache-2.0
- */
+ */ 
 var Loira = {};
 
 Loira.Canvas = (function(){
@@ -154,8 +154,8 @@ Loira.Canvas = (function(){
                 var rels = [];
 
                 for (var i = 0; i < _this.relations.length; i++){
-                    if (_this.relations[i].start._uid != item._uid &&
-                        _this.relations[i].end._uid != item._uid){
+                    if (_this.relations[i].start._uid !== item._uid &&
+                        _this.relations[i].end._uid !== item._uid){
                         rels.push(_this.relations[i]);
                     }
                 }
@@ -225,7 +225,7 @@ Loira.Canvas = (function(){
             var _this = this;
             this._canvas.onkeydown = function(evt){
                 var code = evt.keyCode;
-                if (code == 46){
+                if (code === 46){
                     if (_this._selected && !_this._selected.start ){
                         _this.remove(_this._selected);
                     }
@@ -247,9 +247,7 @@ Loira.Canvas = (function(){
 
                 if (_this._selected){
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
-                    if(_this._tmp.transform){
-                        return;
-                    }else if(_this._selected.callCustomButton(real.x, real.y)){
+                    if(_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)){
                         return;
                     }else{
                         _this._selected = null;

@@ -45,6 +45,16 @@ gulp.task('js', function() {
         .pipe(gulp.dest(paths.build+'/js'));
 });
 
+gulp.task('eslint', function() {
+    console.log('Realizando verificaciones de calidad de codigo');
+
+    return gulp
+        .src(paths.js)
+        .pipe(plug.eslint())
+        .pipe(plug.eslint.format())
+        .pipe(plug.eslint.failAfterError());
+});
+
 gulp.task('copyAssets', function(){
     console.log('Copiando assets');
     return gulp

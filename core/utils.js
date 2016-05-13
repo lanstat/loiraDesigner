@@ -69,7 +69,7 @@ Loira.util = (function(){
          */
         intersectPointLine : function (line1, line2){
             var den = ((line1.y2 - line1.y1) * (line2.x2 - line2.x1)) - ((line1.x2 - line1.x1) * (line2.y2 - line2.y1));
-            if (den == 0) {
+            if (den === 0) {
                 return false;
             }
             var a = line2.y1 - line1.y1;
