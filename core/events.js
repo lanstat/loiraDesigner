@@ -22,7 +22,7 @@ var mouseEvent = function(options){
 var objectEvent = function(options){
 	this.selected = 'selected' in options? options.selected : null;
 	this.type = 'type' in options? options.type : '';
-}
+};
 
 /**
  * Objeto que encapsula un evento sobre una relacion
@@ -34,4 +34,4 @@ var objectEvent = function(options){
 var relationEvent = function(options){
 	this.selected = 'selected' in options? options.selected : null;
 	this.type = 'type' in options? options.type : '';
-}
+};

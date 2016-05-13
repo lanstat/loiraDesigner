@@ -13,19 +13,21 @@ var Relation = {};
  * @memberof Relation
  * @augments Common.Relation
  */
-Relation.Association = Loira.util.createClass(Common.Relation, {
-    /**
-     * Inicializa los valores de la clase
-     *
-     * @memberof Relation.Association#
-     * @private
-     * @param { object } options Conjunto de valores iniciales
-     */
-	initialize : function(options){
-		this.callSuper('initialize', options);
-        this.type = 'association';
-	}
-});
+Relation.Association = (function(){
+    return Loira.util.createClass(Common.Relation, {
+        /**
+         * Inicializa los valores de la clase
+         *
+         * @memberof Relation.Association#
+         * @private
+         * @param { object } options Conjunto de valores iniciales
+         */
+        initialize : function(options){
+            this.callSuper('initialize', options);
+            this.type = 'association';
+        }
+    });
+}());
 
 
 /**
@@ -35,20 +37,22 @@ Relation.Association = Loira.util.createClass(Common.Relation, {
  * @memberof Relation
  * @augments Common.Relation
  */
-Relation.DirectAssociation = Loira.util.createClass(Common.Relation, {
-    /**
-     * Inicializa los valores de la clase
-     *
-     * @memberof Relation.DirectAssociation#
-     * @private
-     * @param { object } options Conjunto de valores iniciales
-     */
-	initialize : function(options){
-        options['icon'] = 'spear.png';
-		this.callSuper('initialize', options);
-        this.type = 'direct_association';
-	}
-});
+Relation.DirectAssociation = (function(){
+    return Loira.util.createClass(Common.Relation, {
+        /**
+         * Inicializa los valores de la clase
+         *
+         * @memberof Relation.DirectAssociation#
+         * @private
+         * @param { object } options Conjunto de valores iniciales
+         */
+        initialize : function(options){
+            options['icon'] = 'spear.png';
+            this.callSuper('initialize', options);
+            this.type = 'direct_association';
+        }
+    });
+}());
 
 /**
  * Contiene las funciones para relacion de generalizacion
@@ -57,20 +61,22 @@ Relation.DirectAssociation = Loira.util.createClass(Common.Relation, {
  * @memberof Relation
  * @augments Common.Relation
  */
-Relation.Generalization = Loira.util.createClass(Common.Relation, {
-    /**
-     * Inicializa los valores de la clase
-     *
-     * @memberof Relation.Generalization#
-     * @private
-     * @param { object } options Conjunto de valores iniciales
-     */
-    initialize : function(options){
-        options['icon'] = 'spear2.png';
-        this.callSuper('initialize', options);
-        this.type = 'generalization';
-    }
-});
+Relation.Generalization = (function(){
+    return Loira.util.createClass(Common.Relation, {
+        /**
+         * Inicializa los valores de la clase
+         *
+         * @memberof Relation.Generalization#
+         * @private
+         * @param { object } options Conjunto de valores iniciales
+         */
+        initialize : function(options){
+            options['icon'] = 'spear2.png';
+            this.callSuper('initialize', options);
+            this.type = 'generalization';
+        }
+    });
+}());
 
 /**
  * Contiene las funciones para relacion de realizacion
@@ -79,21 +85,23 @@ Relation.Generalization = Loira.util.createClass(Common.Relation, {
  * @memberof Relation
  * @augments Common.Relation
  */
-Relation.Realization = Loira.util.createClass(Common.Relation, {
-    /**
-     * Inicializa los valores de la clase
-     *
-     * @memberof Relation.Realization#
-     * @private
-     * @param { object } options Conjunto de valores iniciales
-     */
-    initialize : function(options){
-        options['icon'] = 'spear2.png';
-        options['isDashed'] = true;
-        this.callSuper('initialize', options);
-        this.type = 'realization';
-    }
-});
+Relation.Realization = (function(){
+    return Loira.util.createClass(Common.Relation, {
+        /**
+         * Inicializa los valores de la clase
+         *
+         * @memberof Relation.Realization#
+         * @private
+         * @param { object } options Conjunto de valores iniciales
+         */
+        initialize : function(options){
+            options['icon'] = 'spear2.png';
+            options['isDashed'] = true;
+            this.callSuper('initialize', options);
+            this.type = 'realization';
+        }
+    });
+}());
 
 /**
  * Contiene las funciones para relacion de dependencia
@@ -102,18 +110,20 @@ Relation.Realization = Loira.util.createClass(Common.Relation, {
  * @memberof Relation
  * @augments Common.Relation
  */
-Relation.Dependency = Loira.util.createClass(Common.Relation, {
-    /**
-     * Inicializa los valores de la clase
-     *
-     * @memberof Relation.Dependency#
-     * @private
-     * @param { object } options Conjunto de valores iniciales
-     */
-    initialize : function(options){
-        options['icon'] = 'spear1.png';
-        options['isDashed'] = true;
-        this.callSuper('initialize', options);
-        this.type = 'dependency';
-    }
-});
+Relation.Dependency = (function(){
+    return Loira.util.createClass(Common.Relation, {
+        /**
+         * Inicializa los valores de la clase
+         *
+         * @memberof Relation.Dependency#
+         * @private
+         * @param { object } options Conjunto de valores iniciales
+         */
+        initialize : function(options){
+            options['icon'] = 'spear1.png';
+            options['isDashed'] = true;
+            this.callSuper('initialize', options);
+            this.type = 'dependency';
+        }
+    });
+}());
