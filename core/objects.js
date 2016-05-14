@@ -30,6 +30,7 @@ Loira.Object = (function(){
             this._buttons = [];
             this._canvas = null;
             this.type = '';
+            this.baseType = '';
             this._prepare(options);
         },
         /**

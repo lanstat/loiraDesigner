@@ -40,6 +40,7 @@ Common.Relation = (function(){
                 this.img.src = Loira.Config.assetsPath + options.icon;
                 this.img.onload = function() {}
             }
+            this.baseType = 'relation';
         },
         /**
          * Renderiza el objeto
@@ -50,7 +51,8 @@ Common.Relation = (function(){
          */
         _render: function(ctx) {
             var start = this.start,
-                end = this.end;
+                end = this.end,
+                tmp;
 
             this.x1 = start.x + start.width/2;
             this.y1 = start.y + start.height/2;
@@ -72,32 +74,30 @@ Common.Relation = (function(){
             ctx.setLineDash([]);
 
             if (this.img){
-                var angle = Math.atan(ym / xm);
+                tmp = Math.atan(ym / xm);
 
                 if (xm<0){
-                    angle += Math.PI;
+                    tmp += Math.PI;
                 }
 
-                var h = end.obtainBorderPos(xm, ym, {x1:this.x1, y1: this.y1, x2:this.x2, y2:this.y2}, ctx);
-
                 ctx.translate(this.x2, this.y2);
-                ctx.rotate(angle);
-                ctx.drawImage(this.img, -(15+h), -7);
-                ctx.rotate(-angle);
+                ctx.rotate(tmp);
+                ctx.drawImage(this.img, -(15+end.obtainBorderPos(xm, ym, {x1:this.x1, y1: this.y1, x2:this.x2, y2:this.y2}, ctx)), -7);
+                ctx.rotate(-tmp);
                 ctx.translate(-this.x2, -this.y2);
             }
 
             if (this.text || this.text.length > 0){
                 ctx.font = "10px " + Loira.Config.fontType;
 
-                var textW = ctx.measureText(this.text).width;
+                tmp = ctx.measureText(this.text).width;
 
                 ctx.fillStyle = Loira.Config.background;
-                ctx.fillRect(this.x1 + xm/2 - textW/2, this.y1 + ym/2 - 15, textW, 12);
+                ctx.fillRect(this.x1 + xm/2 - tmp/2, this.y1 + ym/2 - 15, tmp, 12);
                 ctx.fillStyle = "#000000";
 
                 ctx.fillText(this.text,
-                    this.x1 + xm/2 - textW/2,
+                    this.x1 + xm/2 - tmp/2,
                     this.y1 + ym/2 - 5);
 
                 ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
@@ -181,6 +181,7 @@ Common.Symbol = (function(){
                     console.log('clean');
                 }
             });
+            this.baseType = 'symbol';
         },
         /**
          * Evento que se ejecuta cuando se realiza una relacion entre simbolos
@@ -196,7 +197,7 @@ Common.Symbol = (function(){
                     for (var i = 0; i < canvas.items.length; i++) {
                         var item = canvas.items[i];
                         if(item.checkCollision(evt.x, evt.y)){
-                            canvas.addRelation(canvas.nextRelation.update(_this, item));
+                            canvas.add(canvas.nextRelation.update(_this, item));
                             canvas.nextRelation = new Relation.Association();
                             break;
                         }
@@ -290,6 +291,77 @@ Common.Actor = (function(){
                 this.x = this.x + this.width/2 - textW/2;
                 this.width = textW;
             }
+
+            var angle = Math.atan(ym / xm);
+
+            if (xm<0){
+                angle += Math.PI;
+            }
+
+            var result = {x:100, y:this.y-10};
+
+            if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)){
+                result = Loira.util.intersectPointLine(points, {x1:this.x, y1:-100, x2:this.x, y2:100});
+            }else{
+                result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
+            }
+
+            var x = result.x - (this.x + this.width/2);
+            var y = result.y - (this.y + this.height/2);
+
+            return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+        }
+    });
+}());
+
+Common.Container = (function(){
+    'use strict';
+
+    return Loira.util.createClass(Common.Symbol, {
+        /**
+         * Inicializa los valores de la clase
+         *
+         * @memberof Common.Actor#
+         * @protected
+         * @param { object } options Conjunto de valores iniciales
+         */
+        initialize : function(options){
+            this.callSuper('initialize', options);
+
+            this.text = options.text? options.text: 'Contenedor';
+            this.width = 100;
+            this.height = 100;
+            this.type = 'container';
+            this.baseType = 'container';
+        },
+        /**
+         * Renderiza el objeto
+         *
+         * @memberof Common.Actor#
+         * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+         * @protected
+         */
+        _render: function(ctx) {
+            var textW = ctx.measureText(this.text).width;
+            if (textW > this.width){
+                this.x = this.x + this.width/2 - textW/2;
+                this.width = textW;
+            }
+
+            ctx.rect(this.x, this.y, this.width, this.height);
+
+            ctx.fillText('<< ' + this.text + ' >>', this.x, this.y+10);
+        },
+        /**
+         * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
+         *
+         * @memberof Common.Symbol#
+         * @param { int } xm Delta x de la relacion
+         * @param { int } ym Delta y de la relacion
+         * @param points Puntos que forman la linea de relacion
+         * @returns {number} Distancia borde del simbolo
+         */
+        obtainBorderPos : function(xm, ym, points){
 
             var angle = Math.atan(ym / xm);
 

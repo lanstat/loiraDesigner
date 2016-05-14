@@ -1,6 +1,7 @@
 var gulp = require('gulp');
 var plug = require('gulp-load-plugins')();
 var karma = require('karma').server;
+var path = require('path');
 
 var paths = {
     js: [
@@ -82,7 +83,7 @@ gulp.task('test', ['build'], function(done) {
  */
 function startTests(singleRun, done) {
     karma.start({
-        configFile: __dirname + '/karma.conf.js',
+        configFile: path.join(__dirname, '/karma.conf.js'),
         singleRun: !!singleRun
     }, karmaCompleted);
 

@@ -2,7 +2,7 @@
  * Plugin para diseño de diagramas UML
  * @namespace
  * @license Apache-2.0
- */ 
+ */
 var Loira = {};
 
 Loira.Canvas = (function(){
@@ -35,6 +35,10 @@ Loira.Canvas = (function(){
          */
         _tmp: {},
         /**
+         * @property { array } items - Listado de objetos que posee el canvas
+         */
+        items: [],
+        /**
          * Inicializa las variables y calcula los bordes del canvas
          *
          * @memberof Loira.Canvas#
@@ -42,8 +46,6 @@ Loira.Canvas = (function(){
          * @private
          */
         initialize: function(canvas){
-            this.relations = [];
-            this.items = [];
             if (typeof canvas === 'string'){
                 this._canvas = document.getElementById(canvas);
             }else{
@@ -51,6 +53,7 @@ Loira.Canvas = (function(){
             }
 
             this._callbacks = {};
+            this.items = [];
 
             /**
              * @property {Relation}  nextRelation - Relacion que se usara cuando se agregue una nueva union
@@ -76,9 +79,6 @@ Loira.Canvas = (function(){
 
             ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
-            for (i = 0; i < this.relations.length; i++) {
-                this.relations[i]._render(ctx);
-            }
             for (i = 0; i < this.items.length; i++) {
                 this.items[i]._render(ctx);
             }
@@ -89,53 +89,56 @@ Loira.Canvas = (function(){
             }
         },
         /**
-         * Agrega uno o varios elementos al listado de simbolos
+         * Agrega uno o varios elementos al listado de objetos
          *
          * @memberof Loira.Canvas#
          * @param {Array.<Object>} args Elementos a agregar
          * @fires object:added
+         * @todo verificar que las relaciones se agreguen al final sino ocurre error de indices
          */
         add: function(args){
             args = [].splice.call(arguments, 0);
             var _items = this.items;
             var _this = this;
-            args.forEach(function(item){
+            args.forEach(function(item) {
                 item._canvas = _this;
-                _items.push(item);
-                /**
-                 * Evento que encapsula la agregacion de un objeto del canvas
-                 *
-                 * @event object:added
-                 * @type { object }
-                 * @property {object} selected - Objeto seleccionado
-                 * @property {string} type - Tipo de evento
-                 */
-                _this._emit('object:added', new objectEvent({selected:item, type: 'objectadded'}));
-            });
-        },
-        /**
-         * Agrega una o varias relaciones al listado de relaciones
-         *
-         * @memberof Loira.Canvas#
-         * @param {Array.<Object>} args Elementos a agregar
-         * @fires relation:added
-         */
-        addRelation: function(args){
-            args = [].splice.call(arguments, 0);
-            var _relations = this.relations;
-            var _this = this;
-            args.forEach(function(item){
-                item._canvas = _this;
-                _relations.push(item);
-                /**
-                 * Evento que encapsula la adicion de una relacion del canvas
-                 *
-                 * @event relation:added
-                 * @type { object }
-                 * @property {object} selected - Objeto seleccionado
-                 * @property {string} type - Tipo de evento
-                 */
-                _this._emit('relation:added', new relationEvent({selected:item, type: 'relationadded'}));
+                if (item.baseType === 'symbol') {
+                    _items.push(item);
+                    /**
+                     * Evento que encapsula la agregacion de un objeto del canvas
+                     *
+                     * @event object:added
+                     * @type { object }
+                     * @property {object} selected - Objeto seleccionado
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this._emit('object:added', new objectEvent({selected: item, type: 'objectadded'}));
+                } else if (item.baseType === 'container') {
+                    _items.splice(0, 0, item);
+                    /**
+                     * Evento que encapsula la agregacion de un objeto del canvas
+                     *
+                     * @event object:added
+                     * @type { object }
+                     * @property {object} selected - Objeto seleccionado
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this._emit('container:added', new objectEvent({selected: item, type: 'objectadded'}));
+                } else {
+                    var index = _items.indexOf(item.start);
+                    index = index < _items.indexOf(item.end) ? index : _items.indexOf(item.end);
+
+                    _items.splice(index, 0, item);
+                    /**
+                     * Evento que encapsula la adicion de una relacion del canvas
+                     *
+                     * @event relation:added
+                     * @type { object }
+                     * @property {object} selected - Objeto seleccionado
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this._emit('relation:added', new relationEvent({selected:item, type: 'relationadded'}));
+                }
             });
         },
         /**
@@ -149,20 +152,25 @@ Loira.Canvas = (function(){
             var _items = this.items;
             var _this = this;
             args.forEach(function(item){
-                var index = _items.indexOf(item);
+                var toDelete = [];
 
-                var rels = [];
+                toDelete.push(_items.indexOf(item));
 
-                for (var i = 0; i < _this.relations.length; i++){
-                    if (_this.relations[i].start._uid !== item._uid &&
-                        _this.relations[i].end._uid !== item._uid){
-                        rels.push(_this.relations[i]);
+                for (var i = 0; i < _items.length; i++){
+                    if (_items[i].baseType === 'relation'){
+                        if (_items[i].start._uid === item._uid ||
+                            _items[i].end._uid === item._uid){
+                            toDelete.push(i);
+                        }
                     }
                 }
 
-                _this.relations = rels;
+                toDelete.sort();
 
-                _items = _items.splice(index, 1);
+                for (i = toDelete.length - 1; i >= 0; i--){
+                    _items.splice(toDelete[i], 1);
+                }
+
                 /**
                  * Evento que encapsula la eliminacion de un objeto del canvas
                  *
@@ -226,7 +234,7 @@ Loira.Canvas = (function(){
             this._canvas.onkeydown = function(evt){
                 var code = evt.keyCode;
                 if (code === 46){
-                    if (_this._selected && !_this._selected.start ){
+                    if (_this._selected && _this._selected.baseType !== 'relation' ){
                         _this.remove(_this._selected);
                     }
                 }
@@ -258,24 +266,20 @@ Loira.Canvas = (function(){
                 for (var i = _this.items.length - 1; i >= 0; i--) {
                     item = _this.items[i];
                     if(item.checkCollision(real.x, real.y)){
-                        /**
-                         * Evento que encapsula un click sobre un objeto
-                         *
-                         * @event object:select
-                         * @type { object }
-                         * @property {object} selected - Objeto seleccionado
-                         * @property {string} type - Tipo de evento
-                         */
-                        _this._emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
-                        _this._selected = item;
-                        _this._isDragged = true;
-                        break;
-                    }
-                }
-                if (!_this._selected){
-                    for (i = _this.relations.length - 1; i >= 0; i--) {
-                        item = _this.relations[i];
-                        if(item.checkCollision(real.x, real.y)){
+                        if (item.baseType !== 'relation'){
+                            /**
+                             * Evento que encapsula un click sobre un objeto
+                             *
+                             * @event object:select
+                             * @type { object }
+                             * @property {object} selected - Objeto seleccionado
+                             * @property {string} type - Tipo de evento
+                             */
+                            _this._emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
+                            _this._selected = item;
+                            _this._isDragged = true;
+                            break;
+                        } else if (!_this._selected){
                             /**
                              * Evento que encapsula un click sobre una relacion
                              *
