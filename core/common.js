@@ -384,3 +384,81 @@ Common.Container = (function(){
         }
     });
 }());
+
+/**
+ * Clase para generacion de tablas de datos
+ *
+ * @memberof Common
+ * @class Table
+ * @augments Common.Symbol
+ */
+Common.Table = (function(){
+    'use strict';
+
+    return Loira.util.createClass(Common.Symbol, {
+        /**
+         * Inicializa los valores de la clase
+         *
+         * @memberof Common.Table#
+         * @protected
+         * @param { object } options Conjunto de valores iniciales
+         */
+        initialize : function(options){
+            this.callSuper('initialize', options);
+
+            this.text = options.text? options.text: 'Tabla';
+            this.width = 100;
+            this.height = 100;
+            this.type = 'table';
+            this.baseType = 'table';
+        },
+        /**
+         * Renderiza el objeto
+         *
+         * @memberof Common.Table#
+         * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+         * @protected
+         */
+        _render: function(ctx) {
+            var textW = ctx.measureText(this.text).width;
+            if (textW > this.width){
+                this.x = this.x + this.width/2 - textW/2;
+                this.width = textW;
+            }
+
+            ctx.rect(this.x, this.y, this.width, this.height);
+
+            ctx.fillText('<< ' + this.text + ' >>', this.x, this.y+10);
+        },
+        /**
+         * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
+         *
+         * @memberof Common.Table#
+         * @param { int } xm Delta x de la relacion
+         * @param { int } ym Delta y de la relacion
+         * @param points Puntos que forman la linea de relacion
+         * @returns {number} Distancia borde del simbolo
+         */
+        obtainBorderPos : function(xm, ym, points){
+
+            var angle = Math.atan(ym / xm);
+
+            if (xm<0){
+                angle += Math.PI;
+            }
+
+            var result = {x:100, y:this.y-10};
+
+            if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)){
+                result = Loira.util.intersectPointLine(points, {x1:this.x, y1:-100, x2:this.x, y2:100});
+            }else{
+                result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
+            }
+
+            var x = result.x - (this.x + this.width/2);
+            var y = result.y - (this.y + this.height/2);
+
+            return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+        }
+    });
+}());

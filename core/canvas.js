@@ -39,6 +39,10 @@ Loira.Canvas = (function(){
          */
         items: [],
         /**
+         * @property {Object} _canvas - Puntero al objeto de renderizado de lienzo
+         */
+        _canvas: null,
+        /**
          * Inicializa las variables y calcula los bordes del canvas
          *
          * @memberof Loira.Canvas#
@@ -231,7 +235,7 @@ Loira.Canvas = (function(){
          */
         _bind: function(){
             var _this = this;
-            this._canvas.onkeydown = function(evt){
+            _this._canvas.onkeydown = function(evt){
                 var code = evt.keyCode;
                 if (code === 46){
                     if (_this._selected && _this._selected.baseType !== 'relation' ){
@@ -239,7 +243,7 @@ Loira.Canvas = (function(){
                     }
                 }
             };
-            this._canvas.onmousedown = function(evt){
+            _this._canvas.onmousedown = function(evt){
                 var real = _this._getMouse(evt);
                 _this._tmp.pointer =  real;
                 /**
@@ -298,7 +302,7 @@ Loira.Canvas = (function(){
 
                 _this.renderAll();
             };
-            this._canvas.onmousemove = function(evt){
+            _this._canvas.onmousemove = function(evt){
                 var real = _this._getMouse(evt);
                 /**
                  * Evento que encapsula el movimiento del mouse sobre el canvas
@@ -333,6 +337,8 @@ Loira.Canvas = (function(){
                     }else if(_this._isDragged){
                         _this._selected.x += real.x - _this._tmp.pointer.x;
                         _this._selected.y += real.y - _this._tmp.pointer.y;
+
+                        _this._canvas.style.cursor = 'move';
                         /**
                          * Evento que encapsula el arrastre de un objeto
                          *
@@ -347,8 +353,9 @@ Loira.Canvas = (function(){
                     _this._tmp.pointer = real;
                 }
             };
-            this._canvas.onmouseup = function(evt){
+            _this._canvas.onmouseup = function(evt){
                 var real = _this._getMouse(evt);
+                _this._canvas.style.cursor = 'default';
 
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
