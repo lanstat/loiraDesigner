@@ -13,6 +13,7 @@ var paths = {
         './core/relations.js',
         './plugins/xmiparser.js',
         './plugins/usecase.js',
+        './plugins/box.js',
         './config.js'
     ],
     build: './build'

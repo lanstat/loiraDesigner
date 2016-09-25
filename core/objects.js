@@ -8,6 +8,9 @@ Loira.Object = (function(){
     'use strict';
 
     return {
+        /**
+         * @property {Loira.Canvas}  _canvas - Canvas al que pertenece el objeto
+         */
         _canvas: null,
         _buttons: [],
         /**
@@ -201,6 +204,24 @@ Loira.Object = (function(){
             if(x+w <= pX && x+w+8 >= pX && y+mh <= pY && y+mh+8 >= pY)
                 return 'mr';
             return false;
+        },
+        /**
+         * Muestra el objeto si el canvas se encuentra en un contenedor
+         */
+        show: function(){
+            var _this = this;
+            if (this._canvas && this._canvas._canvasContainer){
+                var pX = (_this.x + _this.width/2) - this._canvas._canvasContainer.element.offsetWidth / 2;
+                var pY = (_this.y + _this.height/2) - this._canvas._canvasContainer.element.offsetHeight / 2;
+
+                pX = pX >= 0? pX : 0;
+                pY = pY >= 0? pY : 0;
+
+                this._canvas._canvasContainer.x = pX;
+                this._canvas._canvasContainer.y = pY;
+                this._canvas._canvasContainer.element.scrollTop = pY;
+                this._canvas._canvasContainer.element.scrollLeft = pX;
+            }
         }
     };
 }());

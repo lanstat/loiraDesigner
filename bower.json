@@ -1,0 +1,33 @@
+{
+  "name": "loira-designer",
+  "description": "Diseñador de diagramas desde paginas web",
+  "main": [
+    "LoiraDesigner.js"
+  ],
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "uml",
+    "loira",
+    "designer",
+    "js",
+    "diagram"
+  ],
+  "authors": [
+    "Juan Javier Garson Aparicio <lanstat@gmail.com> (http://www.lanstat.net)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lanstat/loiraDesigner.git"
+  },
+  "homepage": "https://github.com/lanstat/loiraDesigner#readme",
+  "license": "Apache-2.0",
+  "ignore": [
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "private": false
+}

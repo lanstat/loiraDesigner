@@ -9,6 +9,7 @@ var classes = [
     "../../core/relations.js",
 	"../../plugins/xmiparser.js",
 	"../../plugins/usecase.js",
+	"../../plugins/box.js",
 	"../../config.js"
 ];
 
@@ -20,9 +21,9 @@ window.autoload = function(iter){
 	var script = document.createElement('script');
 	script.onload = function(){
 		window.autoload(iter+1);
-	}
+	};
 	script.src = classes[iter];
 	document.getElementsByTagName('head')[0].appendChild(script);
-}
+};
 
 autoload(0);

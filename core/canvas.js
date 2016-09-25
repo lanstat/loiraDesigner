@@ -1,5 +1,5 @@
 /**
- * Plugin para diseño de diagramas UML
+ * Plugin para diseño de diagramas
  * @namespace
  * @license Apache-2.0
  */
@@ -43,6 +43,14 @@ Loira.Canvas = (function(){
          */
         _canvas: null,
         /**
+         * @property {Image} _background - Imagen de fondo
+         */
+        _background: null,
+        /**
+         * @property {HtmlElement} _canvasContainer - Contenedor del canvas
+         */
+        _canvasContainer: null,
+        /**
          * Inicializa las variables y calcula los bordes del canvas
          *
          * @memberof Loira.Canvas#
@@ -79,11 +87,14 @@ Loira.Canvas = (function(){
          */
         renderAll: function(){
             var ctx = this._canvas.getContext('2d');
-            var i;
 
             ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
-            for (i = 0; i < this.items.length; i++) {
+            if (this._background){
+                ctx.drawImage(this._background, 0, 0);
+            }
+
+            for (var i = 0; i < this.items.length; i++) {
                 this.items[i]._render(ctx);
             }
 
@@ -101,34 +112,14 @@ Loira.Canvas = (function(){
          * @todo verificar que las relaciones se agreguen al final sino ocurre error de indices
          */
         add: function(args){
-            args = [].splice.call(arguments, 0);
+            if (!args.length){
+                args = [].splice.call(arguments, 0);
+            }
             var _items = this.items;
             var _this = this;
             args.forEach(function(item) {
                 item._canvas = _this;
-                if (item.baseType === 'symbol') {
-                    _items.push(item);
-                    /**
-                     * Evento que encapsula la agregacion de un objeto del canvas
-                     *
-                     * @event object:added
-                     * @type { object }
-                     * @property {object} selected - Objeto seleccionado
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this._emit('object:added', new objectEvent({selected: item, type: 'objectadded'}));
-                } else if (item.baseType === 'container') {
-                    _items.splice(0, 0, item);
-                    /**
-                     * Evento que encapsula la agregacion de un objeto del canvas
-                     *
-                     * @event object:added
-                     * @type { object }
-                     * @property {object} selected - Objeto seleccionado
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this._emit('container:added', new objectEvent({selected: item, type: 'objectadded'}));
-                } else {
+                if (item.baseType === 'relation') {
                     var index = _items.indexOf(item.start);
                     index = index < _items.indexOf(item.end) ? index : _items.indexOf(item.end);
 
@@ -142,9 +133,31 @@ Loira.Canvas = (function(){
                      * @property {string} type - Tipo de evento
                      */
                     _this._emit('relation:added', new relationEvent({selected:item, type: 'relationadded'}));
+                } else if (item.baseType === 'container') {
+                    _items.splice(0, 0, item);
+                    /**
+                     * Evento que encapsula la agregacion de un objeto del canvas
+                     *
+                     * @event object:added
+                     * @type { object }
+                     * @property {object} selected - Objeto seleccionado
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this._emit('container:added', new objectEvent({selected: item, type: 'objectadded'}));
+                } else {
+                    _items.push(item);
+                    /**
+                     * Evento que encapsula la agregacion de un objeto del canvas
+                     *
+                     * @event object:added
+                     * @type { object }
+                     * @property {object} selected - Objeto seleccionado
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this._emit('object:added', new objectEvent({selected: item, type: 'objectadded'}));
                 }
             });
-        },
+       },
         /**
          * Elimina los objetos enviados como argumentos
          *
@@ -158,12 +171,15 @@ Loira.Canvas = (function(){
             args.forEach(function(item){
                 var toDelete = [];
 
+                item._canvas = null;
                 toDelete.push(_items.indexOf(item));
 
                 for (var i = 0; i < _items.length; i++){
                     if (_items[i].baseType === 'relation'){
                         if (_items[i].start._uid === item._uid ||
                             _items[i].end._uid === item._uid){
+                            _items[i]._canvas = null;
+
                             toDelete.push(i);
                         }
                     }
@@ -187,7 +203,37 @@ Loira.Canvas = (function(){
             });
 
             this._selected = null;
-            this.renderAll();
+        },
+        /**
+         * Elimina todos los objetos del canvas
+         *
+         * @memberof Loira.Canvas#
+         */
+        removeAll: function(){
+            for (var i = 0; i < this.items.length; i++){
+                this.items[i]._canvas = null;
+            }
+            this.items = [];
+            this._selected = null;
+        },
+        /**
+         * Destruye el componente
+         *
+         * @memberof Loira.Canvas#
+         */
+        destroy: function(){
+            this._canvas.onmousemove = null;
+            this._canvas.onkeydown = null;
+            this._canvas.onmousedown = null;
+            this._canvas.onmouseup = null;
+
+            if (this._canvasContainer){
+                this._canvasContainer.element.removeEventListener('scroll', this._canvasContainer.listener);
+            }
+
+            this._canvasContainer = null;
+
+            this._canvas = null;
         },
         /**
          * Agrega un nuevo escuchador al evento especifico
@@ -208,10 +254,12 @@ Loira.Canvas = (function(){
                 return callback;
             }else if(typeof evt === 'object'){
                 for (name in evt){
-                    if (typeof this._callbacks[name] === 'undefined'){
-                        this._callbacks[name] = [];
+                    if (evt.hasOwnProperty(name)){
+                        if (typeof this._callbacks[name] === 'undefined'){
+                            this._callbacks[name] = [];
+                        }
+                        this._callbacks[name].push(evt[name]);
                     }
-                    this._callbacks[name].push(evt[name]);
                 }
             }
         },
@@ -419,7 +467,53 @@ Loira.Canvas = (function(){
             offsetX += border.borderLeft;
             offsetY += border.borderTop;
 
-            return {x: (evt.pageX - offsetX), y: (evt.pageY - offsetY)};
+            var response = {x: (evt.pageX - offsetX), y: (evt.pageY - offsetY)};
+
+            if (this._canvasContainer){
+                response.x += this._canvasContainer.x;
+                response.y += this._canvasContainer.y;
+            }
+
+            return response;
+        },
+        /**
+         * Define un fondo para
+         *
+         * @param image Imagen a colocar de fondo
+         * @param resizeToImage Determina si el canvas se redimensionara al tamaño de la imagen
+         */
+        setBackground: function(image, resizeToImage){
+            this._background = image;
+
+            if (resizeToImage){
+                this._canvas.width = image.width;
+                this._canvas.height = image.height;
+            }
+        },
+        /**
+         * Define un elemento que contendra al canvas y servira de scroll
+         *
+         * @param container Contenedor del canvas
+         */
+        setScrollContainer: function(container){
+            var _this = this;
+
+            if (_this._canvasContainer){
+                _this._canvasContainer.element.removeEventListener('scroll', _this._canvasContainer.listener);
+            }
+
+            _this._canvasContainer = {
+                x: 0,
+                y: 0,
+                element: document.getElementById(container),
+                listener: function(evt){
+                    _this._canvasContainer.y = _this._canvasContainer.element.scrollTop;
+                    _this._canvasContainer.x = _this._canvasContainer.element.scrollLeft;
+                    return true;
+                }
+            };
+
+            _this._canvasContainer.element.addEventListener('scroll', _this._canvasContainer.listener);
         }
     };
 

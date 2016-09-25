@@ -6,8 +6,10 @@
 - [x] Enlazar relaciones UML con artefactos
 - [x] Agregar texto dentro de un objeto
 - [x] Agregar soporte de multilineado de texto segun redimension de objeto
-- [ ] Manejo de relaciones y solapacion
-- [ ] Relaciones personalizadas
-
-## Siguiente
-- [ ] Conquistar el mundo...
+- [ ] Manejo de relaciones y solapamiento
+- [x] Relaciones personalizadas
+- [ ] Generalizar el diseño para tener un modulo solo de uml
+- [ ] Agregar soporte de multiples diagramas en un solo canvas
+- [ ] Agregar soporte para zoom
+- [ ] Cambiar el uso de viewport y que el plugin genere el canvas
+- [ ] Agregar diretiva para angular y plugin para jquery
