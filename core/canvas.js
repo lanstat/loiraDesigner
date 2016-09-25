@@ -117,6 +117,7 @@ Loira.Canvas = (function(){
             }
             var _items = this.items;
             var _this = this;
+
             args.forEach(function(item) {
                 item._canvas = _this;
                 if (item.baseType === 'relation') {
@@ -145,6 +146,16 @@ Loira.Canvas = (function(){
                      */
                     _this._emit('container:added', new objectEvent({selected: item, type: 'objectadded'}));
                 } else {
+                    if (item.centerObject){
+                        if (_this._canvasContainer){
+                            item.x = (_this._canvasContainer.w / 2) + _this._canvasContainer.x - (item.width / 2);
+                            item.y = (_this._canvasContainer.h / 2) + _this._canvasContainer.y - (item.height / 2);
+                        } else {
+                            item.x = _this._canvas.width / 2;
+                            item.y = _this._canvas.height / 2;
+                        }
+                    }
+
                     _items.push(item);
                     /**
                      * Evento que encapsula la agregacion de un objeto del canvas
@@ -505,6 +516,8 @@ Loira.Canvas = (function(){
             _this._canvasContainer = {
                 x: 0,
                 y: 0,
+                w: 0,
+                h: 0,
                 element: document.getElementById(container),
                 listener: function(evt){
                     _this._canvasContainer.y = _this._canvasContainer.element.scrollTop;
@@ -513,6 +526,8 @@ Loira.Canvas = (function(){
                 }
             };
 
+            _this._canvasContainer.w = _this._canvasContainer.element.clientWidth;
+            _this._canvasContainer.h = _this._canvasContainer.element.clientHeight;
             _this._canvasContainer.element.addEventListener('scroll', _this._canvasContainer.listener);
         }
     };

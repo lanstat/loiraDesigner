@@ -30,6 +30,7 @@ Loira.Object = (function(){
             this.y = 'y' in options ? options.y : 0;
             this.width = 'width' in options ? options.width : 0;
             this.height = 'height' in options ? options.height : 0;
+            this.centerObject = 'centerObject' in options ? options.centerObject : false;
             this._buttons = [];
             this._canvas = null;
             this.type = '';
