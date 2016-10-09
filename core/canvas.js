@@ -51,6 +51,10 @@ Loira.Canvas = (function(){
          */
         _canvasContainer: null,
         /**
+         * @property {String}  defaultRelation - Relacion que se usara por defecto cuando se agregue una nueva union
+         */
+        defaultRelation: null,
+        /**
          * Inicializa las variables y calcula los bordes del canvas
          *
          * @memberof Loira.Canvas#
@@ -67,10 +71,7 @@ Loira.Canvas = (function(){
             this._callbacks = {};
             this.items = [];
 
-            /**
-             * @property {Relation}  nextRelation - Relacion que se usara cuando se agregue una nueva union
-             */
-            this.nextRelation = new Relation.Association();
+            this.defaultRelation = 'Relation.Association';
             if (document.defaultView && document.defaultView.getComputedStyle) {
                 this._border = {
                     paddingLeft: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['paddingLeft'], 10)      || 0,

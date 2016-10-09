@@ -1,0 +1,70 @@
+<html>
+<head>
+    <script type="text/javascript" src="../../LoiraDesigner.js"></script>
+    <style>
+        #buttons{
+            padding: 5px;
+        }
+        #buttons p{
+            margin: 5px;
+        }
+        #buttons button{
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div style="width: 100%">
+    <div id="buttons" style="width: 10%; float: left">
+        <p>Comunes</p>
+        <button id="actor">Proceso</button>
+        <button id="assoc">Terminator</button>
+        <button id="direct">Data</button>
+        <button id="gener">Decision</button>
+    </div>
+    <div style="width: 85%; float: left">
+        <canvas style="background-color:#aacccc" id="_canvas" width="800" height="500" tabindex="999"></canvas>
+    </div>
+</div>
+<script>
+    window.onload = function(){
+        Loira.Config.assetsPath = '../../assets/';
+
+        var canvas = new Loira.Canvas('_canvas');
+        canvas.defaultRelation = 'Relation.DirectAssociation';
+
+        //Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma
+        //solo es en la primera renderizacion
+        setTimeout(function(){
+            canvas.renderAll();
+        }, 50);
+
+        document.getElementById('actor').addEventListener('click', function(){
+            canvas.add(new Workflow.Process({x:150, y:150, text:' '}));
+            canvas.renderAll();
+        });
+
+        document.getElementById('assoc').addEventListener('click', function(){
+            canvas.add(new Workflow.Terminator({x:150, y:150, text:' '}));
+            canvas.renderAll();
+        });
+        document.getElementById('direct').addEventListener('click', function(){
+            canvas.add(new Workflow.Data({x:150, y:150, text:' '}));
+            canvas.renderAll();
+        });
+        document.getElementById('gener').addEventListener('click', function(){
+            canvas.add(new Workflow.Decision({x:150, y:150, text:' '}));
+            canvas.renderAll();
+        });
+
+        /*canvas.on('object:added', function(evt){
+            if(evt.selected.type == 'use_case'){
+                evt.selected.text = prompt("Por favor ingrese un texto", "caso de uso");
+            }else if(evt.selected.type == 'actor'){
+                evt.selected.text = prompt("Por favor ingrese un nombre", "actor");
+            }
+        });*/
+    }
+</script>
+</body>
+</html>

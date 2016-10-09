@@ -196,9 +196,9 @@ Common.Symbol = (function(){
                     var canvas = _this._canvas;
                     for (var i = 0; i < canvas.items.length; i++) {
                         var item = canvas.items[i];
-                        if(item.checkCollision(evt.x, evt.y)){
-                            canvas.add(canvas.nextRelation.update(_this, item));
-                            canvas.nextRelation = new Relation.Association();
+                        if(item.checkCollision(evt.x, evt.y) && !_this.noEndPoint){
+                            var instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                            canvas.add(new instance({}).update(_this, item));
                             break;
                         }
                     }

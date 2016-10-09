@@ -80,6 +80,26 @@ Loira.util = (function(){
             b = numerator2 / den;
 
             return {x: line2.x1 + (a * (line2.x2 - line2.x1)), y: line2.y1 + (a * (line2.y2 - line2.y1))};
+        },
+        /**
+         * Instancia una clase tomando una cadena como base
+         *
+         * @param str Nombre de la clase, o espacio de nombre a instanciar
+         * @returns {Function}
+         */
+        stringToFunction: function(str) {
+            var arr = str.split(".");
+
+            var fn = (window || this);
+            for (var i = 0, len = arr.length; i < len; i++) {
+                fn = fn[arr[i]];
+            }
+
+            if (typeof fn !== "function") {
+                throw new Error("function not found");
+            }
+
+            return  fn;
         }
     };
 }());
