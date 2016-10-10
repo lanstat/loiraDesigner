@@ -77,12 +77,27 @@ Workflow.Process = Loira.util.createClass(Common.Symbol, {
      * @param ym Delta y de la relacion
      * @returns {number} Distancia borde del simbolo
      */
-    obtainBorderPos : function(xm, ym){
-        var a = this.width/2;
-        var b = this.height/2;
-        var ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
+    obtainBorderPos : function(xm, ym, points){
+        var angle = Math.atan(ym / xm);
 
-        return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
+        if (xm<0){
+            angle += Math.PI;
+        }
+
+        //console.log(angle);
+
+        var result = {x:100, y:this.y-10};
+
+        if ((angle > -0.785398 && angle < 0.785398) || (angle > 2.46 && angle < 4)){
+            result = Loira.util.intersectPointLine(points, {x1:this.x, y1:-100, x2:this.x, y2:100});
+        }else{
+            result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
+        }
+
+        var x = result.x - (this.x + this.width/2);
+        var y = result.y - (this.y + this.height/2);
+
+        return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
     }
 });
 

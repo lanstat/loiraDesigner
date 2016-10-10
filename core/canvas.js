@@ -238,6 +238,8 @@ Loira.Canvas = (function(){
             this._canvas.onkeydown = null;
             this._canvas.onmousedown = null;
             this._canvas.onmouseup = null;
+            this._canvas.ondblclick = null;
+            this._canvas.onselectstart = null;
 
             if (this._canvasContainer){
                 this._canvasContainer.element.removeEventListener('scroll', this._canvasContainer.listener);
@@ -295,6 +297,7 @@ Loira.Canvas = (function(){
          */
         _bind: function(){
             var _this = this;
+
             _this._canvas.onkeydown = function(evt){
                 var code = evt.keyCode;
                 if (code === 46){
@@ -303,19 +306,34 @@ Loira.Canvas = (function(){
                     }
                 }
             };
-            _this._canvas.onmousedown = function(evt){
+
+            var onDown = function(evt, isDoubleClick){
                 var real = _this._getMouse(evt);
                 _this._tmp.pointer =  real;
-                /**
-                 * Evento que encapsula un click sobre el canvas
-                 *
-                 * @event mouse:down
-                 * @type { object }
-                 * @property {int} x - Posicion x del puntero
-                 * @property {int} y - Posicion y del puntero
-                 * @property {string} type - Tipo de evento
-                 */
-                _this._emit('mouse:down', new mouseEvent({x:real.x, y:real.y, type: 'mousedown'}));
+
+                if (isDoubleClick) {
+                    /**
+                     * Evento que encapsula doble click sobre el canvas
+                     *
+                     * @event mouse:dblclick
+                     * @type { object }
+                     * @property {int} x - Posicion x del puntero
+                     * @property {int} y - Posicion y del puntero
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this._emit('mouse:dblclick', new mouseEvent({x:real.x, y:real.y, type: 'dblclick'}));
+                }else{
+                    /**
+                     * Evento que encapsula un click sobre el canvas
+                     *
+                     * @event mouse:down
+                     * @type { object }
+                     * @property {int} x - Posicion x del puntero
+                     * @property {int} y - Posicion y del puntero
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this._emit('mouse:down', new mouseEvent({x:real.x, y:real.y, type: 'mousedown'}));
+                }
 
                 if (_this._selected){
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
@@ -330,37 +348,68 @@ Loira.Canvas = (function(){
                 for (var i = _this.items.length - 1; i >= 0; i--) {
                     item = _this.items[i];
                     if(item.checkCollision(real.x, real.y)){
-                        if (item.baseType !== 'relation'){
-                            /**
-                             * Evento que encapsula un click sobre un objeto
-                             *
-                             * @event object:select
-                             * @type { object }
-                             * @property {object} selected - Objeto seleccionado
-                             * @property {string} type - Tipo de evento
-                             */
-                            _this._emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
-                            _this._selected = item;
+                        _this._selected = item;
+                        if (!isDoubleClick){
                             _this._isDragged = true;
+                        }
+
+                        if (item.baseType !== 'relation'){
+                            if (isDoubleClick){
+                                /**
+                                 * Evento que encapsula doble click sobre un objeto
+                                 *
+                                 * @event object:dblclick
+                                 * @type { object }
+                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {string} type - Tipo de evento
+                                 */
+                                _this._emit('object:dblclick', new objectEvent({selected:item, type: 'objectdblclick'}));
+                            }else{
+                                /**
+                                 * Evento que encapsula un click sobre un objeto
+                                 *
+                                 * @event object:select
+                                 * @type { object }
+                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {string} type - Tipo de evento
+                                 */
+                                _this._emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
+                            }
                             break;
                         } else if (!_this._selected){
-                            /**
-                             * Evento que encapsula un click sobre una relacion
-                             *
-                             * @event relation:select
-                             * @type { object }
-                             * @property {object} selected - Objeto seleccionado
-                             * @property {string} type - Tipo de evento
-                             */
-                            _this._emit('relation:selected', new objectEvent({selected:item, type: 'relationselected'}));
-                            _this._selected = item;
-                            _this._isDragged = true;
+                            if (isDoubleClick){
+                                /**
+                                 * Evento que encapsula doble click sobre una relacion
+                                 *
+                                 * @event relation:dblclick
+                                 * @type { object }
+                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {string} type - Tipo de evento
+                                 */
+                                _this._emit('relation:dblclick', new objectEvent({selected:item, type: 'relationdblclick'}));
+                            }else{
+                                /**
+                                 * Evento que encapsula un click sobre una relacion
+                                 *
+                                 * @event relation:select
+                                 * @type { object }
+                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {string} type - Tipo de evento
+                                 */
+                                _this._emit('relation:selected', new objectEvent({selected:item, type: 'relationselected'}));
+                            }
                             break;
+                        } else {
+                            _this._isDragged = false;
                         }
                     }
                 }
 
                 _this.renderAll();
+            };
+
+            _this._canvas.onmousedown = function(evt){
+                onDown(evt, false);
             };
             _this._canvas.onmousemove = function(evt){
                 var real = _this._getMouse(evt);
@@ -377,22 +426,27 @@ Loira.Canvas = (function(){
 
                 if(_this._selected){
                     if(_this._tmp.transform){
-                        switch(_this._tmp.transform){
-                            case 'tc':
-                                _this._selected.y += real.y - _this._tmp.pointer.y;
-                                _this._selected.height -= real.y - _this._tmp.pointer.y;
-                                break;
-                            case 'bc':
-                                _this._selected.height += real.y - _this._tmp.pointer.y;
-                                break;
-                            case 'ml':
-                                _this._selected.x += real.x - _this._tmp.pointer.x;
-                                _this._selected.width -= real.x - _this._tmp.pointer.x;
-                                break;
-                            case 'mr':
-                                _this._selected.width += real.x - _this._tmp.pointer.x;
-                                break;
+                        if (_this._selected.baseType !== 'relation'){
+                            switch(_this._tmp.transform){
+                                case 'tc':
+                                    _this._selected.y += real.y - _this._tmp.pointer.y;
+                                    _this._selected.height -= real.y - _this._tmp.pointer.y;
+                                    break;
+                                case 'bc':
+                                    _this._selected.height += real.y - _this._tmp.pointer.y;
+                                    break;
+                                case 'ml':
+                                    _this._selected.x += real.x - _this._tmp.pointer.x;
+                                    _this._selected.width -= real.x - _this._tmp.pointer.x;
+                                    break;
+                                case 'mr':
+                                    _this._selected.width += real.x - _this._tmp.pointer.x;
+                                    break;
+                            }
+                        } else {
+                            _this._selected.movePoint(_this._tmp.transform, real.x - _this._tmp.pointer.x, real.y - _this._tmp.pointer.y);
                         }
+
                         _this.renderAll();
                     }else if(_this._isDragged){
                         _this._selected.x += real.x - _this._tmp.pointer.x;
@@ -440,7 +494,9 @@ Loira.Canvas = (function(){
                     _this._isDragged = false;
                     _this._tmp.transform = false;
                 }
-            }
+            };
+
+            _this._canvas.onselectstart = function() {return  false;};
         },
         /**
          * Emite un evento generado

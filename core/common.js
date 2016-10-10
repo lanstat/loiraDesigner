@@ -34,12 +34,15 @@ Common.Relation = (function(){
             this.end = options.end? options.end : null;
             this.text = options.text? options.text : '';
             this.isDashed = options.isDashed? options.isDashed : false;
+            this.points = [{}, {}];
+
             this.img = null;
             if (options.icon){
                 this.img = document.createElement('IMG');
                 this.img.src = Loira.Config.assetsPath + options.icon;
                 this.img.onload = function() {}
             }
+
             this.baseType = 'relation';
         },
         /**
@@ -52,42 +55,50 @@ Common.Relation = (function(){
         _render: function(ctx) {
             var start = this.start,
                 end = this.end,
-                tmp;
+                tmp,
+                init,
+                last;
 
-            this.x1 = start.x + start.width/2;
-            this.y1 = start.y + start.height/2;
-            this.x2 = end.x + end.width/2;
-            this.y2 = end.y + end.height/2;
-
-            var xm = this.x2 - this.x1;
-            var ym = this.y2 - this.y1;
+            this.points[0] = {x: start.x + start.width/2, y: start.y + start.height/2};
+            this.points[this.points.length - 1] = {x: end.x + end.width/2, y: end.y + end.height/2};
+            init = this.points[0];
+            last = this.points[1];
 
             ctx.beginPath();
             ctx.lineWidth = 1;
-            ctx.moveTo(this.x1, this.y1);
+            ctx.moveTo(init.x, init.y);
 
-            if (this.isDashed)
+            if (this.isDashed){
                 ctx.setLineDash([5, 5]);
+            }
 
-            ctx.lineTo(this.x2, this.y2);
+            for (var i = 1; i < this.points.length; i++){
+                ctx.lineTo(this.points[i].x, this.points[i].y);
+            }
             ctx.stroke();
             ctx.setLineDash([]);
 
             if (this.img){
+                init = this.points[this.points.length - 2];
+                last = this.points[this.points.length - 1];
+
+                var xm = last.x - init.x;
+                var ym = last.y - init.y;
+
                 tmp = Math.atan(ym / xm);
 
                 if (xm<0){
                     tmp += Math.PI;
                 }
 
-                ctx.translate(this.x2, this.y2);
+                ctx.translate(last.x, last.y);
                 ctx.rotate(tmp);
-                ctx.drawImage(this.img, -(15+end.obtainBorderPos(xm, ym, {x1:this.x1, y1: this.y1, x2:this.x2, y2:this.y2}, ctx)), -7);
+                ctx.drawImage(this.img, -(15+end.obtainBorderPos(xm, ym, {x1:init.x, y1: init.y, x2:last.x, y2:last.y}, ctx)), -7);
                 ctx.rotate(-tmp);
-                ctx.translate(-this.x2, -this.y2);
+                ctx.translate(-last.x, -last.y);
             }
 
-            if (this.text || this.text.length > 0){
+            /*if (this.text || this.text.length > 0){
                 ctx.font = "10px " + Loira.Config.fontType;
 
                 tmp = ctx.measureText(this.text).width;
@@ -101,7 +112,7 @@ Common.Relation = (function(){
                     this.y1 + ym/2 - 5);
 
                 ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            }
+            }*/
         },
         /**
          * Actualiza los objeto de origen y objetivo de la relacion
@@ -113,9 +124,9 @@ Common.Relation = (function(){
          * @returns {Common.Relation}
          */
         update: function(start, end){
-          this.start = start;
-          this.end = end;
-          return this;
+            this.start = start;
+            this.end = end;
+            return this;
         },
         /**
          * Verifica si el punto dado se encuentra dentro de los limites del objeto
@@ -126,10 +137,48 @@ Common.Relation = (function(){
          * @returns {boolean}
          */
         checkCollision: function(x, y){
-            var r = Math.abs(y - this.y1);
-            var t = Math.abs((this.y2 - this.y1) / (this.x2 - this.x1) * (x - this.x1));
+            var init = null,
+                last = null;
+            var x1 = 0,
+                x2 = 0;
+            var y1 = 0,
+                y2 = 0;
 
-            return (Math.abs(r - t) <= 5);
+            for (var i = 1; i < this.points.length; i++){
+                init = this.points[i - 1];
+                last = this.points[i];
+                x1 = init.x;
+                y1 = init.y;
+                y2 = last.y;
+                x2 = last.x;
+
+
+                if (init.x > last.x){
+                    x1 = last.x;
+                    x2 = init.x;
+                }
+
+                if (init.y > last.y){
+                    y1 = last.y;
+                    y2 = init.y;
+                }
+
+                if (x > x1 - 5 && x < x2 + 5 && y > y1 - 5 && y < y2 + 5){
+                    y2 = last.y - init.y;
+                    x2 = last.x - init.x;
+
+                    x = x - init.x;
+                    y = y - init.y;
+
+                    var m = (y2 / x2) * x;
+
+                    if (m > y - 8 && m < y + 8){
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         },
         /**
          * Dibuja el cuadro punteado que contornea al objeto
@@ -143,10 +192,53 @@ Common.Relation = (function(){
 
             ctx.fillStyle= Loira.Config.selected.color;
 
-            ctx.fillRect(this.x1-4, this.y1-4, 8, 8);
-            ctx.fillRect(this.x2-4, this.y2-4, 8, 8);
+            for (var i = 0; i < this.points.length; i++){
+                ctx.fillRect(this.points[i].x-4, this.points[i].y-4, 8, 8);
+            }
 
             ctx.strokeStyle= '#000000';
+        },
+        addPoint: function(){
+            var _this = this;
+            var last = _this.points[1],
+                init = _this.points[0];
+
+            var x = Math.round((last.x - init.x)/ 2) + init.x;
+            var y = Math.round((last.y - init.y)/ 2) + init.y;
+
+            _this.points.splice(1, 0, {x: x, y: y});
+        },
+        /**
+         * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
+         *
+         * @memberof Common.Relation#
+         * @param pX Posicion x del punto
+         * @param pY Posicion y del punto
+         * @returns {*}
+         */
+        getSelectedCorner: function(pX, pY){
+            for (var i = 1; i < this.points.length - 1; i++){
+                var x = this.points[i].x-4,
+                    y = this.points[i].y-4,
+                    w = x + 8,
+                    h = y + 8;
+                if (pX > x && pX < w && pY > y && pY < h){
+                    return i;
+                }
+            }
+            return false;
+        },
+        /**
+         * Mueve un punto de la relacion
+         *
+         * @memberof Common.Relation#
+         * @param point Indice del punto a mover
+         * @param x Delta de x
+         * @param y Delta de y
+         */
+        movePoint: function(point, x, y){
+            this.points[point].x += x;
+            this.points[point].y += y;
         }
     }, true);
 }());
@@ -196,10 +288,13 @@ Common.Symbol = (function(){
                     var canvas = _this._canvas;
                     for (var i = 0; i < canvas.items.length; i++) {
                         var item = canvas.items[i];
-                        if(item.checkCollision(evt.x, evt.y) && !_this.noEndPoint){
-                            var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                            canvas.add(new instance({}).update(_this, item));
-                            break;
+
+                        if (item.baseType != 'relation'){
+                            if(item.checkCollision(evt.x, evt.y) && !_this.noEndPoint){
+                                var instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                                canvas.add(new instance({}).update(_this, item));
+                                break;
+                            }
                         }
                     }
                     canvas.fall('mouse:down', listener);

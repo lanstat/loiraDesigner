@@ -21,6 +21,7 @@
         <button id="assoc">Terminator</button>
         <button id="direct">Data</button>
         <button id="gener">Decision</button>
+        <button id="part">Partir</button>
     </div>
     <div style="width: 85%; float: left">
         <canvas style="background-color:#aacccc" id="_canvas" width="800" height="500" tabindex="999"></canvas>
@@ -31,6 +32,7 @@
         Loira.Config.assetsPath = '../../assets/';
 
         var canvas = new Loira.Canvas('_canvas');
+        var relation = null;
         canvas.defaultRelation = 'Relation.DirectAssociation';
 
         //Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma
@@ -56,14 +58,14 @@
             canvas.add(new Workflow.Decision({x:150, y:150, text:' '}));
             canvas.renderAll();
         });
+        document.getElementById('part').addEventListener('click', function(){
+            relation.addPoint();
+            canvas.renderAll();
+        });
 
-        /*canvas.on('object:added', function(evt){
-            if(evt.selected.type == 'use_case'){
-                evt.selected.text = prompt("Por favor ingrese un texto", "caso de uso");
-            }else if(evt.selected.type == 'actor'){
-                evt.selected.text = prompt("Por favor ingrese un nombre", "actor");
-            }
-        });*/
+        canvas.on('relation:added', function(evt){
+            relation = evt.selected;
+        });
     }
 </script>
 </body>
