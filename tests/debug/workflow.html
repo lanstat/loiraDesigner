@@ -18,7 +18,8 @@
     <div id="buttons" style="width: 10%; float: left">
         <p>Comunes</p>
         <button id="actor">Proceso</button>
-        <button id="assoc">Terminator</button>
+        <button id="assoc">Inicio</button>
+        <button id="fin">Fin</button>
         <button id="direct">Data</button>
         <button id="gener">Decision</button>
         <button id="part">Partir</button>
@@ -47,7 +48,11 @@
         });
 
         document.getElementById('assoc').addEventListener('click', function(){
-            canvas.add(new Workflow.Terminator({x:150, y:150, text:' '}));
+            canvas.add(new Workflow.StartTerminator({x:150, y:150, text:'INICIO'}));
+            canvas.renderAll();
+        });
+        document.getElementById('fin').addEventListener('click', function(){
+            canvas.add(new Workflow.EndTerminator({x:150, y:150, text:'FIN'}));
             canvas.renderAll();
         });
         document.getElementById('direct').addEventListener('click', function(){

@@ -493,6 +493,7 @@ Loira.Canvas = (function(){
                     _this._emit('object:released', new mouseEvent({selected:_this.selected, type: 'objectreleased'}));
                     _this._isDragged = false;
                     _this._tmp.transform = false;
+                    _this._selected.recalculateBorders();
                 }
             };
 
@@ -586,6 +587,34 @@ Loira.Canvas = (function(){
             _this._canvasContainer.w = _this._canvasContainer.element.clientWidth;
             _this._canvasContainer.h = _this._canvasContainer.element.clientHeight;
             _this._canvasContainer.element.addEventListener('scroll', _this._canvasContainer.listener);
+        },
+        /**
+         * Obtiene las relaciones vinculadas a un objeto
+         *
+         * @param object {Loira.Object} Objeto del que se obtendra las relaciones
+         * @param onlyIncoming {boolean} Indica si solo se deben listar relaciones entrantes
+         * @param onlyOutgoing {boolean} Indica si solo se deben listar relaciones salientes
+         * @returns {Array}
+         */
+        getRelationsFromObject: function(object, onlyIncoming, onlyOutgoing){
+            var relations = [];
+            for (var i = 0; i < this.items.length; i++){
+                var item = this.items[i];
+
+                if (item.baseType == 'relation'){
+                    if (item.start == object || item.end == object){
+                        if (item.start == object && onlyOutgoing){
+                            relations.push(item);
+                        }else if (item.end == object && onlyIncoming){
+                            relations.push(item);
+                        }else if (!onlyIncoming && !onlyOutgoing) {
+                            relations.push(item);
+                        }
+                    }
+                }
+            }
+
+            return relations;
         }
     };
 

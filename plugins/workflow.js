@@ -9,16 +9,32 @@ var Workflow = {};
  * Simbolo de Caso de uso
  *
  * @class
- * @memberof UseCase
+ * @memberof Workflow
  * @augments Common.Symbol
  */
 Workflow.Process = Loira.util.createClass(Common.Symbol, {
+    /**
+     *
+     * @memberof Workflow.Process#
+     * @param options
+     */
     initialize : function(options){
         this.callSuper('initialize', options);
+        
         this.width = 100;
         this.height = 70;
         this.text = options.text;
-        this.type = 'use_case';
+        this.type = 'process';
+        this.borders = {
+            bottomLeft: 0,
+            topLeft: 0,
+            topRight: 0,
+            bottomRight: 0
+        };
+
+        this.recalculateBorders();
+
+        this.maxOutGoingRelation = 1;
     },
     _render: function(ctx) {
         ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
@@ -26,7 +42,6 @@ Workflow.Process = Loira.util.createClass(Common.Symbol, {
         ctx.beginPath();
         ctx.lineWidth = 2;
 
-        //ctx.moveTo(this.x, this.y);
         ctx.rect(this.x, this.y, this.width, this.height);
         ctx.stroke();
         ctx.fillStyle = "#fcf5d9";
@@ -73,6 +88,7 @@ Workflow.Process = Loira.util.createClass(Common.Symbol, {
     /**
      * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
      *
+     * @memberof Workflow.Process#
      * @param xm Delta x de la relacion
      * @param ym Delta y de la relacion
      * @returns {number} Distancia borde del simbolo
@@ -84,11 +100,9 @@ Workflow.Process = Loira.util.createClass(Common.Symbol, {
             angle += Math.PI;
         }
 
-        //console.log(angle);
-
         var result = {x:100, y:this.y-10};
 
-        if ((angle > -0.785398 && angle < 0.785398) || (angle > 2.46 && angle < 4)){
+        if ((angle > this.borders.bottomLeft && angle < this.borders.topLeft) || (angle > this.borders.topRight && angle < this.borders.bottomRight)){
             result = Loira.util.intersectPointLine(points, {x1:this.x, y1:-100, x2:this.x, y2:100});
         }else{
             result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
@@ -98,17 +112,24 @@ Workflow.Process = Loira.util.createClass(Common.Symbol, {
         var y = result.y - (this.y + this.height/2);
 
         return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+    },
+    /**
+     * Recalcula los bordes del objeto
+     *
+     * @memberof Workflow.Process#
+     */
+    recalculateBorders: function(){
+        var xm = Math.round(this.width /2),
+            ym = Math.round(this.height /2);
+
+        this.borders.bottomLeft = Math.atan(-ym / xm);
+        this.borders.topLeft = Math.atan(ym / xm);
+        this.borders.topRight = Math.atan(ym / -xm) + Math.PI;
+        this.borders.bottomRight = Math.atan(-ym / -xm) + Math.PI;
     }
 });
 
 Workflow.Terminator = Loira.util.createClass(Common.Symbol, {
-    initialize : function(options){
-        this.callSuper('initialize', options);
-        this.width = 100;
-        this.height = 70;
-        this.text = options.text;
-        this.type = 'use_case';
-    },
     _render: function(ctx) {
         ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
@@ -185,6 +206,31 @@ Workflow.Terminator = Loira.util.createClass(Common.Symbol, {
         var ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
 
         return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
+    }
+}, true);
+
+Workflow.StartTerminator = Loira.util.createClass(Workflow.Terminator, {
+    initialize : function(options){
+        this.callSuper('initialize', options);
+
+        this.width = 70;
+        this.height = 30;
+        this.text = options.text;
+        this.startPoint = true;
+        this.maxOutGoingRelation = 1;
+
+        this.type = 'start_terminator';
+    }
+});
+
+Workflow.EndTerminator = Loira.util.createClass(Workflow.Terminator, {
+    initialize : function(options){
+        this.callSuper('initialize', options);
+        this.width = 70;
+        this.height = 30;
+        this.text = options.text;
+        this.endPoint = true;
+        this.type = 'end_terminator';
     }
 });
 

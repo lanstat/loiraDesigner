@@ -26,12 +26,16 @@ Loira.Object = (function(){
             if(typeof options === 'undefined'){
                 options = {};
             }
+
             this.x = 'x' in options ? options.x : 0;
             this.y = 'y' in options ? options.y : 0;
             this.width = 'width' in options ? options.width : 0;
             this.height = 'height' in options ? options.height : 0;
             this.centerObject = 'centerObject' in options ? options.centerObject : false;
-            this.noEndPoint = 'noEndPoint' in options ? options.noEndPoint : false;
+            this.startPoint = 'startPoint' in options ? options.startPoint : false;
+            this.endPoint = 'endPoint' in options ? options.endPoint : false;
+            this.maxOutGoingRelation = 'maxOutGoingRelation' in options? options.maxOutGoingRelation : false;
+
             this._buttons = [];
             this._canvas = null;
             this.type = '';
@@ -209,6 +213,8 @@ Loira.Object = (function(){
         },
         /**
          * Muestra el objeto si el canvas se encuentra en un contenedor
+         *
+         * @memberof Loira.Object#
          */
         show: function(){
             var _this = this;
@@ -224,6 +230,12 @@ Loira.Object = (function(){
                 this._canvas._canvasContainer.element.scrollTop = pY;
                 this._canvas._canvasContainer.element.scrollLeft = pX;
             }
-        }
+        },
+        /**
+         * Recalcula los bordes del objeto
+         *
+         * @memberof Loira.Object#
+         */
+        recalculateBorders: function(){}
     };
 }());

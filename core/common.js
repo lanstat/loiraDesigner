@@ -278,11 +278,6 @@ Common.Symbol = (function(){
             this.on({
                 icon: Loira.Config.assetsPath + 'arrow.png',
                 click: link
-            },{
-                icon: Loira.Config.assetsPath + 'clean.png',
-                click: function(){
-                    console.log('clean');
-                }
             });
             this.baseType = 'symbol';
         },
@@ -297,17 +292,22 @@ Common.Symbol = (function(){
             var  listener = this._canvas.on(
                 'mouse:down', function(evt){
                     var canvas = _this._canvas;
-                    for (var i = 0; i < canvas.items.length; i++) {
-                        var item = canvas.items[i];
+                    var relations = canvas.getRelationsFromObject(_this, false, true);
 
-                        if (item.baseType != 'relation'){
-                            if(item.checkCollision(evt.x, evt.y) && !_this.noEndPoint){
-                                var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                canvas.add(new instance({}).update(_this, item));
-                                break;
+                    if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)){
+                        for (var i = 0; i < canvas.items.length; i++) {
+                            var item = canvas.items[i];
+
+                            if (item.baseType != 'relation' && !item.startPoint){
+                                if(item.checkCollision(evt.x, evt.y) && !_this.endPoint){
+                                    var instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                                    canvas.add(new instance({}).update(_this, item));
+                                    break;
+                                }
                             }
                         }
                     }
+
                     canvas.fall('mouse:down', listener);
                 }
             );
