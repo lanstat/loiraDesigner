@@ -143,6 +143,9 @@ Common.Relation = (function(){
                 x2 = 0;
             var y1 = 0,
                 y2 = 0;
+            var xd = 0,
+                yd = 0;
+            var m;
 
             for (var i = 1; i < this.points.length; i++){
                 init = this.points[i - 1];
@@ -164,16 +167,24 @@ Common.Relation = (function(){
                 }
 
                 if (x > x1 - 5 && x < x2 + 5 && y > y1 - 5 && y < y2 + 5){
-                    y2 = last.y - init.y;
-                    x2 = last.x - init.x;
+                    yd = Math.abs(last.y - init.y);
+                    xd = Math.abs(last.x - init.x);
 
-                    x = x - init.x;
-                    y = y - init.y;
+                    x = Math.abs(x - init.x);
+                    y = Math.abs(y - init.y);
 
-                    var m = (y2 / x2) * x;
+                    if (xd > yd){
+                        m = Math.abs((yd / xd) * x);
 
-                    if (m > y - 8 && m < y + 8){
-                        return true;
+                        if ((m == 0 && (y > y1 && y < y2)) || (m > y - 8 && m < y + 8)){
+                            return true;
+                        }
+                    } else {
+                        m = Math.abs((xd / yd) * y);
+
+                        if ((m == 0 && (x > x1 && x < x2)) || (m > x - 8 && m < x + 8)){
+                            return true;
+                        }
                     }
                 }
             }
