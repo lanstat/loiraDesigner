@@ -43,16 +43,16 @@
         }, 50);
 
         document.getElementById('actor').addEventListener('click', function(){
-            canvas.add(new Workflow.Process({x:150, y:150, text:' '}));
+            canvas.add(new Workflow.Process({x:150, y:150, text:'Cambiar de decision'}));
             canvas.renderAll();
         });
 
         document.getElementById('assoc').addEventListener('click', function(){
-            canvas.add(new Workflow.StartTerminator({x:150, y:150, text:'INICIO'}));
+            canvas.add(new Workflow.StartTerminator({x:150, y:150}));
             canvas.renderAll();
         });
         document.getElementById('fin').addEventListener('click', function(){
-            canvas.add(new Workflow.EndTerminator({x:150, y:150, text:'FIN'}));
+            canvas.add(new Workflow.EndTerminator({x:150, y:150}));
             canvas.renderAll();
         });
         document.getElementById('direct').addEventListener('click', function(){
@@ -70,6 +70,7 @@
 
         canvas.on('relation:added', function(evt){
             relation = evt.selected;
+            relation.text = 'asdasdasdasdasd';
         });
     }
 </script>

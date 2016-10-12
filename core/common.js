@@ -57,7 +57,9 @@ Common.Relation = (function(){
                 end = this.end,
                 tmp,
                 init,
-                last;
+                last,
+                xm,
+                ym;
 
             this.points[0] = {x: start.x + start.width/2, y: start.y + start.height/2};
             this.points[this.points.length - 1] = {x: end.x + end.width/2, y: end.y + end.height/2};
@@ -82,8 +84,8 @@ Common.Relation = (function(){
                 init = this.points[this.points.length - 2];
                 last = this.points[this.points.length - 1];
 
-                var xm = last.x - init.x;
-                var ym = last.y - init.y;
+                xm = last.x - init.x;
+                ym = last.y - init.y;
 
                 tmp = Math.atan(ym / xm);
 
@@ -98,21 +100,27 @@ Common.Relation = (function(){
                 ctx.translate(-last.x, -last.y);
             }
 
-            /*if (this.text || this.text.length > 0){
+            if (this.text || this.text.length > 0){
                 ctx.font = "10px " + Loira.Config.fontType;
+
+                init = this.points[0];
+                last = this.points[1];
+
+                xm = last.x - init.x;
+                ym = last.y - init.y;
 
                 tmp = ctx.measureText(this.text).width;
 
                 ctx.fillStyle = Loira.Config.background;
-                ctx.fillRect(this.x1 + xm/2 - tmp/2, this.y1 + ym/2 - 15, tmp, 12);
+                ctx.fillRect(init.x + xm/2 - tmp/2, init.y + ym/2 - 15, tmp, 12);
                 ctx.fillStyle = "#000000";
 
                 ctx.fillText(this.text,
-                    this.x1 + xm/2 - tmp/2,
-                    this.y1 + ym/2 - 5);
+                    init.x + xm/2 - tmp/2,
+                    init.y + ym/2 - 5);
 
                 ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            }*/
+            }
         },
         /**
          * Actualiza los objeto de origen y objetivo de la relacion
@@ -316,11 +324,13 @@ Common.Symbol = (function(){
          * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
          *
          * @memberof Common.Symbol#
-         * @param xm Delta x de la relacion
-         * @param ym Delta y de la relacion
+         * @param xm {number} Delta x de la relacion
+         * @param ym {number} Delta y de la relacion
+         * @param points Puntos que forman la recta
+         * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
          * @returns {number} Distancia borde del simbolo
          */
-        obtainBorderPos : function(xm, ym){
+        obtainBorderPos : function(xm, ym, points, ctx){
             return 0;
         }
     }, true);
@@ -383,9 +393,9 @@ Common.Actor = (function(){
         /**
          * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
          *
-         * @memberof Common.Symbol#
-         * @param { int } xm Delta x de la relacion
-         * @param { int } ym Delta y de la relacion
+         * @memberof Common.Actor#
+         * @param { number } xm Delta x de la relacion
+         * @param { number } ym Delta y de la relacion
          * @param points Puntos que forman la linea de relacion
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
          * @returns {number} Distancia borde del simbolo
@@ -427,7 +437,7 @@ Common.Container = (function(){
         /**
          * Inicializa los valores de la clase
          *
-         * @memberof Common.Actor#
+         * @memberof Common.Container#
          * @protected
          * @param { object } options Conjunto de valores iniciales
          */
@@ -443,7 +453,7 @@ Common.Container = (function(){
         /**
          * Renderiza el objeto
          *
-         * @memberof Common.Actor#
+         * @memberof Common.Container#
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
          * @protected
          */
@@ -461,7 +471,7 @@ Common.Container = (function(){
         /**
          * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
          *
-         * @memberof Common.Symbol#
+         * @memberof Common.Container#
          * @param { int } xm Delta x de la relacion
          * @param { int } ym Delta y de la relacion
          * @param points Puntos que forman la linea de relacion

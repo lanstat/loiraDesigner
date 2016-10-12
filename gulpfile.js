@@ -14,6 +14,7 @@ var paths = {
         './plugins/xmiparser.js',
         './plugins/usecase.js',
         './plugins/box.js',
+        './plugins/workflow.js',
         './config.js'
     ],
     build: './build'

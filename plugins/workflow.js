@@ -1,12 +1,12 @@
 /**
- * Diagrama de Caso de uso
+ * Diagrama de flujo de trabajo
  *
  * @namespace
  */
 var Workflow = {};
 
 /**
- * Simbolo de Caso de uso
+ * Simbolo de proceso
  *
  * @class
  * @memberof Workflow
@@ -89,11 +89,13 @@ Workflow.Process = Loira.util.createClass(Common.Symbol, {
      * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
      *
      * @memberof Workflow.Process#
-     * @param xm Delta x de la relacion
-     * @param ym Delta y de la relacion
+     * @param xm {number} Delta x de la relacion
+     * @param ym {number} Delta y de la relacion
+     * @param points Puntos que forman la recta
+     * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
      * @returns {number} Distancia borde del simbolo
      */
-    obtainBorderPos : function(xm, ym, points){
+    obtainBorderPos : function(xm, ym, points, ctx){
         var angle = Math.atan(ym / xm);
 
         if (xm<0){
@@ -129,6 +131,13 @@ Workflow.Process = Loira.util.createClass(Common.Symbol, {
     }
 });
 
+/**
+ * Simbolo base para terminadores de flujo de trabajo
+ *
+ * @class
+ * @memberof Workflow
+ * @augments Common.Symbol
+ */
 Workflow.Terminator = Loira.util.createClass(Common.Symbol, {
     _render: function(ctx) {
         ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
@@ -215,7 +224,7 @@ Workflow.StartTerminator = Loira.util.createClass(Workflow.Terminator, {
 
         this.width = 70;
         this.height = 30;
-        this.text = options.text;
+        this.text = 'INICIO';
         this.startPoint = true;
         this.maxOutGoingRelation = 1;
 
@@ -228,19 +237,26 @@ Workflow.EndTerminator = Loira.util.createClass(Workflow.Terminator, {
         this.callSuper('initialize', options);
         this.width = 70;
         this.height = 30;
-        this.text = options.text;
+        this.text = 'FIN';
         this.endPoint = true;
         this.type = 'end_terminator';
     }
 });
 
+/**
+ * Simbolo de datos de flujo de trabajo
+ *
+ * @class
+ * @memberof Workflow
+ * @augments Common.Symbol
+ */
 Workflow.Data = Loira.util.createClass(Common.Symbol, {
     initialize : function(options){
         this.callSuper('initialize', options);
         this.width = 100;
         this.height = 70;
         this.text = options.text;
-        this.type = 'use_case';
+        this.type = 'data';
     },
     _render: function(ctx) {
         ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
@@ -324,7 +340,7 @@ Workflow.Decision = Loira.util.createClass(Common.Symbol, {
         this.width = 100;
         this.height = 70;
         this.text = options.text;
-        this.type = 'use_case';
+        this.type = 'decision';
     },
     _render: function(ctx) {
         ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;

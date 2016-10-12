@@ -35,6 +35,7 @@ Loira.Object = (function(){
             this.startPoint = 'startPoint' in options ? options.startPoint : false;
             this.endPoint = 'endPoint' in options ? options.endPoint : false;
             this.maxOutGoingRelation = 'maxOutGoingRelation' in options? options.maxOutGoingRelation : false;
+            this.extras = 'extras' in options? options.extras : {};
 
             this._buttons = [];
             this._canvas = null;
