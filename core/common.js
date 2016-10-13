@@ -34,7 +34,7 @@ Common.Relation = (function(){
             this.end = options.end? options.end : null;
             this.text = options.text? options.text : '';
             this.isDashed = options.isDashed? options.isDashed : false;
-            this.points = [{}, {}];
+            this.points = options.points? options.points : [{}, {}];
 
             this.img = null;
             if (options.icon){

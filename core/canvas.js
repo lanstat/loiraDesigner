@@ -376,7 +376,7 @@ Loira.Canvas = (function(){
                                 _this._emit('object:selected', new objectEvent({selected:item, type: 'objectselected'}));
                             }
                             break;
-                        } else if (!_this._selected){
+                        } else {
                             if (isDoubleClick){
                                 /**
                                  * Evento que encapsula doble click sobre una relacion
@@ -399,8 +399,6 @@ Loira.Canvas = (function(){
                                 _this._emit('relation:selected', new objectEvent({selected:item, type: 'relationselected'}));
                             }
                             break;
-                        } else {
-                            _this._isDragged = false;
                         }
                     }
                 }
