@@ -1,3 +1,0 @@
-Loira.Editor = {
-    
-};

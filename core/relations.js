@@ -1,129 +1,101 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 /**
  * Conjunto de relaciones comunes
  *
  * @namespace Relation
  * @license Apache-2.0
  */
-var Relation = {};
-
-/**
- * Contiene las funciones para relacion de asociacion
- * 
- * @class
- * @memberof Relation
- * @augments Common.Relation
- */
-Relation.Association = (function(){
-    return Loira.util.createClass(Common.Relation, {
-        /**
-         * Inicializa los valores de la clase
-         *
-         * @memberof Relation.Association#
-         * @private
-         * @param { object } options Conjunto de valores iniciales
-         */
-        initialize : function(options){
-            this.callSuper('initialize', options);
+var Relation;
+(function (Relation) {
+    /**
+     * Contiene las funciones para relacion de asociacion
+     *
+     * @class
+     * @memberof Relation
+     * @augments Common.Relation
+     */
+    var Association = (function (_super) {
+        __extends(Association, _super);
+        function Association(options) {
+            _super.call(this, options);
             this.type = 'association';
         }
-    });
-}());
-
-
-/**
- * Contiene las funciones para relacion directa
- *
- * @class
- * @memberof Relation
- * @augments Common.Relation
- */
-Relation.DirectAssociation = (function(){
-    return Loira.util.createClass(Common.Relation, {
-        /**
-         * Inicializa los valores de la clase
-         *
-         * @memberof Relation.DirectAssociation#
-         * @private
-         * @param { object } options Conjunto de valores iniciales
-         */
-        initialize : function(options){
-            options['icon'] = 'spear.png';
-            this.callSuper('initialize', options);
+        return Association;
+    }(Common.Relation));
+    Relation.Association = Association;
+    /**
+     * Contiene las funciones para relacion directa
+     *
+     * @class
+     * @memberof Relation
+     * @augments Common.Relation
+     */
+    var DirectAssociation = (function (_super) {
+        __extends(DirectAssociation, _super);
+        function DirectAssociation(options) {
+            options.icon = 'spear.png';
+            _super.call(this, options);
             this.type = 'direct_association';
         }
-    });
-}());
-
-/**
- * Contiene las funciones para relacion de generalizacion
- *
- * @class
- * @memberof Relation
- * @augments Common.Relation
- */
-Relation.Generalization = (function(){
-    return Loira.util.createClass(Common.Relation, {
-        /**
-         * Inicializa los valores de la clase
-         *
-         * @memberof Relation.Generalization#
-         * @private
-         * @param { object } options Conjunto de valores iniciales
-         */
-        initialize : function(options){
-            options['icon'] = 'spear2.png';
-            this.callSuper('initialize', options);
+        return DirectAssociation;
+    }(Common.Relation));
+    Relation.DirectAssociation = DirectAssociation;
+    /**
+     * Contiene las funciones para relacion de generalizacion
+     *
+     * @class
+     * @memberof Relation
+     * @augments Common.Relation
+     */
+    var Generalization = (function (_super) {
+        __extends(Generalization, _super);
+        function Generalization(options) {
+            options.icon = 'spear2.png';
+            _super.call(this, options);
             this.type = 'generalization';
         }
-    });
-}());
-
-/**
- * Contiene las funciones para relacion de realizacion
- *
- * @class
- * @memberof Relation
- * @augments Common.Relation
- */
-Relation.Realization = (function(){
-    return Loira.util.createClass(Common.Relation, {
-        /**
-         * Inicializa los valores de la clase
-         *
-         * @memberof Relation.Realization#
-         * @private
-         * @param { object } options Conjunto de valores iniciales
-         */
-        initialize : function(options){
-            options['icon'] = 'spear2.png';
-            options['isDashed'] = true;
-            this.callSuper('initialize', options);
+        return Generalization;
+    }(Common.Relation));
+    Relation.Generalization = Generalization;
+    /**
+     * Contiene las funciones para relacion de realizacion
+     *
+     * @class
+     * @memberof Relation
+     * @augments Common.Relation
+     */
+    var Realization = (function (_super) {
+        __extends(Realization, _super);
+        function Realization(options) {
+            options.icon = 'spear2.png';
+            options.isDashed = true;
+            _super.call(this, options);
             this.type = 'realization';
         }
-    });
-}());
-
-/**
- * Contiene las funciones para relacion de dependencia
- *
- * @class
- * @memberof Relation
- * @augments Common.Relation
- */
-Relation.Dependency = (function(){
-    return Loira.util.createClass(Common.Relation, {
-        /**
-         * Inicializa los valores de la clase
-         *
-         * @memberof Relation.Dependency#
-         * @private
-         * @param { object } options Conjunto de valores iniciales
-         */
-        initialize : function(options){
-            options['icon'] = 'spear1.png';
-            options['isDashed'] = true;
-            this.callSuper('initialize', options);
+        return Realization;
+    }(Common.Relation));
+    Relation.Realization = Realization;
+    /**
+     * Contiene las funciones para relacion de dependencia
+     *
+     * @class
+     * @memberof Relation
+     * @augments Common.Relation
+     */
+    var Dependency = (function (_super) {
+        __extends(Dependency, _super);
+        function Dependency(options) {
+            options.icon = 'spear1.png';
+            options.isDashed = true;
+            _super.call(this, options);
             this.type = 'dependency';
         }
-    });
-}());
+        return Dependency;
+    }(Common.Relation));
+    Relation.Dependency = Dependency;
+})(Relation || (Relation = {}));
+//# sourceMappingURL=relations.js.map

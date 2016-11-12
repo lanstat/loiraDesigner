@@ -46,18 +46,8 @@ module Loira{
             this._canvas = null;
             this.type = '';
             this.baseType = '';
-            this._prepare(options);
         }
-        /**
-         * Funcion de preparacion de valores inciales (Es una funcion de ayuda sera borrada cuando se consiga solucionar
-         * el problema con la recursion de funcion heradadas)
-         *
-         * @memberof Loira.Element#
-         * @param { object } options Datos con valores inciales
-         * @protected
-         * @abstract
-         */
-        protected abstract _prepare(options: BaseOption): void;
+
         /**
          * Renderiza el objeto
          *
@@ -66,7 +56,7 @@ module Loira{
          * @protected
          * @abstract
          */
-        protected abstract _render(ctx: CanvasRenderingContext2D): void;
+        public abstract _render(ctx: CanvasRenderingContext2D): void;
         /**
          * Verifica si el punto dado se encuentra dentro de los limites del objeto
          *
@@ -99,7 +89,7 @@ module Loira{
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
          * @private
          */
-        protected _renderButtons(ctx: CanvasRenderingContext2D): void {
+        public _renderButtons(ctx: CanvasRenderingContext2D): void {
             let x: number = this.x + this.width + 10;
             let y: number = this.y;
             if (this._buttons.length > 0) {

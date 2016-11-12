@@ -1,65 +1,58 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 /**
  * Clase base para la creacion de nuevos objetos dibujables
  *
  * @memberof Loira
  * @namespace util
  */
-Loira.util = (function(){
-    return {
-        /**
-         * Crea un objeto o funcion que extiende la base con los metodos del hijo
-         *
-         * @param base Objeto base a extender
-         * @param child Objecto que agregara sus funciones a la base
-         * @param isAbstract Determina si lo que se retornara es un objeto (abstracto) o un funcion (clase instanciable)
-         * @returns {*} Retorna un objeto o funcion instanciable
-         */
-        createClass: function(base, child, isAbstract){
-            var obj = {};
-            var i;
-
-            for (i in child) {
-                if (child.hasOwnProperty(i)) {
-                    obj[i] = child[i];
-                }
+var Loira;
+(function (Loira) {
+    var util;
+    (function (util) {
+        var BaseOption = (function () {
+            function BaseOption() {
             }
-            for (i in base) {
-                if (base.hasOwnProperty(i)) {
-                    if (obj.hasOwnProperty(i)){
-                        obj['$'+i] = base[i];
-                    }else{
-                        obj[i] = base[i];
-                    }
-                }
+            return BaseOption;
+        }());
+        util.BaseOption = BaseOption;
+        var RelOption = (function (_super) {
+            __extends(RelOption, _super);
+            function RelOption() {
+                _super.apply(this, arguments);
             }
-            if(isAbstract){
-                return obj;
+            return RelOption;
+        }(BaseOption));
+        util.RelOption = RelOption;
+        var Line = (function () {
+            function Line() {
             }
-            return function(options){
-                for (var i in obj) {
-                    if (obj.hasOwnProperty(i)){
-                        this[i] = obj[i];
-                    }
-                }
-
-                this.initialize(options);
+            return Line;
+        }());
+        util.Line = Line;
+        var Point = (function () {
+            function Point() {
             }
-        },
+            return Point;
+        }());
+        util.Point = Point;
         /**
          * Crea una cadena con caracteres aleatorios
          *
          * @param maxLength Longitud de la cadena
          * @returns {string}
          */
-        createRandom: function (maxLength){
+        function createRandom(maxLength) {
             var text = "";
             var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-            for( var i=0; i < maxLength; i++ )
+            for (var i = 0; i < maxLength; i++)
                 text += possible.charAt(Math.floor(Math.random() * possible.length));
-
             return text;
-        },
+        }
+        util.createRandom = createRandom;
         /**
          * Determina la el punto de intereseccion entre 2 lineas
          *
@@ -67,7 +60,7 @@ Loira.util = (function(){
          * @param line2 Linea 2
          * @returns {*}
          */
-        intersectPointLine : function (line1, line2){
+        function intersectPointLine(line1, line2) {
             var den = ((line1.y2 - line1.y1) * (line2.x2 - line2.x1)) - ((line1.x2 - line1.x1) * (line2.y2 - line2.y1));
             if (den === 0) {
                 return false;
@@ -75,31 +68,29 @@ Loira.util = (function(){
             var a = line2.y1 - line1.y1;
             var b = line2.x1 - line1.x1;
             var numerator1 = ((line1.x2 - line1.x1) * a) - ((line1.y2 - line1.y1) * b);
-            var numerator2 = ((line2.x2 - line2.x1) * a) - ((line2.y2 - line2.y1) * b);
             a = numerator1 / den;
-            b = numerator2 / den;
-
-            return {x: line2.x1 + (a * (line2.x2 - line2.x1)), y: line2.y1 + (a * (line2.y2 - line2.y1))};
-        },
+            return { x: line2.x1 + (a * (line2.x2 - line2.x1)), y: line2.y1 + (a * (line2.y2 - line2.y1)) };
+        }
+        util.intersectPointLine = intersectPointLine;
         /**
          * Instancia una clase tomando una cadena como base
          *
          * @param str Nombre de la clase, o espacio de nombre a instanciar
-         * @returns {Function}
+         * @returns {*}
          */
-        stringToFunction: function(str) {
+        function stringToFunction(str) {
             var arr = str.split(".");
-
             var fn = (window || this);
-            for (var i = 0, len = arr.length; i < len; i++) {
-                fn = fn[arr[i]];
+            for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
+                var part = arr_1[_i];
+                fn = fn[part];
             }
-
             if (typeof fn !== "function") {
                 throw new Error("function not found");
             }
-
-            return  fn;
+            return fn;
         }
-    };
-}());
+        util.stringToFunction = stringToFunction;
+    })(util = Loira.util || (Loira.util = {}));
+})(Loira || (Loira = {}));
+//# sourceMappingURL=utils.js.map

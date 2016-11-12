@@ -11,15 +11,9 @@ module Common{
         public icon: string;
         public img: HTMLImageElement;
 
-        /**
-         * Funcion de preparacion de valores inciales (Es una funcion de ayuda sera borrada cuando se consiga solucionar
-         * el problema con la recursion de funcion heradadas)
-         *
-         * @memberof Common.Relation#
-         * @protected
-         * @param { object } options Datos con valores inciales
-         */
-        protected _prepare(options: RelOption): void {
+        constructor(options: RelOption){
+            super(options);
+
             this.start = options.start? options.start : null;
             this.end = options.end? options.end : null;
             this.isDashed = options.isDashed? options.isDashed : false;
@@ -41,7 +35,7 @@ module Common{
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
          * @protected
          */
-        protected _render(ctx: CanvasRenderingContext2D): void {
+        public _render(ctx: CanvasRenderingContext2D): void {
             let start:Symbol = this.start,
                 end:Symbol = this.end,
                 tmp: number,
@@ -261,7 +255,9 @@ module Common{
 
     export abstract class Symbol extends Loira.Element{
 
-        protected _prepare(options: Loira.util.BaseOption): void {
+        constructor(options: Loira.util.BaseOption){
+            super(options);
+
             var link = this._linkSymbol;
             this.on({
                 icon: Loira.Config.assetsPath + 'arrow.png',
@@ -295,7 +291,6 @@ module Common{
                             }
                         }
                     }
-
                     canvas.fall('mouse:down', listener);
                 }
             );
@@ -314,11 +309,12 @@ module Common{
         abstract obtainBorderPos(xm: number, ym: number, points: Line, ctx: CanvasRenderingContext2D): number;
     }
 
+
     export class Actor extends Common.Symbol{
         public img: HTMLImageElement;
 
-        protected _prepare(options: Loira.util.BaseOption): void {
-            super._prepare(options);
+        constructor(options: Loira.util.BaseOption){
+            super(options);
 
             this.img = <HTMLImageElement> document.createElement('IMG');
             this.img.src = Loira.Config.assetsPath + 'actor.png';
@@ -358,7 +354,7 @@ module Common{
             return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
         }
 
-        protected _render(ctx: CanvasRenderingContext2D): void {
+        public _render(ctx: CanvasRenderingContext2D): void {
             let textW:number = ctx.measureText(this.text).width;
             if (textW > this.width){
                 this.x = this.x + this.width/2 - textW/2;
