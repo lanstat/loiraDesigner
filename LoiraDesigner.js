@@ -4,7 +4,7 @@ var classes = [
 	"../../core/canvas.js",
 	"../../core/events.js",
 	"../../core/utils.js",
-	"../../core/objects.js",
+	"../../core/element.js",
 	"../../core/common.js",
     "../../core/relations.js",
 	"../../plugins/xmiparser.js",

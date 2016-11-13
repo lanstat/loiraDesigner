@@ -7,7 +7,7 @@ module Loira.event{
      * @property {int} y - Posicion y del puntero
      * @property {string} type - Tipo de evento
      */
-    export class mouseEvent{
+    export class MouseEvent{
         public x: number;
         public y: number;
         public type: string;
@@ -26,11 +26,11 @@ module Loira.event{
      * @property {object} selected - Objeto seleccionado
      * @property {string} type - Tipo de evento
      */
-    export class objectEvent{
-        public selected: Common.Symbol;
+    export class ObjectEvent{
+        public selected: Loira.Element;
         public type: string;
 
-        constructor(selected: Common.Symbol, type: string) {
+        constructor(selected: Loira.Element, type: string) {
             this.selected = selected;
             this.type = type;
         }
@@ -43,7 +43,7 @@ module Loira.event{
      * @property {object} selected - Relacion seleccionada
      * @property {string} type - Tipo de evento
      */
-    export class relationEvent{
+    export class RelationEvent{
         public selected: Common.Relation;
         public type: string;
 
