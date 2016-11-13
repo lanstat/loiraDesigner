@@ -1,15 +1,11 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 /**
  * Diagrama de Caso de uso
  *
  * @namespace
  */
-var UseCase;
-(function (UseCase_1) {
+module UseCase{
+    import BaseOption = Loira.util.BaseOption;
+    import RelOption = Loira.util.RelOption;
     /**
      * Simbolo de Caso de uso
      *
@@ -17,27 +13,38 @@ var UseCase;
      * @memberof UseCase
      * @augments Common.Symbol
      */
-    var UseCase = (function (_super) {
-        __extends(UseCase, _super);
-        function UseCase(options) {
-            _super.call(this, options);
+    export class UseCase extends Common.Symbol {
+        constructor(options: BaseOption) {
+            super(options);
+
             this.width = 100;
             this.height = 70;
             this.text = options.text;
             this.type = 'use_case';
         }
-        UseCase.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
-            var a = this.width / 2;
-            var b = this.height / 2;
-            var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
-            return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
-        };
-        UseCase.prototype._render = function (ctx) {
+
+        obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+            let a = this.width/2;
+            let b = this.height/2;
+            let ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
+
+            return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
+        }
+
+        _render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             if (this.text) {
-                var kappa = .5522848, ox = (this.width / 2) * kappa, oy = (this.height / 2) * kappa, xe = this.x + this.width, ye = this.y + this.height, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
+                var kappa = .5522848,
+                    ox = (this.width / 2) * kappa,
+                    oy = (this.height / 2) * kappa,
+                    xe = this.x + this.width,
+                    ye = this.y + this.height,
+                    xm = this.x + this.width / 2,
+                    ym = this.y + this.height / 2;
+
                 ctx.beginPath();
                 ctx.lineWidth = 2;
+
                 ctx.moveTo(this.x, ym);
                 ctx.bezierCurveTo(this.x, ym - oy, xm - ox, this.y, xm, this.y);
                 ctx.bezierCurveTo(xm + ox, this.y, xe, ym - oy, xe, ym);
@@ -47,42 +54,50 @@ var UseCase;
                 ctx.fillStyle = "#fcf5d9";
                 ctx.fill();
                 ctx.fillStyle = "#000000";
+
                 this._drawText(ctx, this._splitText(ctx, this.text));
             }
-        };
-        UseCase.prototype.recalculateBorders = function () {
-        };
-        UseCase.prototype._splitText = function (ctx, text) {
+        }
+
+        recalculateBorders() {
+        }
+
+        private _splitText(ctx: CanvasRenderingContext2D, text: string) {
             var words = text.split(' ');
             var buff = '';
             var lines = [];
+
             for (var i = 0; i < words.length; i++) {
                 if (ctx.measureText(buff + words[i]).width > this.width - 10) {
                     lines.push(buff);
                     buff = words[i] + ' ';
-                }
-                else {
+                } else {
                     buff = buff + ' ' + words[i];
                 }
             }
             lines.push(buff);
+
             return lines;
-        };
-        UseCase.prototype._drawText = function (ctx, lines, horiAlign, vertAlign) {
-            var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
+        }
+
+        private _drawText(ctx: CanvasRenderingContext2D, lines: any, horiAlign?: boolean, vertAlign?: boolean) {
+            let y,
+                xm = this.x + this.width / 2,
+                ym = this.y + this.height / 2;
             if (typeof lines === 'string') {
                 lines = [lines];
             }
+
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
+
             for (var i = 0; i < lines.length; i++) {
                 var textW = ctx.measureText(lines[i]).width;
                 ctx.fillText(lines[i], xm - textW / 2, y + 3);
                 y = y + Loira.Config.fontSize + 3;
             }
-        };
-        return UseCase;
-    }(Common.Symbol));
-    UseCase_1.UseCase = UseCase;
+        }
+    }
+
     /**
      * Contiene las funciones para relacion de extension
      *
@@ -90,18 +105,17 @@ var UseCase;
      * @memberof UseCase
      * @augments Common.Relation
      */
-    var Extends = (function (_super) {
-        __extends(Extends, _super);
-        function Extends(options) {
+    export class Extends extends Common.Relation{
+        constructor(options: RelOption){
             options.icon = 'spear1.png';
             options.text = '<< extends >>';
             options.isDashed = true;
-            _super.call(this, options);
+
+            super(options);
             this.type = 'extends';
         }
-        return Extends;
-    }(Common.Relation));
-    UseCase_1.Extends = Extends;
+    }
+
     /**
      * Contiene las funciones para relacion de inclusion
      *
@@ -109,17 +123,15 @@ var UseCase;
      * @memberof UseCase
      * @augments Common.Relation
      */
-    var Include = (function (_super) {
-        __extends(Include, _super);
-        function Include(options) {
+    export class Include extends Common.Relation{
+        constructor(options: RelOption){
             options.icon = 'spear1.png';
             options.text = '<< include >>';
             options.isDashed = true;
-            _super.call(this, options);
+
+            super(options);
             this.type = 'include';
         }
-        return Include;
-    }(Common.Relation));
-    UseCase_1.Include = Include;
-})(UseCase || (UseCase = {}));
-//# sourceMappingURL=usecase.js.map
+    }
+}
+

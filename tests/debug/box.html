@@ -38,6 +38,7 @@
         image.src = 'test.jpg';
         image.onload = function () {
             canvas.setBackground(image, true);
+            canvas.renderAll();
         };
 
         canvas.setScrollContainer('genial');

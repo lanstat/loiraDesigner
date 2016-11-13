@@ -1,8 +1,8 @@
 //Esta clase es solo para uso en desarrollo 
 
 var classes = [
-	"../../core/canvas.js",
 	"../../core/events.js",
+	"../../core/canvas.js",
 	"../../core/utils.js",
 	"../../core/element.js",
 	"../../core/common.js",
@@ -10,7 +10,7 @@ var classes = [
 	"../../plugins/xmiparser.js",
 	"../../plugins/usecase.js",
 	"../../plugins/box.js",
-	"../../plugins/workflow.js",
+	//"../../plugins/workflow.js",
 	"../../config.js"
 ];
 
