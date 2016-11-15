@@ -307,6 +307,41 @@ module Common{
          * @returns {number} Distancia borde del simbolo
          */
         abstract obtainBorderPos(xm: number, ym: number, points: Line, ctx: CanvasRenderingContext2D): number;
+
+        private _splitText(ctx: CanvasRenderingContext2D, text: string, padding: number = 10) {
+            var words = text.split(' ');
+            var buff = '';
+            var lines = [];
+
+            for (var i = 0; i < words.length; i++) {
+                if (ctx.measureText(buff + words[i]).width > this.width - padding) {
+                    lines.push(buff);
+                    buff = words[i] + ' ';
+                } else {
+                    buff = buff + ' ' + words[i];
+                }
+            }
+            lines.push(buff);
+
+            return lines;
+        }
+
+        protected drawText(ctx: CanvasRenderingContext2D, line: string, horiAlign?: boolean, vertAlign?: boolean) {
+            let y,
+                xm = this.x + this.width / 2,
+                ym = this.y + this.height / 2,
+                lines: string[];
+
+            lines = this._splitText(ctx, line);
+
+            y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
+
+            for (var i = 0; i < lines.length; i++) {
+                let textW: number = ctx.measureText(lines[i]).width;
+                ctx.fillText(lines[i], xm - textW / 2, y + 3);
+                y = y + Loira.Config.fontSize + 3;
+            }
+        }
     }
 
 

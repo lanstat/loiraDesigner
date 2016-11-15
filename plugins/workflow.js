@@ -11,7 +11,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var Workflow;
 (function (Workflow) {
     /**
-     * Simbolo de proceso
+     * Process symbol
      *
      * @class
      * @memberof Workflow
@@ -59,7 +59,7 @@ var Workflow;
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
             ctx.fillStyle = "#000000";
-            this._drawText(ctx, this._splitText(ctx, this.text));
+            this.drawText(ctx, this.text);
         };
         Process.prototype.recalculateBorders = function () {
             var xm = Math.round(this.width / 2), ym = Math.round(this.height / 2);
@@ -68,39 +68,11 @@ var Workflow;
             this.borders.topRight = Math.atan(ym / -xm) + Math.PI;
             this.borders.bottomRight = Math.atan(-ym / -xm) + Math.PI;
         };
-        Process.prototype._splitText = function (ctx, text) {
-            var words = text.split(' ');
-            var buff = '';
-            var lines = [];
-            for (var i = 0; i < words.length; i++) {
-                if (ctx.measureText(buff + words[i]).width > this.width - 10) {
-                    lines.push(buff);
-                    buff = words[i] + ' ';
-                }
-                else {
-                    buff = buff + ' ' + words[i];
-                }
-            }
-            lines.push(buff);
-            return lines;
-        };
-        Process.prototype._drawText = function (ctx, lines, horiAlign, vertAlign) {
-            var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
-            if (typeof lines === 'string') {
-                lines = [lines];
-            }
-            y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
-            for (var i = 0; i < lines.length; i++) {
-                var textW = ctx.measureText(lines[i]).width;
-                ctx.fillText(lines[i], xm - textW / 2, y + 3);
-                y = y + Loira.Config.fontSize + 3;
-            }
-        };
         return Process;
     }(Common.Symbol));
     Workflow.Process = Process;
     /**
-     * Simbolo base para terminadores de flujo de trabajo
+     * Base symbol for terminators of workflow
      *
      * @class
      * @memberof Workflow
@@ -134,37 +106,9 @@ var Workflow;
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
             ctx.fillStyle = "#000000";
-            this._drawText(ctx, this._splitText(ctx, this.text));
+            this.drawText(ctx, this.text);
         };
         Terminator.prototype.recalculateBorders = function () { };
-        Terminator.prototype._splitText = function (ctx, text) {
-            var words = text.split(' ');
-            var buff = '';
-            var lines = [];
-            for (var i = 0; i < words.length; i++) {
-                if (ctx.measureText(buff + words[i]).width > this.width - 10) {
-                    lines.push(buff);
-                    buff = words[i] + ' ';
-                }
-                else {
-                    buff = buff + ' ' + words[i];
-                }
-            }
-            lines.push(buff);
-            return lines;
-        };
-        Terminator.prototype._drawText = function (ctx, lines, horiAlign, vertAlign) {
-            var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
-            if (typeof lines === 'string') {
-                lines = [lines];
-            }
-            y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
-            for (var i = 0; i < lines.length; i++) {
-                var textW = ctx.measureText(lines[i]).width;
-                ctx.fillText(lines[i], xm - textW / 2, y + 3);
-                y = y + Loira.Config.fontSize + 3;
-            }
-        };
         return Terminator;
     }(Common.Symbol));
     var StartTerminator = (function (_super) {
@@ -195,7 +139,7 @@ var Workflow;
     }(Terminator));
     Workflow.EndTerminator = EndTerminator;
     /**
-     * Simbolo de datos de flujo de trabajo
+     * Data symbol
      *
      * @class
      * @memberof Workflow
@@ -233,37 +177,9 @@ var Workflow;
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
             ctx.fillStyle = "#000000";
-            this._drawText(ctx, this._splitText(ctx, this.text));
+            this.drawText(ctx, this.text);
         };
         Data.prototype.recalculateBorders = function () {
-        };
-        Data.prototype._splitText = function (ctx, text) {
-            var words = text.split(' ');
-            var buff = '';
-            var lines = [];
-            for (var i = 0; i < words.length; i++) {
-                if (ctx.measureText(buff + words[i]).width > this.width - 10) {
-                    lines.push(buff);
-                    buff = words[i] + ' ';
-                }
-                else {
-                    buff = buff + ' ' + words[i];
-                }
-            }
-            lines.push(buff);
-            return lines;
-        };
-        Data.prototype._drawText = function (ctx, lines, horiAlign, vertAlign) {
-            var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
-            if (typeof lines === 'string') {
-                lines = [lines];
-            }
-            y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
-            for (var i = 0; i < lines.length; i++) {
-                var textW = ctx.measureText(lines[i]).width;
-                ctx.fillText(lines[i], xm - textW / 2, y + 3);
-                y = y + Loira.Config.fontSize + 3;
-            }
         };
         return Data;
     }(Common.Symbol));
@@ -313,37 +229,9 @@ var Workflow;
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
             ctx.fillStyle = "#000000";
-            this._drawText(ctx, this._splitText(ctx, this.text));
+            this.drawText(ctx, this.text);
         };
         Decision.prototype.recalculateBorders = function () {
-        };
-        Decision.prototype._splitText = function (ctx, text) {
-            var words = text.split(' ');
-            var buff = '';
-            var lines = [];
-            for (var i = 0; i < words.length; i++) {
-                if (ctx.measureText(buff + words[i]).width > this.width - 10) {
-                    lines.push(buff);
-                    buff = words[i] + ' ';
-                }
-                else {
-                    buff = buff + ' ' + words[i];
-                }
-            }
-            lines.push(buff);
-            return lines;
-        };
-        Decision.prototype._drawText = function (ctx, lines, horiAlign, vertAlign) {
-            var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
-            if (typeof lines === 'string') {
-                lines = [lines];
-            }
-            y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
-            for (var i = 0; i < lines.length; i++) {
-                var textW = ctx.measureText(lines[i]).width;
-                ctx.fillText(lines[i], xm - textW / 2, y + 3);
-                y = y + Loira.Config.fontSize + 3;
-            }
         };
         return Decision;
     }(Common.Symbol));

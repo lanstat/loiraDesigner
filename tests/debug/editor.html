@@ -53,25 +53,25 @@
             canvas.renderAll();
         });
         document.getElementById('assoc').addEventListener('click', function(){
-            canvas.nextRelation = new Relation.Association({});
+            canvas.defaultRelation = 'Relation.Association';
         });
         document.getElementById('direct').addEventListener('click', function(){
-            canvas.nextRelation = new Relation.DirectAssociation({});
+            canvas.defaultRelation = 'Relation.DirectAssociation';
         });
         document.getElementById('gener').addEventListener('click', function(){
-            canvas.nextRelation = new Relation.Generalization({});
+            canvas.defaultRelation = 'Relation.Generalization';
         });
         document.getElementById('reali').addEventListener('click', function(){
-            canvas.nextRelation = new Relation.Realization({});
+            canvas.defaultRelation = 'Relation.Realization';
         });
         document.getElementById('depen').addEventListener('click', function(){
-            canvas.nextRelation = new Relation.Dependency({});
+            canvas.defaultRelation = 'Relation.Dependency';
         });
         document.getElementById('incl').addEventListener('click', function(){
-            canvas.nextRelation = new UseCase.Include({});
+            canvas.defaultRelation = 'UseCase.Include';
         });
         document.getElementById('exten').addEventListener('click', function(){
-            canvas.nextRelation = new UseCase.Extends({});
+            canvas.defaultRelation = 'UseCase.Extends';
         });
 
         canvas.on('object:added', function(evt){
