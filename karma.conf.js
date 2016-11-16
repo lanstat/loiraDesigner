@@ -18,7 +18,7 @@ module.exports = function(config) {
         // list of files / patterns to load in the browser
         files: [
             'node_modules/jquery/dist/jquery.min.js',
-            'build/js/loira.min.js',
+            'build/js/loira.js',
             'node_modules/qunitjs/qunit/qunit.js',
             'tests/unit/qunit-test.js'
         ],

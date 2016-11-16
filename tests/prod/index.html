@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<script type="text/javascript" src="../../build/js/loira.min.js"></script>
+		<script type="text/javascript" src="../../build/js/loira.js"></script>
         <style>
         </style>
 	</head>
@@ -25,10 +25,7 @@
                 });
 
 				canvas.add(case1, case2, actor);
-
-                var rel = new Relation.Dependency({start:case1, end:case2});
-
-                canvas.addRelation(new Relation.Dependency({start:case1, end:case2}));
+                canvas.add(new Relation.Dependency({start:case1, end:case2}));
 
                 //Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma
                 //solo es en la primera renderizacion

@@ -1,4 +1,4 @@
-test('Creacion de simbolos', function () {
+QUnit.test('Creacion de simbolos', function (assert) {
     Loira.Config.assetsPath = '../../build/assets/';
 
     var _canvas = document.createElement('canvas');
@@ -8,11 +8,11 @@ test('Creacion de simbolos', function () {
 
     canvas.add(actor);
 
-    ok(actor._uid != '', 'No se creo el objeto');
-    ok(canvas.items.length == 1, 'No se agrego el objeto');
+    assert.ok(actor._uid != '', 'No se creo el objeto');
+    assert.ok(canvas.items.length == 1, 'No se agrego el objeto');
 });
 
-test('Eliminacion de simbolos', function () {
+QUnit.test('Eliminacion de simbolos', function (assert) {
     Loira.Config.assetsPath = '../../build/assets/';
 
     var _canvas = document.createElement('canvas');
@@ -30,5 +30,5 @@ test('Eliminacion de simbolos', function () {
 
     canvas.remove(actor);
 
-    ok(canvas.items.length == 2, 'No se elimino el objeto');
+    assert.ok(canvas.items.length == 2, 'No se elimino el objeto');
 });

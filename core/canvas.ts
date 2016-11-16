@@ -63,8 +63,12 @@ module Loira{
          * @class Canvas
          * @param {object} canvas Identificador o elemento canvas
          */
-        constructor(canvas: string) {
-            this._canvas = <HTMLCanvasElement> document.getElementById(canvas);
+        constructor(canvas: any) {
+            if (typeof canvas === 'string'){
+                this._canvas = <HTMLCanvasElement> document.getElementById(canvas);
+            } else {
+                this._canvas = canvas;
+            }
 
             this._callbacks = {};
             this.items = [];

@@ -1,12 +1,12 @@
 var gulp = require('gulp');
 var plug = require('gulp-load-plugins')();
-var karma = require('karma').server;
+var karmaServer = require('karma').Server;
 var path = require('path');
 
 var paths = {
     js: [
-        './core/canvas.js',
         './core/events.js',
+        './core/canvas.js',
         './core/utils.js',
         './core/element.js',
         './core/common.js',
@@ -15,7 +15,7 @@ var paths = {
         './plugins/usecase.js',
         './plugins/box.js',
         './plugins/workflow.js',
-        './config.js'
+        './core/config.js'
     ],
     build: './build'
 };
@@ -84,14 +84,8 @@ gulp.task('test', ['build'], function(done) {
  * @return {undefined}
  */
 function startTests(singleRun, done) {
-    karma.start({
+    new karmaServer({
         configFile: path.join(__dirname, '/karma.conf.js'),
         singleRun: !!singleRun
-    }, karmaCompleted);
-
-    ////////////////
-
-    function karmaCompleted() {
-        done();
-    }
+    }, done).start();
 }
