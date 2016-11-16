@@ -70,12 +70,21 @@ gulp.task('build', ['jsmin', 'js', 'copyAssets']);
 /**
  * Ejecuta las pruebas de la aplicacion
  *
- * @todo Agregar las pruebas respectivas con karma y qunit o jasmine
  * @return {Stream}
  */
-gulp.task('test', ['build'], function(done) {
+gulp.task('testBuild', ['build'], function(done) {
     startTests(true, done);
 });
+
+/**
+ * Ejecuta las pruebas de la aplicacion
+ *
+ * @return {Stream}
+ */
+gulp.task('test', function(done) {
+    startTests(true, done);
+});
+
 
 /**
  * Start the tests using karma.
