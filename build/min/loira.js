@@ -1101,7 +1101,7 @@ var Common;
                     return i;
                 }
             }
-            return -1;
+            return false;
         };
         /**
          * Mueve un punto de la relacion
@@ -1143,7 +1143,6 @@ var Common;
                 if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
-                        // TODO agregar startpoint y endpoint a workflow
                         if (item.baseType != 'relation') {
                             if (item.checkCollision(evt.x, evt.y)) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
@@ -1639,6 +1638,43 @@ var __extends = (this && this.__extends) || function (d, b) {
  */
 var Workflow;
 (function (Workflow) {
+    var BaseOption = Loira.util.BaseOption;
+    var WorkflowOption = (function (_super) {
+        __extends(WorkflowOption, _super);
+        function WorkflowOption() {
+            _super.apply(this, arguments);
+        }
+        return WorkflowOption;
+    }(BaseOption));
+    var Symbol = (function (_super) {
+        __extends(Symbol, _super);
+        function Symbol(options) {
+            _super.call(this, options);
+            this.startPoint = options.startPoint ? options.startPoint : false;
+            this.endPoint = options.endPoint ? options.endPoint : false;
+        }
+        Symbol.prototype._linkSymbol = function () {
+            var _this = this;
+            var listener = this._canvas.on('mouse:down', function (evt) {
+                var canvas = _this._canvas;
+                var relations = canvas.getRelationsFromObject(_this, false, true);
+                if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
+                    for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
+                        var item = _a[_i];
+                        if (item.baseType != 'relation' && !item.startPoint) {
+                            if (item.checkCollision(evt.x, evt.y) && !_this.endPoint) {
+                                var instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                                canvas.add(new instance({}).update(_this, item));
+                                break;
+                            }
+                        }
+                    }
+                }
+                canvas.fall('mouse:down', listener);
+            });
+        };
+        return Symbol;
+    }(Common.Symbol));
     /**
      * Process symbol
      *
@@ -1676,8 +1712,8 @@ var Workflow;
                 result = Loira.util.intersectPointLine(points, { x1: -100, y1: this.y, x2: 100, y2: this.y });
             }
             var x = result.x - (this.x + this.width / 2);
-            var y = result.y - (this.y + this.height / 2);
-            return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+            var axis = result.y - (this.y + this.height / 2);
+            return Math.sqrt(Math.pow(x, 2) + Math.pow(axis, 2));
         };
         Process.prototype._render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
@@ -1698,7 +1734,7 @@ var Workflow;
             this.borders.bottomRight = Math.atan(-ym / -xm) + Math.PI;
         };
         return Process;
-    }(Common.Symbol));
+    }(Symbol));
     Workflow.Process = Process;
     /**
      * Base symbol for terminators of workflow
@@ -1739,7 +1775,7 @@ var Workflow;
         };
         Terminator.prototype.recalculateBorders = function () { };
         return Terminator;
-    }(Common.Symbol));
+    }(Symbol));
     var StartTerminator = (function (_super) {
         __extends(StartTerminator, _super);
         function StartTerminator(options) {
@@ -1811,7 +1847,7 @@ var Workflow;
         Data.prototype.recalculateBorders = function () {
         };
         return Data;
-    }(Common.Symbol));
+    }(Symbol));
     Workflow.Data = Data;
     var Decision = (function (_super) {
         __extends(Decision, _super);
@@ -1863,26 +1899,26 @@ var Workflow;
         Decision.prototype.recalculateBorders = function () {
         };
         return Decision;
-    }(Common.Symbol));
+    }(Symbol));
     Workflow.Decision = Decision;
 })(Workflow || (Workflow = {}));
 //# sourceMappingURL=workflow.js.map
 var Loira;
 (function (Loira) {
-    var fontSize = 12;
-    var fontType = 'Arial';
-    var selected = {
+    var _fontSize = 12;
+    var _fontType = 'Arial';
+    var _selected = {
         color: '#339966'
     };
-    var background = '#aacccc';
-    var assetsPath = '../assets/';
+    var _background = '#aacccc';
+    var _assetsPath = '../assets/';
     var Config;
     (function (Config) {
-        Config.fontSize = Config.fontSize;
-        Config.fontType = Config.fontType;
-        Config.selected = Config.selected;
-        Config.background = Config.background;
-        Config.assetsPath = Config.assetsPath;
+        Config.fontSize = _fontSize;
+        Config.fontType = _fontType;
+        Config.selected = _selected;
+        Config.background = _background;
+        Config.assetsPath = _assetsPath;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=config.js.map

@@ -1,21 +1,21 @@
 module Loira{
-    var fontSize:number = 12;
+    var _fontSize:number = 12;
 
-    var fontType:string = 'Arial';
+    var _fontType:string = 'Arial';
 
-    var selected:any = {
+    var _selected:any = {
         color: '#339966'
     };
 
-    var background:string = '#aacccc';
+    var _background:string = '#aacccc';
 
-    var assetsPath:string = '../assets/';
+    var _assetsPath:string = '../assets/';
 
     export module Config{
-        export var fontSize = fontSize;
-        export var fontType = fontType;
-        export var selected = selected;
-        export var background = background;
-        export var assetsPath = assetsPath;
+        export var fontSize = _fontSize;
+        export var fontType = _fontType;
+        export var selected = _selected;
+        export var background = _background;
+        export var assetsPath = _assetsPath;
     }
 }

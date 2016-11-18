@@ -5,6 +5,47 @@
  */
 module Workflow{
     import BaseOption = Loira.util.BaseOption;
+
+    class WorkflowOption extends BaseOption{
+        startPoint: boolean;
+        endPoint: boolean;
+    }
+
+    abstract class Symbol extends Common.Symbol{
+        protected startPoint: boolean;
+        protected endPoint: boolean;
+
+        constructor(options: WorkflowOption){
+            super(options);
+
+            this.startPoint = options.startPoint? options.startPoint: false;
+            this.endPoint = options.endPoint? options.endPoint: false;
+        }
+
+        protected _linkSymbol(): void{
+            let _this = this;
+            let  listener = this._canvas.on(
+                'mouse:down', function(evt){
+                    var canvas = _this._canvas;
+                    var relations = canvas.getRelationsFromObject(_this, false, true);
+
+                    if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)){
+                        for (let item of canvas.items) {
+                            if (item.baseType != 'relation' && !item.startPoint){
+                                if(item.checkCollision(evt.x, evt.y) && !_this.endPoint){
+                                    var instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                                    canvas.add(new instance({}).update(_this, item));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    canvas.fall('mouse:down', listener);
+                }
+            );
+        }
+    }
+
     /**
      * Process symbol
      *
@@ -12,10 +53,10 @@ module Workflow{
      * @memberof Workflow
      * @augments Common.Symbol
      */
-    export class Process extends Common.Symbol{
+    export class Process extends Symbol{
         borders: any;
 
-        constructor(options: BaseOption){
+        constructor(options: WorkflowOption){
             super(options);
 
             this.width = 100;
@@ -41,7 +82,7 @@ module Workflow{
                 angle += Math.PI;
             }
 
-            var result = {x:100, y:this.y-10};
+            let result = {x:100, y:this.y-10};
 
             if ((angle > this.borders.bottomLeft && angle < this.borders.topLeft) || (angle > this.borders.topRight && angle < this.borders.bottomRight)){
                 result = Loira.util.intersectPointLine(points, {x1:this.x, y1:-100, x2:this.x, y2:100});
@@ -49,10 +90,10 @@ module Workflow{
                 result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
             }
 
-            var x = result.x - (this.x + this.width/2);
-            var y = result.y - (this.y + this.height/2);
+            let x = result.x - (this.x + this.width/2);
+            let axis = result.y - (this.y + this.height/2);
 
-            return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+            return Math.sqrt(Math.pow(x, 2) + Math.pow(axis, 2));
         }
 
         _render(ctx: CanvasRenderingContext2D): void {
@@ -88,7 +129,7 @@ module Workflow{
      * @memberof Workflow
      * @augments Common.Symbol
      */
-    class Terminator extends Common.Symbol{
+    class Terminator extends Symbol{
         obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
             let a = this.width/2;
             let b = this.height/2;
@@ -131,9 +172,8 @@ module Workflow{
     }
 
     export class StartTerminator extends Terminator {
-        startPoint: boolean;
 
-        constructor(options: BaseOption){
+        constructor(options: WorkflowOption){
             super(options);
 
             this.width = 70;
@@ -147,9 +187,8 @@ module Workflow{
     }
 
     export class EndTerminator extends Terminator {
-        endPoint: boolean;
 
-        constructor(options: BaseOption){
+        constructor(options: WorkflowOption){
             super(options);
             this.width = 70;
             this.height = 30;
@@ -166,8 +205,8 @@ module Workflow{
      * @memberof Workflow
      * @augments Common.Symbol
      */
-    export class Data extends Common.Symbol{
-        constructor(options: BaseOption){
+    export class Data extends Symbol{
+        constructor(options: WorkflowOption){
             super(options);
             this.width = 100;
             this.height = 70;
@@ -213,8 +252,8 @@ module Workflow{
         }
     }
 
-    export class Decision extends Common.Symbol{
-        constructor(options: BaseOption){
+    export class Decision extends Symbol{
+        constructor(options: WorkflowOption){
             super(options);
             this.width = 100;
             this.height = 70;

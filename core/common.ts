@@ -236,7 +236,7 @@ module Common{
                     return i;
                 }
             }
-            return -1;
+            return false;
         }
 
         /**
@@ -281,7 +281,6 @@ module Common{
 
                     if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)){
                         for (let item of canvas.items) {
-                            // TODO agregar startpoint y endpoint a workflow
                             if (item.baseType != 'relation'){
                                 if(item.checkCollision(evt.x, evt.y)){
                                     var instance = Loira.util.stringToFunction(canvas.defaultRelation);

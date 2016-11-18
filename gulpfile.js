@@ -36,7 +36,7 @@ gulp.task('jsmin', function() {
         .src(paths.js)
         .pipe(plug.concat('loira.min.js'))
         .pipe(plug.uglify({}))
-        .pipe(gulp.dest(paths.build+'/js'));
+        .pipe(gulp.dest(paths.build+'/min'));
 });
 
 gulp.task('js', function() {
@@ -45,7 +45,7 @@ gulp.task('js', function() {
     return gulp
         .src(paths.js)
         .pipe(plug.concat('loira.js'))
-        .pipe(gulp.dest(paths.build+'/js'));
+        .pipe(gulp.dest(paths.build+'/min'));
 });
 
 gulp.task('eslint', function() {
@@ -63,6 +63,13 @@ gulp.task('copyAssets', function(){
     return gulp
         .src('assets/**')
         .pipe(gulp.dest(paths.build+'/assets'));
+});
+
+gulp.task('copyJs', function(){
+    console.log('Copiando js');
+    return gulp
+        .src(['./core/*.js', './plugins/*.js'])
+        .pipe(gulp.dest(paths.build+'/js'));
 });
 
 gulp.task('build', ['jsmin', 'js', 'copyAssets']);
