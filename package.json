@@ -1,6 +1,6 @@
 {
   "name": "loira-designer",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "Diseñador de diagramas desde paginas web",
   "main": "LoiraDesigner.js",
   "directories": {
