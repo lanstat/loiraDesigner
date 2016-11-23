@@ -47,9 +47,9 @@ module Loira.event{
         public selected: Common.Relation;
         public type: string;
 
-        constructor(selected: Common.Relation, type: string) {
-            this.selected = selected;
-            this.type = type;
+        constructor(selectedRel: Common.Relation, typeRel: string) {
+            this.selected = selectedRel;
+            this.type = typeRel;
         }
     }
 }

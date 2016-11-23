@@ -44,7 +44,7 @@ rules:
   # Best Practices
   accessor-pairs: 2
   block-scoped-var: 0
-  complexity: [2, 9]
+  complexity: [2, 20]
   consistent-return: 0
   curly: 0
   default-case: 0
@@ -60,7 +60,7 @@ rules:
   no-empty-pattern: 2
   no-eq-null: 2
   no-eval: 2
-  no-extend-native: 2
+  no-extend-native: [2, {"exceptions": ["Symbol"]}]
   no-extra-bind: 2
   no-fallthrough: 2
   no-floating-decimal: 0
@@ -90,12 +90,12 @@ rules:
   no-unused-expressions: 2
   no-useless-call: 2
   no-useless-concat: 2
-  no-void: 2
+  no-void: 0
   no-warning-comments: 0
   no-with: 2
   radix: 2
   vars-on-top: 0
-  wrap-iife: 2
+  wrap-iife: [2, "any"]
   yoda: 0
 
   # Strict
@@ -148,7 +148,7 @@ rules:
   max-len: 0
   max-nested-callbacks: 0
   max-params: 0
-  max-statements: [2, 30]
+  max-statements: [2, 50]
   new-cap: 0
   new-parens: 0
   newline-after-var: 0

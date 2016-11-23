@@ -621,12 +621,12 @@ module Loira{
         getRelationsFromObject(object: Loira.Element, onlyIncoming: boolean, onlyOutgoing: boolean): Common.Relation[] {
             let relations = [];
             for (let item of this.items) {
-                if (item.baseType == 'relation') {
+                if (item.baseType === 'relation') {
                     let rel = <Common.Relation> item;
-                    if (rel.start == object || rel.end == object) {
-                        if (rel.start == object && onlyOutgoing) {
+                    if (rel.start === object || rel.end === object) {
+                        if (rel.start === object && onlyOutgoing) {
                             relations.push(item);
-                        } else if (rel.end == object && onlyIncoming) {
+                        } else if (rel.end === object && onlyIncoming) {
                             relations.push(item);
                         } else if (!onlyIncoming && !onlyOutgoing) {
                             relations.push(item);

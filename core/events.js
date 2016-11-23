@@ -42,9 +42,9 @@ var Loira;
          * @property {string} type - Tipo de evento
          */
         var RelationEvent = (function () {
-            function RelationEvent(selected, type) {
-                this.selected = selected;
-                this.type = type;
+            function RelationEvent(selectedRel, typeRel) {
+                this.selected = selectedRel;
+                this.type = typeRel;
             }
             return RelationEvent;
         }());

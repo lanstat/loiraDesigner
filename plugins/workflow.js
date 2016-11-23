@@ -33,7 +33,7 @@ var Workflow;
                 if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
-                        if (item.baseType != 'relation' && !item.startPoint) {
+                        if (item.baseType !== 'relation' && !item.startPoint) {
                             if (item.checkCollision(evt.x, evt.y) && !_this.endPoint) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
                                 canvas.add(new instance({}).update(_this, item));

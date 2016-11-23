@@ -571,13 +571,13 @@ var Loira;
             var relations = [];
             for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
                 var item = _a[_i];
-                if (item.baseType == 'relation') {
+                if (item.baseType === 'relation') {
                     var rel = item;
-                    if (rel.start == object || rel.end == object) {
-                        if (rel.start == object && onlyOutgoing) {
+                    if (rel.start === object || rel.end === object) {
+                        if (rel.start === object && onlyOutgoing) {
                             relations.push(item);
                         }
-                        else if (rel.end == object && onlyIncoming) {
+                        else if (rel.end === object && onlyIncoming) {
                             relations.push(item);
                         }
                         else if (!onlyIncoming && !onlyOutgoing) {
