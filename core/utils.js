@@ -34,7 +34,9 @@ var Loira;
         }());
         util.Line = Line;
         var Point = (function () {
-            function Point() {
+            function Point(x, y) {
+                this.x = x;
+                this.y = y;
             }
             return Point;
         }());

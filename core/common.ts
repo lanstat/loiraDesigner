@@ -86,8 +86,10 @@ module Common{
             if (this.text || this.text.length > 0){
                 ctx.font = "10px " + Loira.Config.fontType;
 
-                init = this.points[0];
-                last = this.points[1];
+                let pivot: number = Math.round(this.points.length / 2);
+
+                init = this.points[pivot - 1];
+                last = this.points[pivot];
 
                 xm = last.x - init.x;
                 ym = last.y - init.y;

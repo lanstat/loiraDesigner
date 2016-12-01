@@ -62,8 +62,9 @@ var Common;
             }
             if (this.text || this.text.length > 0) {
                 ctx.font = "10px " + Loira.Config.fontType;
-                init = this.points[0];
-                last = this.points[1];
+                var pivot = Math.round(this.points.length / 2);
+                init = this.points[pivot - 1];
+                last = this.points[pivot];
                 xm = last.x - init.x;
                 ym = last.y - init.y;
                 tmp = ctx.measureText(this.text).width;

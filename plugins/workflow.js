@@ -11,6 +11,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var Workflow;
 (function (Workflow) {
     var BaseOption = Loira.util.BaseOption;
+    var Point = Loira.util.Point;
     var WorkflowOption = (function (_super) {
         __extends(WorkflowOption, _super);
         function WorkflowOption() {
@@ -36,7 +37,18 @@ var Workflow;
                         if (item.baseType !== 'relation' && !item.startPoint) {
                             if (item.checkCollision(evt.x, evt.y) && !_this.endPoint) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                canvas.add(new instance({}).update(_this, item));
+                                var points = null;
+                                if (_this._uid == item._uid) {
+                                    var widthLeft = _this.x + _this.width + 30;
+                                    var heightHalf = _this.y + _this.height / 2;
+                                    points = [];
+                                    points.push(new Point());
+                                    points.push(new Point(widthLeft, heightHalf));
+                                    points.push(new Point(widthLeft, _this.y - 30));
+                                    points.push(new Point(_this.x + _this.width / 2, _this.y - 30));
+                                    points.push(new Point());
+                                }
+                                canvas.add(new instance({ points: points }).update(_this, item));
                                 break;
                             }
                         }
@@ -57,9 +69,9 @@ var Workflow;
     var Process = (function (_super) {
         __extends(Process, _super);
         function Process(options) {
+            options.width = options.width ? options.width : 100;
+            options.height = options.height ? options.height : 70;
             _super.call(this, options);
-            this.width = 100;
-            this.height = 70;
             this.text = options.text;
             this.type = 'process';
             this.borders = {
@@ -151,9 +163,9 @@ var Workflow;
     var StartTerminator = (function (_super) {
         __extends(StartTerminator, _super);
         function StartTerminator(options) {
+            options.width = options.width ? options.width : 100;
+            options.height = options.height ? options.height : 70;
             _super.call(this, options);
-            this.width = 70;
-            this.height = 30;
             this.text = 'INICIO';
             this.startPoint = true;
             this.maxOutGoingRelation = 1;
@@ -185,9 +197,9 @@ var Workflow;
     var Data = (function (_super) {
         __extends(Data, _super);
         function Data(options) {
+            options.width = options.width ? options.width : 100;
+            options.height = options.height ? options.height : 70;
             _super.call(this, options);
-            this.width = 100;
-            this.height = 70;
             this.text = options.text;
             this.type = 'data';
         }
@@ -224,9 +236,9 @@ var Workflow;
     var Decision = (function (_super) {
         __extends(Decision, _super);
         function Decision(options) {
+            options.width = options.width ? options.width : 100;
+            options.height = options.height ? options.height : 70;
             _super.call(this, options);
-            this.width = 100;
-            this.height = 70;
             this.text = options.text;
             this.type = 'decision';
         }

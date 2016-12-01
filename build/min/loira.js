@@ -42,9 +42,9 @@ var Loira;
          * @property {string} type - Tipo de evento
          */
         var RelationEvent = (function () {
-            function RelationEvent(selected, type) {
-                this.selected = selected;
-                this.type = type;
+            function RelationEvent(selectedRel, typeRel) {
+                this.selected = selectedRel;
+                this.type = typeRel;
             }
             return RelationEvent;
         }());
@@ -625,13 +625,13 @@ var Loira;
             var relations = [];
             for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
                 var item = _a[_i];
-                if (item.baseType == 'relation') {
+                if (item.baseType === 'relation') {
                     var rel = item;
-                    if (rel.start == object || rel.end == object) {
-                        if (rel.start == object && onlyOutgoing) {
+                    if (rel.start === object || rel.end === object) {
+                        if (rel.start === object && onlyOutgoing) {
                             relations.push(item);
                         }
-                        else if (rel.end == object && onlyIncoming) {
+                        else if (rel.end === object && onlyIncoming) {
                             relations.push(item);
                         }
                         else if (!onlyIncoming && !onlyOutgoing) {
@@ -683,7 +683,9 @@ var Loira;
         }());
         util.Line = Line;
         var Point = (function () {
-            function Point() {
+            function Point(x, y) {
+                this.x = x;
+                this.y = y;
             }
             return Point;
         }());
@@ -986,8 +988,9 @@ var Common;
             }
             if (this.text || this.text.length > 0) {
                 ctx.font = "10px " + Loira.Config.fontType;
-                init = this.points[0];
-                last = this.points[1];
+                var pivot = Math.round(this.points.length / 2);
+                init = this.points[pivot - 1];
+                last = this.points[pivot];
                 xm = last.x - init.x;
                 ym = last.y - init.y;
                 tmp = ctx.measureText(this.text).width;
@@ -1024,39 +1027,39 @@ var Common;
          */
         Relation.prototype.checkCollision = function (x, y) {
             var init = null, last = null;
-            var x1 = 0, x2 = 0;
-            var y1 = 0, y2 = 0;
             var xd = 0, yd = 0;
+            var point1 = { x: 0, y: 0 };
+            var point2 = { x: 0, y: 0 };
             var m;
             for (var i = 1; i < this.points.length; i++) {
                 init = this.points[i - 1];
                 last = this.points[i];
-                x1 = init.x;
-                y1 = init.y;
-                y2 = last.y;
-                x2 = last.x;
+                point1.x = init.x;
+                point1.y = init.y;
+                point2.y = last.y;
+                point2.x = last.x;
                 if (init.x > last.x) {
-                    x1 = last.x;
-                    x2 = init.x;
+                    point1.x = last.x;
+                    point2.x = init.x;
                 }
                 if (init.y > last.y) {
-                    y1 = last.y;
-                    y2 = init.y;
+                    point1.y = last.y;
+                    point2.y = init.y;
                 }
-                if (x > x1 - 5 && x < x2 + 5 && y > y1 - 5 && y < y2 + 5) {
+                if (x > point1.x - 5 && x < point2.x + 5 && y > point1.y - 5 && y < point2.y + 5) {
                     yd = Math.abs(last.y - init.y);
                     xd = Math.abs(last.x - init.x);
                     x = Math.abs(x - init.x);
                     y = Math.abs(y - init.y);
                     if (xd > yd) {
                         m = Math.abs((yd / xd) * x);
-                        if ((m == 0 && (y > y1 && y < y2)) || (m > y - 8 && m < y + 8)) {
+                        if ((m === 0 && (y > point1.y && y < point2.y)) || (m > y - 8 && m < y + 8)) {
                             return true;
                         }
                     }
                     else {
                         m = Math.abs((xd / yd) * y);
-                        if ((m == 0 && (x > x1 && x < x2)) || (m > x - 8 && m < x + 8)) {
+                        if ((m === 0 && (x > point1.x && x < point2.x)) || (m > x - 8 && m < x + 8)) {
                             return true;
                         }
                     }
@@ -1143,7 +1146,7 @@ var Common;
                 if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
-                        if (item.baseType != 'relation') {
+                        if (item.baseType !== 'relation') {
                             if (item.checkCollision(evt.x, evt.y)) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
                                 canvas.add(new instance({}).update(_this, item));
@@ -1639,6 +1642,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var Workflow;
 (function (Workflow) {
     var BaseOption = Loira.util.BaseOption;
+    var Point = Loira.util.Point;
     var WorkflowOption = (function (_super) {
         __extends(WorkflowOption, _super);
         function WorkflowOption() {
@@ -1661,10 +1665,21 @@ var Workflow;
                 if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
-                        if (item.baseType != 'relation' && !item.startPoint) {
+                        if (item.baseType !== 'relation' && !item.startPoint) {
                             if (item.checkCollision(evt.x, evt.y) && !_this.endPoint) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                canvas.add(new instance({}).update(_this, item));
+                                var points = null;
+                                if (_this._uid == item._uid) {
+                                    var widthLeft = _this.x + _this.width + 30;
+                                    var heightHalf = _this.y + _this.height / 2;
+                                    points = [];
+                                    points.push(new Point());
+                                    points.push(new Point(widthLeft, heightHalf));
+                                    points.push(new Point(widthLeft, _this.y - 30));
+                                    points.push(new Point(_this.x + _this.width / 2, _this.y - 30));
+                                    points.push(new Point());
+                                }
+                                canvas.add(new instance({ points: points }).update(_this, item));
                                 break;
                             }
                         }
@@ -1685,9 +1700,9 @@ var Workflow;
     var Process = (function (_super) {
         __extends(Process, _super);
         function Process(options) {
+            options.width = options.width ? options.width : 100;
+            options.height = options.height ? options.height : 70;
             _super.call(this, options);
-            this.width = 100;
-            this.height = 70;
             this.text = options.text;
             this.type = 'process';
             this.borders = {
@@ -1779,9 +1794,9 @@ var Workflow;
     var StartTerminator = (function (_super) {
         __extends(StartTerminator, _super);
         function StartTerminator(options) {
+            options.width = options.width ? options.width : 100;
+            options.height = options.height ? options.height : 70;
             _super.call(this, options);
-            this.width = 70;
-            this.height = 30;
             this.text = 'INICIO';
             this.startPoint = true;
             this.maxOutGoingRelation = 1;
@@ -1813,9 +1828,9 @@ var Workflow;
     var Data = (function (_super) {
         __extends(Data, _super);
         function Data(options) {
+            options.width = options.width ? options.width : 100;
+            options.height = options.height ? options.height : 70;
             _super.call(this, options);
-            this.width = 100;
-            this.height = 70;
             this.text = options.text;
             this.type = 'data';
         }
@@ -1852,9 +1867,9 @@ var Workflow;
     var Decision = (function (_super) {
         __extends(Decision, _super);
         function Decision(options) {
+            options.width = options.width ? options.width : 100;
+            options.height = options.height ? options.height : 70;
             _super.call(this, options);
-            this.width = 100;
-            this.height = 70;
             this.text = options.text;
             this.type = 'decision';
         }

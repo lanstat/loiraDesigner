@@ -5,6 +5,7 @@
  */
 module Workflow{
     import BaseOption = Loira.util.BaseOption;
+    import Point = Loira.util.Point;
 
     class WorkflowOption extends BaseOption{
         startPoint: boolean;
@@ -33,8 +34,22 @@ module Workflow{
                         for (let item of canvas.items) {
                             if (item.baseType !== 'relation' && !item.startPoint){
                                 if(item.checkCollision(evt.x, evt.y) && !_this.endPoint){
-                                    var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                    canvas.add(new instance({}).update(_this, item));
+                                    let instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                                    let points: Point[] = null;
+
+                                    if (_this._uid == item._uid){
+                                        let widthLeft: number = _this.x + _this.width + 30;
+                                        let heightHalf: number = _this.y + _this.height/2;
+
+                                        points = [];
+                                        points.push(new Point());
+                                        points.push(new Point(widthLeft, heightHalf));
+                                        points.push(new Point(widthLeft, _this.y - 30));
+                                        points.push(new Point(_this.x + _this.width/2, _this.y - 30));
+                                        points.push(new Point());
+                                    }
+
+                                    canvas.add(new instance({points: points}).update(_this, item));
                                     break;
                                 }
                             }
@@ -57,10 +72,10 @@ module Workflow{
         borders: any;
 
         constructor(options: WorkflowOption){
-            super(options);
+            options.width = options.width? options.width : 100;
+            options.height = options.height? options.height : 70;
 
-            this.width = 100;
-            this.height = 70;
+            super(options);
             this.text = options.text;
             this.type = 'process';
             this.borders = {
@@ -174,10 +189,11 @@ module Workflow{
     export class StartTerminator extends Terminator {
 
         constructor(options: WorkflowOption){
+            options.width = options.width? options.width : 100;
+            options.height = options.height? options.height : 70;
+
             super(options);
 
-            this.width = 70;
-            this.height = 30;
             this.text = 'INICIO';
             this.startPoint = true;
             this.maxOutGoingRelation = 1;
@@ -207,9 +223,10 @@ module Workflow{
      */
     export class Data extends Symbol{
         constructor(options: WorkflowOption){
+            options.width = options.width? options.width : 100;
+            options.height = options.height? options.height : 70;
+
             super(options);
-            this.width = 100;
-            this.height = 70;
             this.text = options.text;
             this.type = 'data';
         }
@@ -254,9 +271,10 @@ module Workflow{
 
     export class Decision extends Symbol{
         constructor(options: WorkflowOption){
+            options.width = options.width? options.width : 100;
+            options.height = options.height? options.height : 70;
+
             super(options);
-            this.width = 100;
-            this.height = 70;
             this.text = options.text;
             this.type = 'decision';
         }
