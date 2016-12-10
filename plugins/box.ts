@@ -26,7 +26,8 @@ module Box{
         _render(ctx: CanvasRenderingContext2D): void {
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.fillStyle = "#000000";
+
+            ctx.fillText(this.text, this.x, this.y -10)
         }
 
         recalculateBorders() {

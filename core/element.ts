@@ -16,7 +16,7 @@ module Loira{
         public centerObject: boolean;
         public maxOutGoingRelation: number;
         public _buttons: any[];
-        public _canvas: any;
+        public _canvas: Loira.Canvas;
         public type: string;
         public baseType: string;
         public extras: any;
@@ -27,7 +27,7 @@ module Loira{
          *
          * @memberof Loira.Element#
          * @protected
-         * @param { object } options Conjunto de valores iniciales
+         * @param { BaseOption } options Conjunto de valores iniciales
          */
         constructor(options: BaseOption) {
             this._uid = Loira.util.createRandom(8);
@@ -192,14 +192,14 @@ module Loira{
         show(): void {
             var _this = this;
             if (this._canvas && this._canvas._canvasContainer) {
-                var pX: number = (_this.x + _this.width / 2) - this._canvas._canvasContainer.element.offsetWidth / 2;
-                var pY: number = (_this.y + _this.height / 2) - this._canvas._canvasContainer.element.offsetHeight / 2;
+                var pX: number = (_this.x + _this.width / 2) - this._canvas.container.offsetWidth / 2;
+                var pY: number = (_this.y + _this.height / 2) - this._canvas.container.offsetHeight / 2;
                 pX = pX >= 0 ? pX : 0;
                 pY = pY >= 0 ? pY : 0;
                 this._canvas._canvasContainer.x = pX;
                 this._canvas._canvasContainer.y = pY;
-                this._canvas._canvasContainer.element.scrollTop = pY;
-                this._canvas._canvasContainer.element.scrollLeft = pX;
+                this._canvas.container.scrollTop = pY;
+                this._canvas.container.scrollLeft = pX;
             }
         }
         /**

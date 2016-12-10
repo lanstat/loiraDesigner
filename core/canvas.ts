@@ -50,7 +50,7 @@ module Loira{
         /**
          * @property {Object} _canvasContainer - Contenedor del canvas
          */
-        private _canvasContainer: CanvasContainer = null;
+        public _canvasContainer: CanvasContainer = null;
         /**
          * @property {String}  defaultRelation - Relacion que se usara por defecto cuando se agregue una nueva union
          */
@@ -122,11 +122,15 @@ module Loira{
             ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
             for (var i = 0; i < this.items.length; i++) {
+                ctx.save();
                 this.items[i]._render(ctx);
+                ctx.restore();
             }
 
             if (this._selected) {
+                ctx.save();
                 this._selected.drawSelected(ctx);
+                ctx.restore();
                 this._selected._renderButtons(ctx);
             }
         }

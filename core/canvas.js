@@ -110,10 +110,14 @@ var Loira;
             var ctx = this._canvas.getContext('2d');
             ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
             for (var i = 0; i < this.items.length; i++) {
+                ctx.save();
                 this.items[i]._render(ctx);
+                ctx.restore();
             }
             if (this._selected) {
+                ctx.save();
                 this._selected.drawSelected(ctx);
+                ctx.restore();
                 this._selected._renderButtons(ctx);
             }
         };
