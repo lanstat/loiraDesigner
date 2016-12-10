@@ -14,8 +14,12 @@ module Loira{
         public y: number = 0;
         public w: number = 0;
         public h: number = 0;
-        public element: HTMLElement;
         public listener: () => boolean;
+    }
+
+    class CanvasConfig {
+        public width: number = 0;
+        public height: number = 0;
     }
 
     export class Canvas {
@@ -36,39 +40,60 @@ module Loira{
          */
         private items: Loira.Element[] = [];
         /**
-         * @property {Object} _canvas - Puntero al objeto de renderizado de lienzo
+         * @property {HTMLCanvasElement} _canvas - Puntero al objeto de renderizado de lienzo
          */
         private _canvas: HTMLCanvasElement = null;
         /**
-         * @property {Image} _background - Imagen de fondo
+         * @property {HTMLCanvasElement} _background - Imagen de fondo
          */
-        private _background: HTMLImageElement = null;
+        private _background: HTMLCanvasElement = null;
         /**
-         * @property {HtmlElement} _canvasContainer - Contenedor del canvas
+         * @property {Object} _canvasContainer - Contenedor del canvas
          */
         private _canvasContainer: CanvasContainer = null;
         /**
          * @property {String}  defaultRelation - Relacion que se usara por defecto cuando se agregue una nueva union
          */
         public defaultRelation: string = null;
+        /**
+         * @property {HTMLDivElement}  container - Canvas container
+         */
+        public container: HTMLDivElement = null;
 
         public _callbacks: any;
 
         private _border: any;
+
+        private _config: CanvasConfig;
 
         /**
          * Crea una nueva instancia de canvas
          *
          * @memberof Loira
          * @class Canvas
-         * @param {object} canvas Identificador o elemento canvas
+         * @param {object} container Id of the element container or pointer of the container
+         * @param {CanvasConfig} config Canvas configurations
          */
-        constructor(canvas: any) {
-            if (typeof canvas === 'string'){
-                this._canvas = <HTMLCanvasElement> document.getElementById(canvas);
+        constructor(container: any, config: CanvasConfig) {
+            if (typeof container === 'string'){
+                this.container = <HTMLDivElement> document.getElementById(container);
             } else {
-                this._canvas = canvas;
+                this.container = container;
             }
+            this._canvas = <HTMLCanvasElement> document.createElement('canvas');
+            this._canvas.width = config.width;
+            this._canvas.height = config.height;
+            this._canvas.style.position = 'absolute';
+            this._canvas.style.left = '0';
+            this._canvas.style.top = '0';
+            this._canvas.style.zIndex = '100';
+
+            this.container.style.width = this.container.style.maxWidth = config.width + 'px';
+            this.container.style.height = this.container.style.maxHeight = config.height + 'px';
+            this.container.style.position = 'relative';
+            this._config = config;
+
+            this.container.appendChild(this._canvas);
 
             this._callbacks = {};
             this.items = [];
@@ -82,7 +107,9 @@ module Loira{
                     borderTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderTopWidth'], 10) || 0
                 }
             }
+
             this._bind();
+            this._setScrollContainer();
         }
 
         /**
@@ -93,10 +120,6 @@ module Loira{
             let ctx: CanvasRenderingContext2D = this._canvas.getContext('2d');
 
             ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-
-            if (this._background) {
-                ctx.drawImage(this._background, 0, 0);
-            }
 
             for (var i = 0; i < this.items.length; i++) {
                 this.items[i]._render(ctx);
@@ -252,12 +275,15 @@ module Loira{
             this._canvas.onselectstart = null;
 
             if (this._canvasContainer) {
-                this._canvasContainer.element.removeEventListener('scroll', this._canvasContainer.listener);
+                this.container.removeEventListener('scroll', this._canvasContainer.listener);
             }
 
             this._canvasContainer = null;
 
             this._canvas = null;
+            while(this.container.firstChild){
+                this.container.removeChild(this.container.firstChild);
+            }
         }
 
         /**
@@ -572,24 +598,33 @@ module Loira{
          * @param resizeToImage Define if the canvas should resize to image size
          */
         setBackground(image: HTMLImageElement, resizeToImage: boolean) {
-            this._background = image;
+            this._background = <HTMLCanvasElement> document.createElement('canvas');
+            this._background.width = image.width;
+            this._background.height = image.height;
+            this._background.style.position = 'absolute';
+            this._background.style.left = '0';
+            this._background.style.top = '0';
+            this._background.style.zIndex = '0';
+
+            this._background.getContext('2d').drawImage(image, 0, 0);
 
             if (resizeToImage) {
+                this.container.style.overflow = 'auto';
                 this._canvas.width = image.width;
                 this._canvas.height = image.height;
             }
+
+            this.container.insertBefore(this._background, this._canvas);
         }
 
         /**
          * Define un elemento que contendra al canvas y servira de scroll
-         *
-         * @param container Contenedor del canvas
          */
-        setScrollContainer(container: string) {
+        private _setScrollContainer() {
             let _this = this;
 
             if (_this._canvasContainer) {
-                _this._canvasContainer.element.removeEventListener('scroll', _this._canvasContainer.listener);
+                _this.container.removeEventListener('scroll', _this._canvasContainer.listener);
             }
 
             _this._canvasContainer = {
@@ -597,17 +632,16 @@ module Loira{
                 y: 0,
                 w: 0,
                 h: 0,
-                element: document.getElementById(container),
                 listener: function () {
-                    _this._canvasContainer.y = _this._canvasContainer.element.scrollTop;
-                    _this._canvasContainer.x = _this._canvasContainer.element.scrollLeft;
+                    _this._canvasContainer.y = _this.container.scrollTop;
+                    _this._canvasContainer.x = _this.container.scrollLeft;
                     return true;
                 }
             };
 
-            _this._canvasContainer.w = _this._canvasContainer.element.clientWidth;
-            _this._canvasContainer.h = _this._canvasContainer.element.clientHeight;
-            _this._canvasContainer.element.addEventListener('scroll', _this._canvasContainer.listener);
+            _this._canvasContainer.w = _this.container.clientWidth;
+            _this._canvasContainer.h = _this.container.clientHeight;
+            _this.container.addEventListener('scroll', _this._canvasContainer.listener);
         }
 
         /**

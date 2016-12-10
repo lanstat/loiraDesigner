@@ -1,7 +1,7 @@
 QUnit.test('Creacion de simbolos', function (assert) {
     Loira.Config.assetsPath = '../../build/assets/';
 
-    var _canvas = document.createElement('canvas');
+    var _canvas = document.createElement('div');
 
     var canvas = new Loira.Canvas(_canvas);
     var actor = new Common.Actor({x:20, y:10, text:'Prueba'});
@@ -15,7 +15,7 @@ QUnit.test('Creacion de simbolos', function (assert) {
 QUnit.test('Eliminacion de simbolos', function (assert) {
     Loira.Config.assetsPath = '../../build/assets/';
 
-    var _canvas = document.createElement('canvas');
+    var _canvas = document.createElement('div');
 
     var canvas = new Loira.Canvas(_canvas);
 

@@ -22,8 +22,9 @@
         <button id="delBox">Borrar caja</button>
         <button id="destroy">Destruir canvas</button>
     </div>
-    <div id="genial" style="width: 85%; height: 500px; float: left; overflow: auto">
-        <canvas style="background-color:#aacccc" id="_canvas" width="800" height="500" tabindex="999"></canvas>
+    <div id="genial" style="width: 85%; height: 500px; float: left">
+        <div id="_canvas2"></div>
+        <!--<canvas style="background-color:#aacccc" id="_canvas" width="800" height="500" tabindex="999"></canvas>-->
     </div>
 </div>
 <script>
@@ -31,7 +32,7 @@
 
         Loira.Config.assetsPath = '../../assets/';
 
-        var canvas = new Loira.Canvas('_canvas');
+        var canvas = new Loira.Canvas('_canvas2', {height: 500, width: 800});
         var myObject;
 
         var image = new Image();
@@ -40,8 +41,6 @@
             canvas.setBackground(image, true);
             canvas.renderAll();
         };
-
-        canvas.setScrollContainer('genial');
 
         // TODO Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma solo es en la primera renderizacion
         setTimeout(function(){
@@ -67,14 +66,6 @@
 
         document.getElementById('destroy').addEventListener('click', function(){
             canvas.destroy();
-        });
-
-        canvas.on('object:added', function(evt){
-            if(evt.selected.type == 'use_case'){
-                evt.selected.text = prompt("Por favor ingrese un texto", "caso de uso");
-            }else if(evt.selected.type == 'actor'){
-                evt.selected.text = prompt("Por favor ingrese un nombre", "actor");
-            }
         });
     }
 </script>

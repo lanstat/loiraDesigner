@@ -17,15 +17,23 @@ var Loira;
         }
         return CanvasContainer;
     }());
+    var CanvasConfig = (function () {
+        function CanvasConfig() {
+            this.width = 0;
+            this.height = 0;
+        }
+        return CanvasConfig;
+    }());
     var Canvas = (function () {
         /**
          * Crea una nueva instancia de canvas
          *
          * @memberof Loira
          * @class Canvas
-         * @param {object} canvas Identificador o elemento canvas
+         * @param {object} container Id of the element container or pointer of the container
+         * @param {CanvasConfig} config Canvas configurations
          */
-        function Canvas(canvas) {
+        function Canvas(container, config) {
             /**
              * @property {Object}  _selected - Objeto que se encuentra seleccionado
              */
@@ -43,27 +51,43 @@ var Loira;
              */
             this.items = [];
             /**
-             * @property {Object} _canvas - Puntero al objeto de renderizado de lienzo
+             * @property {HTMLCanvasElement} _canvas - Puntero al objeto de renderizado de lienzo
              */
             this._canvas = null;
             /**
-             * @property {Image} _background - Imagen de fondo
+             * @property {HTMLCanvasElement} _background - Imagen de fondo
              */
             this._background = null;
             /**
-             * @property {HtmlElement} _canvasContainer - Contenedor del canvas
+             * @property {Object} _canvasContainer - Contenedor del canvas
              */
             this._canvasContainer = null;
             /**
              * @property {String}  defaultRelation - Relacion que se usara por defecto cuando se agregue una nueva union
              */
             this.defaultRelation = null;
-            if (typeof canvas === 'string') {
-                this._canvas = document.getElementById(canvas);
+            /**
+             * @property {HTMLDivElement}  container - Canvas container
+             */
+            this.container = null;
+            if (typeof container === 'string') {
+                this.container = document.getElementById(container);
             }
             else {
-                this._canvas = canvas;
+                this.container = container;
             }
+            this._canvas = document.createElement('canvas');
+            this._canvas.width = config.width;
+            this._canvas.height = config.height;
+            this._canvas.style.position = 'absolute';
+            this._canvas.style.left = '0';
+            this._canvas.style.top = '0';
+            this._canvas.style.zIndex = '100';
+            this.container.style.width = this.container.style.maxWidth = config.width + 'px';
+            this.container.style.height = this.container.style.maxHeight = config.height + 'px';
+            this.container.style.position = 'relative';
+            this._config = config;
+            this.container.appendChild(this._canvas);
             this._callbacks = {};
             this.items = [];
             this.defaultRelation = 'Relation.Association';
@@ -76,6 +100,7 @@ var Loira;
                 };
             }
             this._bind();
+            this._setScrollContainer();
         }
         /**
          * Dibuja las relaciones y simbolos dentro del canvas
@@ -84,9 +109,6 @@ var Loira;
         Canvas.prototype.renderAll = function () {
             var ctx = this._canvas.getContext('2d');
             ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-            if (this._background) {
-                ctx.drawImage(this._background, 0, 0);
-            }
             for (var i = 0; i < this.items.length; i++) {
                 this.items[i]._render(ctx);
             }
@@ -228,10 +250,13 @@ var Loira;
             this._canvas.ondblclick = null;
             this._canvas.onselectstart = null;
             if (this._canvasContainer) {
-                this._canvasContainer.element.removeEventListener('scroll', this._canvasContainer.listener);
+                this.container.removeEventListener('scroll', this._canvasContainer.listener);
             }
             this._canvasContainer = null;
             this._canvas = null;
+            while (this.container.firstChild) {
+                this.container.removeChild(this.container.firstChild);
+            }
         };
         /**
          * Agrega un nuevo escuchador al evento especifico
@@ -527,37 +552,43 @@ var Loira;
          * @param resizeToImage Define if the canvas should resize to image size
          */
         Canvas.prototype.setBackground = function (image, resizeToImage) {
-            this._background = image;
+            this._background = document.createElement('canvas');
+            this._background.width = image.width;
+            this._background.height = image.height;
+            this._background.style.position = 'absolute';
+            this._background.style.left = '0';
+            this._background.style.top = '0';
+            this._background.style.zIndex = '0';
+            this._background.getContext('2d').drawImage(image, 0, 0);
             if (resizeToImage) {
+                this.container.style.overflow = 'auto';
                 this._canvas.width = image.width;
                 this._canvas.height = image.height;
             }
+            this.container.insertBefore(this._background, this._canvas);
         };
         /**
          * Define un elemento que contendra al canvas y servira de scroll
-         *
-         * @param container Contenedor del canvas
          */
-        Canvas.prototype.setScrollContainer = function (container) {
+        Canvas.prototype._setScrollContainer = function () {
             var _this = this;
             if (_this._canvasContainer) {
-                _this._canvasContainer.element.removeEventListener('scroll', _this._canvasContainer.listener);
+                _this.container.removeEventListener('scroll', _this._canvasContainer.listener);
             }
             _this._canvasContainer = {
                 x: 0,
                 y: 0,
                 w: 0,
                 h: 0,
-                element: document.getElementById(container),
                 listener: function () {
-                    _this._canvasContainer.y = _this._canvasContainer.element.scrollTop;
-                    _this._canvasContainer.x = _this._canvasContainer.element.scrollLeft;
+                    _this._canvasContainer.y = _this.container.scrollTop;
+                    _this._canvasContainer.x = _this.container.scrollLeft;
                     return true;
                 }
             };
-            _this._canvasContainer.w = _this._canvasContainer.element.clientWidth;
-            _this._canvasContainer.h = _this._canvasContainer.element.clientHeight;
-            _this._canvasContainer.element.addEventListener('scroll', _this._canvasContainer.listener);
+            _this._canvasContainer.w = _this.container.clientWidth;
+            _this._canvasContainer.h = _this.container.clientHeight;
+            _this.container.addEventListener('scroll', _this._canvasContainer.listener);
         };
         /**
          * Obtiene las relaciones vinculadas a un objeto
