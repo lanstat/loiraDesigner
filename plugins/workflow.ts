@@ -27,12 +27,12 @@ module Workflow{
             let _this = this;
             let  listener = this._canvas.on(
                 'mouse:down', function(evt){
-                    var canvas = _this._canvas;
-                    var relations = canvas.getRelationsFromObject(_this, false, true);
+                    let canvas:Loira.Canvas = _this._canvas;
+                    let relations:Common.Relation[] = canvas.getRelationsFromObject(_this, false, true);
 
                     if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)){
                         for (let item of canvas.items) {
-                            if (item.baseType !== 'relation' && !item.startPoint){
+                            if (item.baseType !== 'relation' && !item['startPoint']){
                                 if(item.checkCollision(evt.x, evt.y) && !_this.endPoint){
                                     let instance = Loira.util.stringToFunction(canvas.defaultRelation);
                                     let points: Point[] = null;

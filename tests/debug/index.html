@@ -5,8 +5,7 @@
         </style>
 	</head>
 	<body>
-		<div>
-            <canvas style="background-color:#aacccc" id="_canvas" width="800" height="500" tabindex="999"></canvas>
+		<div id="_canvas">
         </div>
         <button id="addObject">Agregar</button>
         <button id="setDirectRelation">Relacion directa</button>
@@ -14,7 +13,7 @@
 			window.onload = function(){
                 Loira.Config.assetsPath = '../../assets/';
 
-				var canvas = new Loira.Canvas('_canvas');
+				var canvas = new Loira.Canvas('_canvas', {width: 800, height:600});
 
                 console.log(canvas);
 				var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});

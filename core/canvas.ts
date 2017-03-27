@@ -36,9 +36,9 @@ module Loira{
          */
         private _tmp: any = {};
         /**
-         * @property { array } items - Listado de objetos que posee el canvas
+         * @property { Loira.Element[] } items - Listado de objetos que posee el canvas
          */
-        private items: Loira.Element[] = [];
+        public items: Loira.Element[] = [];
         /**
          * @property {HTMLCanvasElement} _canvas - Puntero al objeto de renderizado de lienzo
          */
@@ -80,6 +80,11 @@ module Loira{
             } else {
                 this.container = container;
             }
+
+            if (!config){
+                config = {width: parseInt(this.container.style.width), height: parseInt(this.container.style.height)};
+            }
+
             this._canvas = <HTMLCanvasElement> document.createElement('canvas');
             this._canvas.width = config.width;
             this._canvas.height = config.height;
@@ -87,6 +92,7 @@ module Loira{
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
             this._canvas.style.zIndex = '100';
+            this._canvas.style.backgroundColor = Loira.Config.background;
 
             this.container.style.width = this.container.style.maxWidth = config.width + 'px';
             this.container.style.height = this.container.style.maxHeight = config.height + 'px';
@@ -298,7 +304,7 @@ module Loira{
          * @param { function } callback Funcion que escucha el evento
          * @returns { function } Funcion que escucha el evento
          */
-        on(evt: any, callback: () => void): () => void {
+        on(evt: any, callback: (evt: any) => void): (evt: any) => void {
             let name: string;
 
             if (typeof evt === 'string') {
@@ -321,12 +327,12 @@ module Loira{
         }
 
         /**
-         * Desregistra un evento
+         * Unregister a event
          *
-         * @param {string} evt - Nombre del evento
+         * @param {string} evt - Event's name
          * @param {function} callback - Funcion a desregistrar
          */
-        fall(evt: string, callback: () => void) {
+        fall(evt: string, callback: (evt: any) => void) {
             var index = this._callbacks[evt].indexOf(callback);
             if (index > -1) {
                 this._callbacks[evt].splice(index, 1);

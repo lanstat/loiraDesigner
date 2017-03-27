@@ -47,7 +47,7 @@ var Loira;
              */
             this._tmp = {};
             /**
-             * @property { array } items - Listado de objetos que posee el canvas
+             * @property { Loira.Element[] } items - Listado de objetos que posee el canvas
              */
             this.items = [];
             /**
@@ -76,6 +76,9 @@ var Loira;
             else {
                 this.container = container;
             }
+            if (!config) {
+                config = { width: parseInt(this.container.style.width), height: parseInt(this.container.style.height) };
+            }
             this._canvas = document.createElement('canvas');
             this._canvas.width = config.width;
             this._canvas.height = config.height;
@@ -83,6 +86,7 @@ var Loira;
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
             this._canvas.style.zIndex = '100';
+            this._canvas.style.backgroundColor = Loira.Config.background;
             this.container.style.width = this.container.style.maxWidth = config.width + 'px';
             this.container.style.height = this.container.style.maxHeight = config.height + 'px';
             this.container.style.position = 'relative';
@@ -292,9 +296,9 @@ var Loira;
             return null;
         };
         /**
-         * Desregistra un evento
+         * Unregister a event
          *
-         * @param {string} evt - Nombre del evento
+         * @param {string} evt - Event's name
          * @param {function} callback - Funcion a desregistrar
          */
         Canvas.prototype.fall = function (evt, callback) {
