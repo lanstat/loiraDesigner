@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SVG Test</title>
+
+    <script type="text/javascript" src="../../LoiraDesigner.js"></script>
+</head>
+<body>
+<div id="_canvas2"></div>
+<div id="mySvg"></div>
+<script>
+    window.onload = function(){
+
+        Loira.Config.assetsPath = '../../assets/';
+
+        var canvas = new Loira.Canvas('_canvas2', {height: 500, width: 800});
+        var drawable = new Loira.Drawable('../../assets/glyphs.png', {'actor': {x: 0, y: 98, width: 35, height: 72}}, function(){
+            drawable.render('actor', canvas._canvas.getContext('2d'), 100, 100);
+            //canvas.renderAll();
+        });
+    }
+</script>
+</body>
+</html>

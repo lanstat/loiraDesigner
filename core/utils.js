@@ -33,6 +33,12 @@ var Loira;
             return Line;
         }());
         util.Line = Line;
+        var Region = (function () {
+            function Region() {
+            }
+            return Region;
+        }());
+        util.Region = Region;
         var Point = (function () {
             function Point(x, y) {
                 this.x = x;

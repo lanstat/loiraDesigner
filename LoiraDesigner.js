@@ -11,6 +11,7 @@ var classes = [
 	"../../plugins/usecase.js",
 	"../../plugins/box.js",
 	"../../plugins/workflow.js",
+	"../../core/drawable.js",
 	"../../core/config.js"
 ];
 

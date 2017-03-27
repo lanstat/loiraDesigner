@@ -66,8 +66,10 @@ module Loira{
 
         private _config: CanvasConfig;
 
+        public drawable: Drawable;
+
         /**
-         * Crea una nueva instancia de canvas
+         * Create a new instance of canvas
          *
          * @memberof Loira
          * @class Canvas

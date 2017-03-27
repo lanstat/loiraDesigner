@@ -7,6 +7,7 @@ var Loira;
     };
     var _background = '#aacccc';
     var _assetsPath = '../assets/';
+    var _regions;
     var Config;
     (function (Config) {
         Config.fontSize = _fontSize;
@@ -14,6 +15,7 @@ var Loira;
         Config.selected = _selected;
         Config.background = _background;
         Config.assetsPath = _assetsPath;
+        Config.regions = _regions;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=config.js.map

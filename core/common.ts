@@ -345,14 +345,8 @@ module Common{
 
 
     export class Actor extends Common.Symbol{
-        public img: HTMLImageElement;
-
         constructor(options: Loira.util.BaseOption){
             super(options);
-
-            this.img = <HTMLImageElement> document.createElement('IMG');
-            this.img.src = Loira.Config.assetsPath + 'actor.png';
-            this.img.onload = function() {};
 
             this.text = options.text? options.text: 'Actor1';
             this.width = 30;
@@ -382,10 +376,7 @@ module Common{
                 result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
             }
 
-            let x:number = result.x - (this.x + this.width/2);
-            let y:number = result.y - (this.y + this.height/2);
-
-            return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+            return Math.sqrt(Math.pow((result.x - (this.x + this.width/2)), 2) + Math.pow((result.y - (this.y + this.height/2)), 2));
         }
 
         public _render(ctx: CanvasRenderingContext2D): void {
@@ -400,6 +391,7 @@ module Common{
             ctx.fillStyle = "#000000";
 
             ctx.drawImage(this.img, this.x + this.width/2 - 15, this.y);
+
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#000000";
 

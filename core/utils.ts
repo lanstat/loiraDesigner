@@ -35,6 +35,13 @@ module Loira.util{
         y2: number;
     }
 
+    export class Region{
+        height: number;
+        width: number;
+        x: number;
+        y: number;
+    }
+
     export class Point{
         x: number;
         y: number;

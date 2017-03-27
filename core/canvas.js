@@ -26,7 +26,7 @@ var Loira;
     }());
     var Canvas = (function () {
         /**
-         * Crea una nueva instancia de canvas
+         * Create a new instance of canvas
          *
          * @memberof Loira
          * @class Canvas
