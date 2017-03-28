@@ -9,7 +9,6 @@ module Common{
         public isDashed: boolean;
         public points: Point[];
         public icon: string;
-        public img: HTMLImageElement;
 
         constructor(options: RelOption){
             super(options);
@@ -18,12 +17,7 @@ module Common{
             this.end = options.end? options.end : null;
             this.isDashed = options.isDashed? options.isDashed : false;
             this.points = options.points? options.points : [new Point(), new Point()];
-
-            this.img = null;
-            if (options.icon){
-                this.img = <HTMLImageElement>document.createElement('IMG');
-                this.img.src = Loira.Config.assetsPath + options.icon;
-            }
+            this.icon = options.icon? options.icon: '';
 
             this.baseType = 'relation';
         }
@@ -63,7 +57,7 @@ module Common{
             ctx.stroke();
             ctx.setLineDash([]);
 
-            if (this.img){
+            if (this.icon){
                 init = this.points[this.points.length - 2];
                 last = this.points[this.points.length - 1];
 
@@ -78,7 +72,7 @@ module Common{
 
                 ctx.translate(last.x, last.y);
                 ctx.rotate(tmp);
-                ctx.drawImage(this.img, -(15+end.obtainBorderPos(xm, ym, {x1:init.x, y1: init.y, x2:last.x, y2:last.y}, ctx)), -7);
+                Loira.drawable.render(this.icon, ctx, -(15+end.obtainBorderPos(xm, ym, {x1:init.x, y1: init.y, x2:last.x, y2:last.y}, ctx)), -7);
                 ctx.rotate(-tmp);
                 ctx.translate(-last.x, -last.y);
             }
@@ -260,7 +254,7 @@ module Common{
 
             var link = this._linkSymbol;
             this.on({
-                icon: Loira.Config.assetsPath + 'arrow.png',
+                icon: 'arrow',
                 click: link
             });
             this.baseType = 'symbol';
@@ -343,7 +337,6 @@ module Common{
         }
     }
 
-
     export class Actor extends Common.Symbol{
         constructor(options: Loira.util.BaseOption){
             super(options);
@@ -390,7 +383,7 @@ module Common{
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.fillStyle = "#000000";
 
-            ctx.drawImage(this.img, this.x + this.width/2 - 15, this.y);
+            Loira.drawable.render('actor', ctx, this.x + this.width/2 - 15, this.y);
 
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#000000";

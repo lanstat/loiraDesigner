@@ -29,7 +29,7 @@ module Relation{
      */
     export class DirectAssociation extends Common.Relation{
         constructor(options: Loira.util.RelOption){
-            options.icon = 'spear.png';
+            options.icon = 'spear';
             super(options);
 
             this.type = 'direct_association';
@@ -45,7 +45,7 @@ module Relation{
      */
     export class Generalization extends Common.Relation{
         constructor(options: Loira.util.RelOption){
-            options.icon = 'spear2.png';
+            options.icon = 'spear2';
             super(options);
 
             this.type = 'generalization';
@@ -61,7 +61,7 @@ module Relation{
      */
     export class Realization extends Common.Relation{
         constructor(options: Loira.util.RelOption){
-            options.icon = 'spear2.png';
+            options.icon = 'spear2';
             options.isDashed = true;
             super(options);
 
@@ -78,7 +78,7 @@ module Relation{
      */
     export class Dependency extends Common.Relation{
         constructor(options: Loira.util.RelOption){
-            options.icon = 'spear1.png';
+            options.icon = 'spear1';
             options.isDashed = true;
             super(options);
 

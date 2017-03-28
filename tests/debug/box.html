@@ -28,8 +28,7 @@
 </div>
 <script>
     window.onload = function(){
-
-        Loira.Config.assetsPath = '../../assets/';
+        Loira.Config.assetsPath = '../../assets/glyphs.png';
 
         var canvas = new Loira.Canvas('_canvas2', {height: 500, width: 800});
         var myObject;
@@ -40,11 +39,6 @@
             canvas.setBackground(image, true);
             canvas.renderAll();
         };
-
-        // TODO Se le da un timeout para q carguen las imagenes, se mantiene hasta encontrar otra forma solo es en la primera renderizacion
-        setTimeout(function(){
-            canvas.renderAll();
-        }, 50);
 
         document.getElementById('box').addEventListener('click', function(){
             myObject = new Box.Box({text:'Hola mundo', centerObject: true});

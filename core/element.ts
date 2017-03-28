@@ -1,5 +1,6 @@
 module Loira{
     import BaseOption = Loira.util.BaseOption;
+    import Region = Loira.util.Region;
 
     /**
      * Clase base para la creacion de nuevos objetos dibujables
@@ -76,11 +77,7 @@ module Loira{
          */
         on(args: any): void {
             args = [].splice.call(arguments, 0);
-            for (let button of args) {
-                let img: HTMLImageElement = <HTMLImageElement>document.createElement('IMG');
-                img.src = button.icon;
-                this._buttons.push({'icon': img, 'click': button.click});
-            }
+            this._buttons = args;
         }
         /**
          * Renderiza los iconos de los botones laterales
@@ -94,8 +91,9 @@ module Loira{
             let y: number = this.y;
             if (this._buttons.length > 0) {
                 this._buttons.forEach(function (item) {
-                    ctx.drawImage(item.icon, x, y);
-                    y += item.icon.height + 4;
+                    drawable.render(item.icon, ctx, x, y);
+                    //ctx.drawImage(item.icon, x, y);
+                    y += drawable.get(item.icon).height + 4;
                 });
             }
         }
@@ -109,10 +107,12 @@ module Loira{
          * @private
          */
         callCustomButton(x: number, y: number): boolean {
-            var _x: number = this.x + this.width + 10;
-            var _y: number = this.y;
+            let _x: number = this.x + this.width + 10;
+            let _y: number = this.y;
+            let region: Region;
             for (let item of this._buttons) {
-                if (_x <= x && x <= _x + item.icon.width && _y <= y && y <= _y + item.icon.height) {
+                region = drawable.get(item.icon);
+                if (_x <= x && x <= _x + region.width && _y <= y && y <= _y + region.height) {
                     item.click.call(this);
                     return true;
                 }

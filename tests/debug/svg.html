@@ -12,13 +12,9 @@
 <script>
     window.onload = function(){
 
-        Loira.Config.assetsPath = '../../assets/';
+        Loira.Config.assetsPath = '../../assets/glyphs.png';
 
         var canvas = new Loira.Canvas('_canvas2', {height: 500, width: 800});
-        var drawable = new Loira.Drawable('../../assets/glyphs.png', {'actor': {x: 0, y: 98, width: 35, height: 72}}, function(){
-            drawable.render('actor', canvas._canvas.getContext('2d'), 100, 100);
-            //canvas.renderAll();
-        });
     }
 </script>
 </body>

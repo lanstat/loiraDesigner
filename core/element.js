@@ -52,12 +52,7 @@ var Loira;
          */
         Element.prototype.on = function (args) {
             args = [].splice.call(arguments, 0);
-            for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
-                var button = args_1[_i];
-                var img = document.createElement('IMG');
-                img.src = button.icon;
-                this._buttons.push({ 'icon': img, 'click': button.click });
-            }
+            this._buttons = args;
         };
         /**
          * Renderiza los iconos de los botones laterales
@@ -71,8 +66,9 @@ var Loira;
             var y = this.y;
             if (this._buttons.length > 0) {
                 this._buttons.forEach(function (item) {
-                    ctx.drawImage(item.icon, x, y);
-                    y += item.icon.height + 4;
+                    Loira.drawable.render(item.icon, ctx, x, y);
+                    //ctx.drawImage(item.icon, x, y);
+                    y += Loira.drawable.get(item.icon).height + 4;
                 });
             }
         };
@@ -88,9 +84,11 @@ var Loira;
         Element.prototype.callCustomButton = function (x, y) {
             var _x = this.x + this.width + 10;
             var _y = this.y;
+            var region;
             for (var _i = 0, _a = this._buttons; _i < _a.length; _i++) {
                 var item = _a[_i];
-                if (_x <= x && x <= _x + item.icon.width && _y <= y && y <= _y + item.icon.height) {
+                region = Loira.drawable.get(item.icon);
+                if (_x <= x && x <= _x + region.width && _y <= y && y <= _y + region.height) {
                     item.click.call(this);
                     return true;
                 }

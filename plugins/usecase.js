@@ -65,7 +65,7 @@ var UseCase;
     var Extends = (function (_super) {
         __extends(Extends, _super);
         function Extends(options) {
-            options.icon = 'spear1.png';
+            options.icon = 'spear1';
             options.text = '<< extends >>';
             options.isDashed = true;
             _super.call(this, options);
@@ -84,7 +84,7 @@ var UseCase;
     var Include = (function (_super) {
         __extends(Include, _super);
         function Include(options) {
-            options.icon = 'spear1.png';
+            options.icon = 'spear1';
             options.text = '<< include >>';
             options.isDashed = true;
             _super.call(this, options);

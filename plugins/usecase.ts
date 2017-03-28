@@ -72,7 +72,7 @@ module UseCase{
      */
     export class Extends extends Common.Relation{
         constructor(options: RelOption){
-            options.icon = 'spear1.png';
+            options.icon = 'spear1';
             options.text = '<< extends >>';
             options.isDashed = true;
 
@@ -90,7 +90,7 @@ module UseCase{
      */
     export class Include extends Common.Relation{
         constructor(options: RelOption){
-            options.icon = 'spear1.png';
+            options.icon = 'spear1';
             options.text = '<< include >>';
             options.isDashed = true;
 

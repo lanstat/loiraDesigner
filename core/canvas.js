@@ -103,6 +103,10 @@ var Loira;
                     borderTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderTopWidth'], 10) || 0
                 };
             }
+            var _this = this;
+            Loira.drawable.registerMap(Loira.Config.assetsPath, Loira.Config.regions, function () {
+                _this.renderAll();
+            });
             this._bind();
             this._setScrollContainer();
         }

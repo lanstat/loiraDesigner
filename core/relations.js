@@ -37,7 +37,7 @@ var Relation;
     var DirectAssociation = (function (_super) {
         __extends(DirectAssociation, _super);
         function DirectAssociation(options) {
-            options.icon = 'spear.png';
+            options.icon = 'spear';
             _super.call(this, options);
             this.type = 'direct_association';
         }
@@ -54,7 +54,7 @@ var Relation;
     var Generalization = (function (_super) {
         __extends(Generalization, _super);
         function Generalization(options) {
-            options.icon = 'spear2.png';
+            options.icon = 'spear2';
             _super.call(this, options);
             this.type = 'generalization';
         }
@@ -71,7 +71,7 @@ var Relation;
     var Realization = (function (_super) {
         __extends(Realization, _super);
         function Realization(options) {
-            options.icon = 'spear2.png';
+            options.icon = 'spear2';
             options.isDashed = true;
             _super.call(this, options);
             this.type = 'realization';
@@ -89,7 +89,7 @@ var Relation;
     var Dependency = (function (_super) {
         __extends(Dependency, _super);
         function Dependency(options) {
-            options.icon = 'spear1.png';
+            options.icon = 'spear1';
             options.isDashed = true;
             _super.call(this, options);
             this.type = 'dependency';

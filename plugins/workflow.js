@@ -30,8 +30,7 @@ var Workflow;
             var _this = this;
             var listener = this._canvas.on('mouse:down', function (evt) {
                 var canvas = _this._canvas;
-                var relations = canvas.getRelationsFromObject(_this, false, true);
-                if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
+                if (!_this.maxOutGoingRelation || (canvas.getRelationsFromObject(_this, false, true).length < _this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
                         if (item.baseType !== 'relation' && !item['startPoint']) {

@@ -66,8 +66,6 @@ module Loira{
 
         private _config: CanvasConfig;
 
-        public drawable: Drawable;
-
         /**
          * Create a new instance of canvas
          *
@@ -115,6 +113,11 @@ module Loira{
                     borderTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderTopWidth'], 10) || 0
                 }
             }
+
+            let _this = this;
+            drawable.registerMap(Config.assetsPath, Config.regions, function(){
+                _this.renderAll();
+            });
 
             this._bind();
             this._setScrollContainer();
