@@ -2,6 +2,7 @@ module Common{
     import RelOption = Loira.util.RelOption;
     import Point = Loira.util.Point;
     import Line = Loira.util.Line;
+    import Region = Loira.util.Region;
 
     export class Relation extends Loira.Element{
         public start: Symbol;
@@ -72,7 +73,11 @@ module Common{
 
                 ctx.translate(last.x, last.y);
                 ctx.rotate(tmp);
-                Loira.drawable.render(this.icon, ctx, -(15+end.obtainBorderPos(xm, ym, {x1:init.x, y1: init.y, x2:last.x, y2:last.y}, ctx)), -7);
+
+                let region:Region = Loira.drawable.get(this.icon);
+                let border:number = end.obtainBorderPos(xm, ym, {x1:init.x, y1: init.y, x2:last.x, y2:last.y}, ctx);
+
+                Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height/2));
                 ctx.rotate(-tmp);
                 ctx.translate(-last.x, -last.y);
             }
