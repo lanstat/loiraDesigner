@@ -59,7 +59,7 @@ var Common;
                 ctx.translate(-last.x, -last.y);
             }
             if (this.text || this.text.length > 0) {
-                ctx.font = "10px " + Loira.Config.fontType;
+                ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
                 var pivot = Math.round(this.points.length / 2);
                 init = this.points[pivot - 1];
                 last = this.points[pivot];
@@ -280,7 +280,7 @@ var Common;
             if (xm < 0) {
                 angle += Math.PI;
             }
-            var result = { x: 100, y: this.y - 10 };
+            var result = null;
             if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)) {
                 result = Loira.util.intersectPointLine(points, { x1: this.x, y1: -100, x2: this.x, y2: 100 });
             }

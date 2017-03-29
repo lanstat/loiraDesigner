@@ -176,7 +176,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('relation:added', new RelationEvent(item, 'relationadded'));
+                    _this.emit('relation:added', new RelationEvent(item, 'relationadded'));
                 } else if (item.baseType === 'container') {
                     _items.splice(0, 0, item);
                     /**
@@ -187,7 +187,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('container:added', new ObjectEvent(item, 'objectadded'));
+                    _this.emit('container:added', new ObjectEvent(item, 'objectadded'));
                 } else {
                     if (item.centerObject) {
                         if (_this._canvasContainer) {
@@ -208,7 +208,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('object:added', new ObjectEvent(item, 'objectadded'));
+                    _this.emit('object:added', new ObjectEvent(item, 'objectadded'));
                 }
             }
         }
@@ -257,7 +257,7 @@ module Loira{
                  * @property {object} selected - Objeto seleccionado
                  * @property {string} type - Tipo de evento
                  */
-                _this._emit('object:removed', new ObjectEvent(item, 'objectremoved'));
+                _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
             }
 
             this._selected = null;
@@ -376,7 +376,7 @@ module Loira{
                      * @property {int} y - Posicion y del puntero
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('mouse:dblclick', new MouseEvent(real.x, real.y, 'dblclick'));
+                    _this.emit('mouse:dblclick', new MouseEvent(real.x, real.y, 'dblclick'));
                 } else {
                     /**
                      * Evento que encapsula un click sobre el canvas
@@ -387,7 +387,7 @@ module Loira{
                      * @property {int} y - Posicion y del puntero
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('mouse:down', new MouseEvent(real.x, real.y, 'mousedown'));
+                    _this.emit('mouse:down', new MouseEvent(real.x, real.y, 'mousedown'));
                 }
 
                 if (_this._selected) {
@@ -418,7 +418,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this._emit('object:dblclick', new ObjectEvent(item, 'objectdblclick'));
+                                _this.emit('object:dblclick', new ObjectEvent(item, 'objectdblclick'));
                             } else {
                                 /**
                                  * Evento que encapsula un click sobre un objeto
@@ -428,7 +428,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this._emit('object:selected', new ObjectEvent(item, 'objectselected'));
+                                _this.emit('object:selected', new ObjectEvent(item, 'objectselected'));
                             }
                             break;
                         } else {
@@ -441,7 +441,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this._emit('relation:dblclick', new ObjectEvent(item, 'relationdblclick'));
+                                _this.emit('relation:dblclick', new ObjectEvent(item, 'relationdblclick'));
                             } else {
                                 /**
                                  * Evento que encapsula un click sobre una relacion
@@ -451,7 +451,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this._emit('relation:selected', new ObjectEvent(item, 'relationselected'));
+                                _this.emit('relation:selected', new ObjectEvent(item, 'relationselected'));
                             }
                             break;
                         }
@@ -476,7 +476,7 @@ module Loira{
                  * @property {int} y - Posicion y del puntero
                  * @property {string} type - Tipo de evento
                  */
-                _this._emit('mouse:move', new MouseEvent(real.x, real.y, 'mousemove'));
+                _this.emit('mouse:move', new MouseEvent(real.x, real.y, 'mousemove'));
 
                 if (_this._selected) {
                     if (_this._tmp.transform) {
@@ -515,7 +515,7 @@ module Loira{
                          * @property {object} selected - Objeto seleccionado
                          * @property {string} type - Tipo de evento
                          */
-                        _this._emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
+                        _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
                         _this.renderAll();
                     }
                     _this._tmp.pointer = real;
@@ -534,7 +534,7 @@ module Loira{
                  * @property {int} y - Posicion y del puntero
                  * @property {string} type - Tipo de evento
                  */
-                _this._emit('mouse:up', new MouseEvent(real.x, real.y, 'mouseup'));
+                _this.emit('mouse:up', new MouseEvent(real.x, real.y, 'mouseup'));
                 if (_this._selected) {
                     /**
                      * Evento que encapsula la liberacion de un objeto
@@ -544,7 +544,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('object:released', new ObjectEvent(_this._selected, 'objectreleased'));
+                    _this.emit('object:released', new ObjectEvent(_this._selected, 'objectreleased'));
                     _this._isDragged = false;
                     _this._tmp.transform = false;
                     _this._selected.recalculateBorders();
@@ -562,8 +562,14 @@ module Loira{
          * @memberof Loira.Canvas#
          * @param evt Nombre del evento a emitir
          * @param options Valores enviados junto al evento
+         * @param element Element that fire event
          */
-        private _emit(evt: string, options: any) {
+        public emit(evt: string, options: any, element?: Loira.Element) {
+            if (typeof  element !== 'undefined'){
+                let type:string = element.baseType === 'relation'? 'relation': 'object';
+                evt = type + ':' + evt;
+            }
+
             if (typeof this._callbacks[evt] !== 'undefined') {
                 for (let item of this._callbacks[evt]) {
                     item.call(this, options);
