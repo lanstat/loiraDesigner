@@ -5,15 +5,17 @@
         </style>
 	</head>
 	<body>
-		<div id="_canvas">
-        </div>
+		<div style="width: 1000px; height: 600px">
+			<div id="_canvas">
+			</div>
+		</div>
         <button id="addObject">Agregar</button>
         <button id="setDirectRelation">Relacion directa</button>
 		<script>
 			window.onload = function(){
 				Loira.Config.assetsPath = '../../assets/glyphs.png';
 
-				var canvas = new Loira.Canvas('_canvas', {width: 800, height:600});
+				var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000});
 
                 console.log(canvas);
 				var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});

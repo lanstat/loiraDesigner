@@ -187,25 +187,15 @@ module Loira{
         /**
          * Muestra el objeto si el canvas se encuentra en un contenedor
          *
-         * @memberof Loira.Object#
+         * @memberof Loira.Element#
          */
         show(): void {
-            var _this = this;
-            if (this._canvas && this._canvas._canvasContainer) {
-                var pX: number = (_this.x + _this.width / 2) - this._canvas.container.offsetWidth / 2;
-                var pY: number = (_this.y + _this.height / 2) - this._canvas.container.offsetHeight / 2;
-                pX = pX >= 0 ? pX : 0;
-                pY = pY >= 0 ? pY : 0;
-                this._canvas._canvasContainer.x = pX;
-                this._canvas._canvasContainer.y = pY;
-                this._canvas.container.scrollTop = pY;
-                this._canvas.container.scrollLeft = pX;
-            }
+            this._canvas.centerToPoint((this.x + this.width / 2), (this.y + this.height / 2));
         }
         /**
          * Recalcula los bordes del objeto
          *
-         * @memberof Loira.Object#
+         * @memberof Loira.Element#
          * @abstract
          */
         abstract recalculateBorders();

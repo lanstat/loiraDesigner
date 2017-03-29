@@ -21,6 +21,7 @@
         <button id="showBox">Mostrar caja</button>
         <button id="delBox">Borrar caja</button>
         <button id="destroy">Destruir canvas</button>
+        <button id="clean">Clean background</button>
     </div>
     <div id="genial" style="width: 85%; height: 500px; float: left">
         <div id="_canvas2"></div>
@@ -59,6 +60,10 @@
 
         document.getElementById('destroy').addEventListener('click', function(){
             canvas.destroy();
+        });
+
+        document.getElementById('clean').addEventListener('click', function(){
+            canvas.cleanBackground();
         });
     }
 </script>

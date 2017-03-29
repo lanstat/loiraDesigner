@@ -21,6 +21,8 @@ var Loira;
         function CanvasConfig() {
             this.width = 0;
             this.height = 0;
+            this.viewportWidth = 0;
+            this.viewportHeight = 0;
         }
         return CanvasConfig;
     }());
@@ -77,8 +79,12 @@ var Loira;
                 this.container = container;
             }
             if (!config) {
-                config = { width: parseInt(this.container.style.width), height: parseInt(this.container.style.height) };
+                config = new CanvasConfig();
+                config.width = this.container.parentElement.offsetWidth;
+                config.height = this.container.parentElement.offsetHeight;
             }
+            config.viewportWidth = config.viewportWidth || this.container.parentElement.offsetWidth || config.width;
+            config.viewportHeight = config.viewportHeight || this.container.parentElement.offsetHeight || config.height;
             this._canvas = document.createElement('canvas');
             this._canvas.width = config.width;
             this._canvas.height = config.height;
@@ -87,10 +93,12 @@ var Loira;
             this._canvas.style.top = '0';
             this._canvas.style.zIndex = '100';
             this._canvas.style.backgroundColor = Loira.Config.background;
-            this.container.style.width = this.container.style.maxWidth = config.width + 'px';
-            this.container.style.height = this.container.style.maxHeight = config.height + 'px';
+            this.container.style.width = this.container.style.maxWidth = config.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = config.viewportHeight + 'px';
             this.container.style.position = 'relative';
+            this.container.style.overflow = 'auto';
             this._config = config;
+            this._tmp.pointer = { x: 0, y: 0 };
             this.container.appendChild(this._canvas);
             this._callbacks = {};
             this.items = [];
@@ -363,14 +371,14 @@ var Loira;
                         _this._selected = null;
                     }
                 }
+                if (!isDoubleClick) {
+                    _this._isDragged = true;
+                }
                 var item;
                 for (var i = _this.items.length - 1; i >= 0; i--) {
                     item = _this.items[i];
                     if (item.checkCollision(real.x, real.y)) {
                         _this._selected = item;
-                        if (!isDoubleClick) {
-                            _this._isDragged = true;
-                        }
                         if (item.baseType !== 'relation') {
                             if (isDoubleClick) {
                                 /**
@@ -430,6 +438,8 @@ var Loira;
             };
             _this._canvas.onmousemove = function (evt) {
                 var real = _this._getMouse(evt);
+                var x = Math.floor(real.x - _this._tmp.pointer.x);
+                var y = Math.floor(real.y - _this._tmp.pointer.y);
                 /**
                  * Evento que encapsula el movimiento del mouse sobre el canvas
                  *
@@ -445,29 +455,29 @@ var Loira;
                         if (_this._selected.baseType !== 'relation') {
                             switch (_this._tmp.transform) {
                                 case 'tc':
-                                    _this._selected.y += real.y - _this._tmp.pointer.y;
-                                    _this._selected.height -= real.y - _this._tmp.pointer.y;
+                                    _this._selected.y += y;
+                                    _this._selected.height -= y;
                                     break;
                                 case 'bc':
-                                    _this._selected.height += real.y - _this._tmp.pointer.y;
+                                    _this._selected.height += y;
                                     break;
                                 case 'ml':
-                                    _this._selected.x += real.x - _this._tmp.pointer.x;
-                                    _this._selected.width -= real.x - _this._tmp.pointer.x;
+                                    _this._selected.x += x;
+                                    _this._selected.width -= x;
                                     break;
                                 case 'mr':
-                                    _this._selected.width += real.x - _this._tmp.pointer.x;
+                                    _this._selected.width += x;
                                     break;
                             }
                         }
                         else {
-                            _this._selected.movePoint(_this._tmp.transform, real.x - _this._tmp.pointer.x, real.y - _this._tmp.pointer.y);
+                            _this._selected.movePoint(_this._tmp.transform, x, y);
                         }
                         _this.renderAll();
                     }
                     else if (_this._isDragged) {
-                        _this._selected.x += real.x - _this._tmp.pointer.x;
-                        _this._selected.y += real.y - _this._tmp.pointer.y;
+                        _this._selected.x += x;
+                        _this._selected.y += y;
                         _this._canvas.style.cursor = 'move';
                         /**
                          * Evento que encapsula el arrastre de un objeto
@@ -480,12 +490,24 @@ var Loira;
                         _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
                         _this.renderAll();
                     }
-                    _this._tmp.pointer = real;
                 }
+                else if (_this._isDragged) {
+                    if (_this._canvas && _this._canvasContainer) {
+                        x = x === 0 ? x : x / Math.abs(x);
+                        y = y === 0 ? y : y / Math.abs(y);
+                        _this.container.scrollLeft += 5 * x;
+                        _this.container.scrollTop -= 5 * y;
+                        _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
+                        _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                    }
+                }
+                console.log(x, y);
+                _this._tmp.pointer = real;
             };
             _this._canvas.onmouseup = function (evt) {
                 var real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
+                _this._isDragged = false;
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
                  *
@@ -506,10 +528,12 @@ var Loira;
                      * @property {string} type - Tipo de evento
                      */
                     _this.emit('object:released', new ObjectEvent(_this._selected, 'objectreleased'));
-                    _this._isDragged = false;
                     _this._tmp.transform = false;
                     _this._selected.recalculateBorders();
                 }
+            };
+            _this._canvas.onmouseleave = function (evt) {
+                _this._isDragged = false;
             };
             _this._canvas.onselectstart = function () {
                 return false;
@@ -578,11 +602,22 @@ var Loira;
             this._background.style.zIndex = '0';
             this._background.getContext('2d').drawImage(image, 0, 0);
             if (resizeToImage) {
-                this.container.style.overflow = 'auto';
                 this._canvas.width = image.width;
                 this._canvas.height = image.height;
+                this._canvas.style.backgroundColor = 'transparent';
             }
             this.container.insertBefore(this._background, this._canvas);
+        };
+        /**
+         * Clean the background
+         */
+        Canvas.prototype.cleanBackground = function () {
+            this.container.removeChild(this.container.firstChild);
+            this._canvas.width = this._config.width;
+            this._canvas.height = this._config.height;
+            this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
+            this._canvas.style.backgroundColor = Loira.Config.background;
         };
         /**
          * Define un elemento que contendra al canvas y servira de scroll
@@ -608,7 +643,7 @@ var Loira;
             _this.container.addEventListener('scroll', _this._canvasContainer.listener);
         };
         /**
-         * Obtiene las relaciones vinculadas a un objeto
+         * Obtain the linked relations to a object
          *
          * @param object {Loira.Element} Objeto del que se obtendra las relaciones
          * @param onlyIncoming {boolean} Indica si solo se deben listar relaciones entrantes
@@ -635,6 +670,24 @@ var Loira;
                 }
             }
             return relations;
+        };
+        /**
+         * Center the canvas at the given point
+         *
+         * @param x X position
+         * @param y Y position
+         */
+        Canvas.prototype.centerToPoint = function (x, y) {
+            if (this._canvas && this._canvasContainer) {
+                x = x - this.container.offsetWidth / 2;
+                y = y - this.container.offsetHeight / 2;
+                x = x >= 0 ? x : 0;
+                y = y >= 0 ? y : 0;
+                this._canvasContainer.x = x;
+                this._canvasContainer.y = y;
+                this.container.scrollTop = y;
+                this.container.scrollLeft = x;
+            }
         };
         return Canvas;
     }());
