@@ -476,75 +476,80 @@ module Loira{
             };
 
             _this._canvas.onmousemove = function (evt) {
-                let real = _this._getMouse(evt);
-                let x:number = Math.floor(real.x - _this._tmp.pointer.x);
-                let y:number = Math.floor(real.y - _this._tmp.pointer.y);
+                if (_this._isDragged) {
+                    let real = _this._getMouse(evt);
+                    let x:number = real.x - _this._tmp.pointer.x;
+                    let y:number = real.y - _this._tmp.pointer.y;
 
-                /**
-                 * Evento que encapsula el movimiento del mouse sobre el canvas
-                 *
-                 * @event mouse:move
-                 * @type { object }
-                 * @property {int} x - Posicion x del puntero
-                 * @property {int} y - Posicion y del puntero
-                 * @property {string} type - Tipo de evento
-                 */
-                _this.emit('mouse:move', new MouseEvent(real.x, real.y, 'mousemove'));
-
-                if (_this._selected) {
-                    if (_this._tmp.transform) {
-                        if (_this._selected.baseType !== 'relation') {
-                            switch (_this._tmp.transform) {
-                                case 'tc':
-                                    _this._selected.y += y;
-                                    _this._selected.height -= y;
-                                    break;
-                                case 'bc':
-                                    _this._selected.height += y;
-                                    break;
-                                case 'ml':
-                                    _this._selected.x += x;
-                                    _this._selected.width -= x;
-                                    break;
-                                case 'mr':
-                                    _this._selected.width += x;
-                                    break;
+                    /**
+                     * Evento que encapsula el movimiento del mouse sobre el canvas
+                     *
+                     * @event mouse:move
+                     * @type { object }
+                     * @property {int} x - Posicion x del puntero
+                     * @property {int} y - Posicion y del puntero
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this.emit('mouse:move', new MouseEvent(real.x, real.y, 'mousemove'));
+                    if (_this._selected) {
+                        if (_this._tmp.transform) {
+                            if (_this._selected.baseType !== 'relation') {
+                                x = Math.floor(x);
+                                y = Math.floor(y);
+                                switch (_this._tmp.transform) {
+                                    case 'tc':
+                                        _this._selected.y += y;
+                                        _this._selected.height -= y;
+                                        break;
+                                    case 'bc':
+                                        _this._selected.height += y;
+                                        break;
+                                    case 'ml':
+                                        _this._selected.x += x;
+                                        _this._selected.width -= x;
+                                        break;
+                                    case 'mr':
+                                        _this._selected.width += x;
+                                        break;
+                                }
+                            } else {
+                                (<Common.Relation> _this._selected).movePoint(_this._tmp.transform, x, y);
                             }
-                        } else {
-                            (<Common.Relation> _this._selected).movePoint(_this._tmp.transform, x, y);
+
+                            _this.renderAll();
+                        } else if (_this._isDragged) {
+                            _this._selected.x += x;
+                            _this._selected.y += y;
+
+                            _this._canvas.style.cursor = 'move';
+                            /**
+                             * Evento que encapsula el arrastre de un objeto
+                             *
+                             * @event object:dragging
+                             * @type { object }
+                             * @property {object} selected - Objeto seleccionado
+                             * @property {string} type - Tipo de evento
+                             */
+                            _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
+                            _this.renderAll();
                         }
+                    } else {
+                        if (_this._canvas && _this._canvasContainer) {
+                            //console.log(x, y);
 
-                        _this.renderAll();
-                    } else if (_this._isDragged) {
-                        _this._selected.x += x;
-                        _this._selected.y += y;
+                            //TODO Agregar sistema de fps para dibujado
+                            x = x === 0? x : x/Math.abs(x);
+                            y =  y === 0? y : y/Math.abs(y);
+                            console.log(new Date().getTime());
+                            _this.container.scrollLeft -= 5*x;
+                            _this.container.scrollTop -= 5*y;
 
-                        _this._canvas.style.cursor = 'move';
-                        /**
-                         * Evento que encapsula el arrastre de un objeto
-                         *
-                         * @event object:dragging
-                         * @type { object }
-                         * @property {object} selected - Objeto seleccionado
-                         * @property {string} type - Tipo de evento
-                         */
-                        _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
-                        _this.renderAll();
+                            _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
+                            _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                        }
                     }
-                } else if (_this._isDragged) {
-                    if (_this._canvas && _this._canvasContainer) {
-                        x = x === 0? x : x/Math.abs(x);
-                        y =  y === 0? y : y/Math.abs(y);
-
-                        _this.container.scrollLeft += 5*x;
-                        _this.container.scrollTop -= 5*y;
-
-                        _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
-                        _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
-                    }
+                    _this._tmp.pointer = real;
                 }
-                console.log(x, y);
-                _this._tmp.pointer = real;
             };
             _this._canvas.onmouseup = function (evt) {
                 var real = _this._getMouse(evt);
