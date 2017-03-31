@@ -26,6 +26,23 @@ var Loira;
         }
         return CanvasConfig;
     }());
+    var FpsCounter = (function () {
+        function FpsCounter(fps) {
+            if (fps === void 0) { fps = 32; }
+            this._fps = 1000 / fps;
+            this._elapsed = new Date().getTime();
+        }
+        FpsCounter.prototype.passed = function () {
+            var response = false;
+            var time = new Date().getTime();
+            if (time >= this._elapsed) {
+                this._elapsed = time + this._fps;
+                response = true;
+            }
+            return response;
+        };
+        return FpsCounter;
+    }());
     var Canvas = (function () {
         /**
          * Create a new instance of canvas
@@ -115,6 +132,7 @@ var Loira;
             Loira.drawable.registerMap(Loira.Config.assetsPath, Loira.Config.regions, function () {
                 _this.renderAll();
             });
+            this._fps = new FpsCounter(config.fps);
             this._bind();
             this._setScrollContainer();
         }
@@ -122,19 +140,22 @@ var Loira;
          * Dibuja las relaciones y simbolos dentro del canvas
          * @memberof Loira.Canvas#
          */
-        Canvas.prototype.renderAll = function () {
-            var ctx = this._canvas.getContext('2d');
-            ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-            for (var i = 0; i < this.items.length; i++) {
-                ctx.save();
-                this.items[i]._render(ctx);
-                ctx.restore();
-            }
-            if (this._selected) {
-                ctx.save();
-                this._selected.drawSelected(ctx);
-                ctx.restore();
-                this._selected._renderButtons(ctx);
+        Canvas.prototype.renderAll = function (forceRender) {
+            if (forceRender === void 0) { forceRender = false; }
+            if (this._fps.passed() || forceRender) {
+                var ctx = this._canvas.getContext('2d');
+                ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+                for (var i = 0; i < this.items.length; i++) {
+                    ctx.save();
+                    this.items[i]._render(ctx);
+                    ctx.restore();
+                }
+                if (this._selected) {
+                    ctx.save();
+                    this._selected.drawSelected(ctx);
+                    ctx.restore();
+                    this._selected._renderButtons(ctx);
+                }
             }
         };
         /**
@@ -373,6 +394,7 @@ var Loira;
                 }
                 if (!isDoubleClick) {
                     _this._isDragged = true;
+                    _this._canvas.style.cursor = '-moz-grabbing;-webkit-grabbing;grabbing';
                 }
                 var item;
                 for (var i = _this.items.length - 1; i >= 0; i--) {
@@ -478,10 +500,9 @@ var Loira;
                             }
                             _this.renderAll();
                         }
-                        else if (_this._isDragged) {
+                        else {
                             _this._selected.x += x;
                             _this._selected.y += y;
-                            _this._canvas.style.cursor = 'move';
                             /**
                              * Evento que encapsula el arrastre de un objeto
                              *
@@ -496,11 +517,8 @@ var Loira;
                     }
                     else {
                         if (_this._canvas && _this._canvasContainer) {
-                            //console.log(x, y);
-                            //TODO Agregar sistema de fps para dibujado
                             x = x === 0 ? x : x / Math.abs(x);
                             y = y === 0 ? y : y / Math.abs(y);
-                            console.log(new Date().getTime());
                             _this.container.scrollLeft -= 5 * x;
                             _this.container.scrollTop -= 5 * y;
                             _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
@@ -512,7 +530,7 @@ var Loira;
             };
             _this._canvas.onmouseup = function (evt) {
                 var real = _this._getMouse(evt);
-                _this._canvas.style.cursor = 'default';
+                //_this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
