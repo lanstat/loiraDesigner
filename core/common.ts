@@ -52,7 +52,7 @@ module Common{
                 ctx.setLineDash([5, 5]);
             }
 
-            for (var i = 1; i < this.points.length; i++){
+            for (let i:number = 1; i < this.points.length; i++){
                 ctx.lineTo(this.points[i].x, this.points[i].y);
             }
             ctx.stroke();
@@ -134,15 +134,15 @@ module Common{
          * @returns {boolean}
          */
         checkCollision(x, y): boolean{
-            var init = null,
+            let init = null,
                 last = null;
-            var xd = 0,
-                yd = 0;
-            var point1: Point = {x: 0, y: 0};
-            var point2: Point = {x: 0, y: 0};
-            var m;
+            let xd:number = 0,
+                yd:number = 0;
+            let point1: Point = {x: 0, y: 0};
+            let point2: Point = {x: 0, y: 0};
+            let m:number;
 
-            for (var i = 1; i < this.points.length; i++){
+            for (let i:number = 1; i < this.points.length; i++){
                 init = this.points[i - 1];
                 last = this.points[i];
                 point1.x = init.x;
@@ -199,7 +199,7 @@ module Common{
 
             ctx.fillStyle= Loira.Config.selected.color;
 
-            for (var i = 0; i < this.points.length; i++){
+            for (let i:number = 0; i < this.points.length; i++){
                 ctx.fillRect(this.points[i].x-4, this.points[i].y-4, 8, 8);
             }
 
@@ -207,14 +207,13 @@ module Common{
         }
 
         addPoint(): void{
-            var _this = this;
-            var last:Point = _this.points[1],
-                init: Point = _this.points[0];
+            let last:Point = this.points[1],
+                init: Point = this.points[0];
 
-            var x: number = Math.round((last.x - init.x)/ 2) + init.x;
-            var y: number = Math.round((last.y - init.y)/ 2) + init.y;
+            let x: number = Math.round((last.x - init.x)/ 2) + init.x;
+            let y: number = Math.round((last.y - init.y)/ 2) + init.y;
 
-            _this.points.splice(1, 0, {x: x, y: y});
+            this.points.splice(1, 0, {x: x, y: y});
         }
 
         /**
@@ -226,8 +225,8 @@ module Common{
          * @returns {string}
          */
         getSelectedCorner(pX: number, pY: number): any{
-            for (var i = 1; i < this.points.length - 1; i++){
-                var x = this.points[i].x-4,
+            for (let i:number = 1; i < this.points.length - 1; i++){
+                let x = this.points[i].x-4,
                     y = this.points[i].y-4,
                     w = x + 8,
                     h = y + 8;
@@ -257,7 +256,7 @@ module Common{
         constructor(options: Loira.util.BaseOption){
             super(options);
 
-            var link = this._linkSymbol;
+            let link = this._linkSymbol;
             this.on({
                 icon: 'arrow',
                 click: link
@@ -272,18 +271,18 @@ module Common{
          * @protected
          */
         protected _linkSymbol(): void{
-            let _this = this;
+            let $this = this;
             let  listener = this._canvas.on(
                 'mouse:down', function(evt){
-                    var canvas = _this._canvas;
-                    var relations = canvas.getRelationsFromObject(_this, false, true);
+                    let canvas:Loira.Canvas = $this._canvas;
+                    let countRel:number = canvas.getRelationsFromObject($this, false, true).length;
 
-                    if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)){
+                    if (!$this.maxOutGoingRelation || (countRel < $this.maxOutGoingRelation)){
                         for (let item of canvas.items) {
                             if (item.baseType !== 'relation'){
                                 if(item.checkCollision(evt.x, evt.y)){
-                                    var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                    canvas.add(new instance({}).update(_this, item));
+                                    let instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                                    canvas.add(new instance({}).update($this, item));
                                     break;
                                 }
                             }
@@ -307,11 +306,11 @@ module Common{
         abstract obtainBorderPos(xm: number, ym: number, points: Line, ctx: CanvasRenderingContext2D): number;
 
         private _splitText(ctx: CanvasRenderingContext2D, text: string, padding: number = 10) {
-            var words = text.split(' ');
-            var buff = '';
-            var lines = [];
+            let words:string[] = text.split(' ');
+            let buff:string = '';
+            let lines:string[] = [];
 
-            for (var i = 0; i < words.length; i++) {
+            for (let i:number = 0; i < words.length; i++) {
                 if (ctx.measureText(buff + words[i]).width > this.width - padding) {
                     lines.push(buff);
                     buff = words[i] + ' ';
@@ -324,7 +323,7 @@ module Common{
             return lines;
         }
 
-        protected drawText(ctx: CanvasRenderingContext2D, line: string, horiAlign?: boolean, vertAlign?: boolean) {
+        protected drawText(ctx: CanvasRenderingContext2D, line: string) {
             let y,
                 xm = this.x + this.width / 2,
                 ym = this.y + this.height / 2,
@@ -334,7 +333,7 @@ module Common{
 
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
 
-            for (var i = 0; i < lines.length; i++) {
+            for (let i:number = 0; i < lines.length; i++) {
                 let textW: number = ctx.measureText(lines[i]).width;
                 ctx.fillText(lines[i], xm - textW / 2, y + 3);
                 y = y + Loira.Config.fontSize + 3;

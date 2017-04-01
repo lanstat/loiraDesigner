@@ -34,7 +34,7 @@ module UseCase{
         _render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             if (this.text) {
-                var kappa = .5522848,
+                let kappa = .5522848,
                     ox = (this.width / 2) * kappa,
                     oy = (this.height / 2) * kappa,
                     xe = this.x + this.width,

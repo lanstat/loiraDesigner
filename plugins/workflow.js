@@ -1,8 +1,13 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * Diagrama de flujo de trabajo
  *
@@ -15,39 +20,40 @@ var Workflow;
     var WorkflowOption = (function (_super) {
         __extends(WorkflowOption, _super);
         function WorkflowOption() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         return WorkflowOption;
     }(BaseOption));
     var Symbol = (function (_super) {
         __extends(Symbol, _super);
         function Symbol(options) {
-            _super.call(this, options);
-            this.startPoint = options.startPoint ? options.startPoint : false;
-            this.endPoint = options.endPoint ? options.endPoint : false;
+            var _this = _super.call(this, options) || this;
+            _this.startPoint = options.startPoint ? options.startPoint : false;
+            _this.endPoint = options.endPoint ? options.endPoint : false;
+            return _this;
         }
         Symbol.prototype._linkSymbol = function () {
-            var _this = this;
+            var $this = this;
             var listener = this._canvas.on('mouse:down', function (evt) {
-                var canvas = _this._canvas;
-                if (!_this.maxOutGoingRelation || (canvas.getRelationsFromObject(_this, false, true).length < _this.maxOutGoingRelation)) {
+                var canvas = $this._canvas;
+                if (!$this.maxOutGoingRelation || (canvas.getRelationsFromObject($this, false, true).length < $this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
                         if (item.baseType !== 'relation' && !item['startPoint']) {
-                            if (item.checkCollision(evt.x, evt.y) && !_this.endPoint) {
+                            if (item.checkCollision(evt.x, evt.y) && !$this.endPoint) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
                                 var points = null;
-                                if (_this._uid == item._uid) {
-                                    var widthLeft = _this.x + _this.width + 30;
-                                    var heightHalf = _this.y + _this.height / 2;
+                                if ($this._uid == item._uid) {
+                                    var widthLeft = $this.x + $this.width + 30;
+                                    var heightHalf = $this.y + $this.height / 2;
                                     points = [];
                                     points.push(new Point());
                                     points.push(new Point(widthLeft, heightHalf));
-                                    points.push(new Point(widthLeft, _this.y - 30));
-                                    points.push(new Point(_this.x + _this.width / 2, _this.y - 30));
+                                    points.push(new Point(widthLeft, $this.y - 30));
+                                    points.push(new Point($this.x + $this.width / 2, $this.y - 30));
                                     points.push(new Point());
                                 }
-                                canvas.add(new instance({ points: points }).update(_this, item));
+                                canvas.add(new instance({ points: points }).update($this, item));
                                 break;
                             }
                         }
@@ -68,19 +74,21 @@ var Workflow;
     var Process = (function (_super) {
         __extends(Process, _super);
         function Process(options) {
+            var _this = this;
             options.width = options.width ? options.width : 100;
             options.height = options.height ? options.height : 70;
-            _super.call(this, options);
-            this.text = options.text;
-            this.type = 'process';
-            this.borders = {
+            _this = _super.call(this, options) || this;
+            _this.text = options.text;
+            _this.type = 'process';
+            _this.borders = {
                 bottomLeft: 0,
                 topLeft: 0,
                 topRight: 0,
                 bottomRight: 0
             };
-            this.recalculateBorders();
-            this.maxOutGoingRelation = 1;
+            _this.recalculateBorders();
+            _this.maxOutGoingRelation = 1;
+            return _this;
         }
         Process.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var angle = Math.atan(ym / xm);
@@ -129,7 +137,7 @@ var Workflow;
     var Terminator = (function (_super) {
         __extends(Terminator, _super);
         function Terminator() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         Terminator.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var a = this.width / 2;
@@ -162,13 +170,15 @@ var Workflow;
     var StartTerminator = (function (_super) {
         __extends(StartTerminator, _super);
         function StartTerminator(options) {
+            var _this = this;
             options.width = options.width ? options.width : 100;
             options.height = options.height ? options.height : 70;
-            _super.call(this, options);
-            this.text = 'INICIO';
-            this.startPoint = true;
-            this.maxOutGoingRelation = 1;
-            this.type = 'start_terminator';
+            _this = _super.call(this, options) || this;
+            _this.text = 'INICIO';
+            _this.startPoint = true;
+            _this.maxOutGoingRelation = 1;
+            _this.type = 'start_terminator';
+            return _this;
         }
         return StartTerminator;
     }(Terminator));
@@ -176,12 +186,13 @@ var Workflow;
     var EndTerminator = (function (_super) {
         __extends(EndTerminator, _super);
         function EndTerminator(options) {
-            _super.call(this, options);
-            this.width = 70;
-            this.height = 30;
-            this.text = 'FIN';
-            this.endPoint = true;
-            this.type = 'end_terminator';
+            var _this = _super.call(this, options) || this;
+            _this.width = 70;
+            _this.height = 30;
+            _this.text = 'FIN';
+            _this.endPoint = true;
+            _this.type = 'end_terminator';
+            return _this;
         }
         return EndTerminator;
     }(Terminator));
@@ -196,11 +207,13 @@ var Workflow;
     var Data = (function (_super) {
         __extends(Data, _super);
         function Data(options) {
+            var _this = this;
             options.width = options.width ? options.width : 100;
             options.height = options.height ? options.height : 70;
-            _super.call(this, options);
-            this.text = options.text;
-            this.type = 'data';
+            _this = _super.call(this, options) || this;
+            _this.text = options.text;
+            _this.type = 'data';
+            return _this;
         }
         Data.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var a = this.width / 2;
@@ -235,11 +248,13 @@ var Workflow;
     var Decision = (function (_super) {
         __extends(Decision, _super);
         function Decision(options) {
+            var _this = this;
             options.width = options.width ? options.width : 100;
             options.height = options.height ? options.height : 70;
-            _super.call(this, options);
-            this.text = options.text;
-            this.type = 'decision';
+            _this = _super.call(this, options) || this;
+            _this.text = options.text;
+            _this.type = 'decision';
+            return _this;
         }
         Decision.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var x = this.x, y = this.y, xP = this.x + this.width / 2, yP = this.y + this.height / 2, xw = this.x + this.width;

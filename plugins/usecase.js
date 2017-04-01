@@ -1,8 +1,13 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * Diagrama de Caso de uso
  *
@@ -20,11 +25,12 @@ var UseCase;
     var UseCase = (function (_super) {
         __extends(UseCase, _super);
         function UseCase(options) {
-            _super.call(this, options);
-            this.width = 100;
-            this.height = 70;
-            this.text = options.text;
-            this.type = 'use_case';
+            var _this = _super.call(this, options) || this;
+            _this.width = 100;
+            _this.height = 70;
+            _this.text = options.text;
+            _this.type = 'use_case';
+            return _this;
         }
         UseCase.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var a = this.width / 2;
@@ -65,11 +71,13 @@ var UseCase;
     var Extends = (function (_super) {
         __extends(Extends, _super);
         function Extends(options) {
+            var _this = this;
             options.icon = 'spear1';
             options.text = '<< extends >>';
             options.isDashed = true;
-            _super.call(this, options);
-            this.type = 'extends';
+            _this = _super.call(this, options) || this;
+            _this.type = 'extends';
+            return _this;
         }
         return Extends;
     }(Common.Relation));
@@ -84,11 +92,13 @@ var UseCase;
     var Include = (function (_super) {
         __extends(Include, _super);
         function Include(options) {
+            var _this = this;
             options.icon = 'spear1';
             options.text = '<< include >>';
             options.isDashed = true;
-            _super.call(this, options);
-            this.type = 'include';
+            _this = _super.call(this, options) || this;
+            _this.type = 'include';
+            return _this;
         }
         return Include;
     }(Common.Relation));

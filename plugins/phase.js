@@ -1,8 +1,13 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * Diagrama de estados
  *
@@ -19,9 +24,10 @@ var Phase;
     var Phase = (function (_super) {
         __extends(Phase, _super);
         function Phase(options) {
-            _super.call(this, options);
-            this.width = 200;
-            this.height = 100;
+            var _this = _super.call(this, options) || this;
+            _this.width = 200;
+            _this.height = 100;
+            return _this;
         }
         Phase.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             return undefined;

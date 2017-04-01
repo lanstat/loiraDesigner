@@ -98,7 +98,7 @@ module Loira.util{
     export function stringToFunction(str:string):any {
         let arr:string[] = str.split(".");
 
-        var fn:any = (window || this);
+        let fn:any = (window || this);
         for (let part of arr) {
             fn = fn[part];
         }

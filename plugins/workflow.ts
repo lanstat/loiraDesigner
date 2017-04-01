@@ -24,31 +24,31 @@ module Workflow{
         }
 
         protected _linkSymbol(): void{
-            let _this = this;
+            let $this = this;
             let  listener = this._canvas.on(
                 'mouse:down', function(evt){
-                    let canvas:Loira.Canvas = _this._canvas;
+                    let canvas:Loira.Canvas = $this._canvas;
 
-                    if (!_this.maxOutGoingRelation || (canvas.getRelationsFromObject(_this, false, true).length < _this.maxOutGoingRelation)){
+                    if (!$this.maxOutGoingRelation || (canvas.getRelationsFromObject($this, false, true).length < $this.maxOutGoingRelation)){
                         for (let item of canvas.items) {
                             if (item.baseType !== 'relation' && !item['startPoint']){
-                                if(item.checkCollision(evt.x, evt.y) && !_this.endPoint){
+                                if(item.checkCollision(evt.x, evt.y) && !$this.endPoint){
                                     let instance = Loira.util.stringToFunction(canvas.defaultRelation);
                                     let points: Point[] = null;
 
-                                    if (_this._uid == item._uid){
-                                        let widthLeft: number = _this.x + _this.width + 30;
-                                        let heightHalf: number = _this.y + _this.height/2;
+                                    if ($this._uid == item._uid){
+                                        let widthLeft: number = $this.x + $this.width + 30;
+                                        let heightHalf: number = $this.y + $this.height/2;
 
                                         points = [];
                                         points.push(new Point());
                                         points.push(new Point(widthLeft, heightHalf));
-                                        points.push(new Point(widthLeft, _this.y - 30));
-                                        points.push(new Point(_this.x + _this.width/2, _this.y - 30));
+                                        points.push(new Point(widthLeft, $this.y - 30));
+                                        points.push(new Point($this.x + $this.width/2, $this.y - 30));
                                         points.push(new Point());
                                     }
 
-                                    canvas.add(new instance({points: points}).update(_this, item));
+                                    canvas.add(new instance({points: points}).update($this, item));
                                     break;
                                 }
                             }
@@ -155,10 +155,10 @@ module Workflow{
         _render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
-            var x = this.x +20;
-            var y = this.y;
-            var xw = this.x + this.width - 20;
-            var yh = this.y + this.height;
+            let x = this.x +20;
+            let y = this.y;
+            let xw = this.x + this.width - 20;
+            let yh = this.y + this.height;
 
             ctx.beginPath();
             ctx.lineWidth = 2;
@@ -231,9 +231,9 @@ module Workflow{
         }
 
         obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
-            var a = this.width/2;
-            var b = this.height/2;
-            var ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
+            let a = this.width/2;
+            let b = this.height/2;
+            let ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
 
             return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
         }
@@ -241,10 +241,10 @@ module Workflow{
         _render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
-            var x = this.x +20;
-            var y = this.y;
-            var xw = this.x + this.width;
-            var yh = this.y + this.height;
+            let x = this.x +20;
+            let y = this.y;
+            let xw = this.x + this.width;
+            let yh = this.y + this.height;
 
             ctx.beginPath();
             ctx.lineWidth = 2;
@@ -285,8 +285,8 @@ module Workflow{
                 yP = this.y + this.height/2,
                 xw = this.x + this.width;
 
-            var angle = Math.atan(yP / xm);
-            var result;
+            let angle = Math.atan(yP / xm);
+            let result:Point;
 
             if (xm<0){
                 angle += Math.PI;
@@ -307,12 +307,12 @@ module Workflow{
         _render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
-            var x = this.x;
-            var y = this.y;
-            var xm = this.x + this.width/2;
-            var ym = this.y + this.height/2;
-            var xw = this.x + this.width;
-            var yh = this.y + this.height;
+            let x = this.x;
+            let y = this.y;
+            let xm = this.x + this.width/2;
+            let ym = this.y + this.height/2;
+            let xw = this.x + this.width;
+            let yh = this.y + this.height;
 
             ctx.beginPath();
             ctx.lineWidth = 2;

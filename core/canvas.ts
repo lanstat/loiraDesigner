@@ -47,6 +47,24 @@ module Loira{
         }
     }
 
+    class TmpData{
+        public pointer:Point;
+        public transform:string;
+    }
+
+    class ZoomData{
+        public scrollX: number;
+        public scrollY: number;
+
+        constructor(){
+            this.update();
+        }
+
+        update(){
+
+        }
+    }
+
     export class Canvas {
         /**
          * @property {Object}  _selected - Objeto que se encuentra seleccionado
@@ -59,7 +77,7 @@ module Loira{
         /**
          * @property {Object}  _tmp - Almacena datos temporales
          */
-        private _tmp: any = {};
+        private _tmp: TmpData = new TmpData();
         /**
          * @property { Loira.Element[] } items - Listado de objetos que posee el canvas
          */
@@ -92,6 +110,8 @@ module Loira{
         private _config: CanvasConfig;
 
         private _fps: FpsCounter;
+
+        private _zoom: ZoomData;
 
         /**
          * Create a new instance of canvas
@@ -153,10 +173,11 @@ module Loira{
                 _this.renderAll();
             });
 
-            this._fps = new FpsCounter(config.fps);
-
             this._bind();
             this._setScrollContainer();
+
+            this._fps = new FpsCounter(config.fps);
+            this._zoom = new ZoomData();
         }
 
         /**
@@ -169,7 +190,7 @@ module Loira{
 
                 ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
-                for (var i = 0; i < this.items.length; i++) {
+                for (let i:number = 0; i < this.items.length; i++) {
                     ctx.save();
                     this.items[i]._render(ctx);
                     ctx.restore();
@@ -202,7 +223,7 @@ module Loira{
             for (let item of args){
                 item._canvas = _this;
                 if (item.baseType === 'relation') {
-                    var index = _items.indexOf(item.start);
+                    let index:number = _items.indexOf(item.start);
                     index = index < _items.indexOf(item.end) ? index : _items.indexOf(item.end);
 
                     _items.splice(index, 0, item);
@@ -259,16 +280,16 @@ module Loira{
          */
         remove(args: any) {
             args = [].splice.call(arguments, 0);
-            let _items = this.items;
+            let _items:Loira.Element[] = this.items;
             let _this = this;
 
             for (let item of args){
-                var toDelete = [];
+                let toDelete:number[] = [];
 
                 item._canvas = null;
                 toDelete.push(_items.indexOf(item));
 
-                for (var i = 0; i < _items.length; i++) {
+                for (let i:number = 0; i < _items.length; i++) {
                     if (_items[i].baseType === 'relation') {
                         let relation = <Common.Relation> _items[i];
 
@@ -283,7 +304,7 @@ module Loira{
 
                 toDelete.sort();
 
-                for (i = toDelete.length - 1; i >= 0; i--) {
+                for (let i:number = toDelete.length - 1; i >= 0; i--) {
                     _items.splice(toDelete[i], 1);
                 }
 
@@ -307,7 +328,7 @@ module Loira{
          * @memberof Loira.Canvas#
          */
         removeAll() {
-            for (var i = 0; i < this.items.length; i++) {
+            for (let i:number = 0; i < this.items.length; i++) {
                 this.items[i]._canvas = null;
             }
             this.items = [];
@@ -376,7 +397,7 @@ module Loira{
          * @param {function} callback - Funcion a desregistrar
          */
         fall(evt: string, callback: (evt: any) => void) {
-            var index = this._callbacks[evt].indexOf(callback);
+            let index = this._callbacks[evt].indexOf(callback);
             if (index > -1) {
                 this._callbacks[evt].splice(index, 1);
             }
@@ -392,7 +413,7 @@ module Loira{
             let _this = this;
 
             _this._canvas.onkeydown = function (evt) {
-                var code = evt.keyCode;
+                let code = evt.keyCode;
                 if (code === 46) {
                     if (_this._selected && _this._selected.baseType !== 'relation') {
                         _this.remove(_this._selected);
@@ -400,8 +421,8 @@ module Loira{
                 }
             };
 
-            var onDown = function (evt, isDoubleClick) {
-                var real = _this._getMouse(evt);
+            let onDown = function (evt, isDoubleClick) {
+                let real:Point = _this._getMouse(evt);
                 _this._tmp.pointer = real;
 
                 if (isDoubleClick) {
@@ -428,22 +449,32 @@ module Loira{
                     _this.emit('mouse:down', new MouseEvent(real.x, real.y, 'mousedown'));
                 }
 
+                if (!isDoubleClick) {
+                    _this._isDragged = true;
+                    _this._canvas.style.cursor = 'move';
+                }
+
                 if (_this._selected) {
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
                     if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
+                        switch (_this._tmp.transform) {
+                            case 'tc':
+                            case 'bc':
+                                _this._canvas.style.cursor = 'ns-resize';
+                                break;
+                            case 'ml':
+                            case 'mr':
+                                _this._canvas.style.cursor = 'ew-resize';
+                                break;
+                        }
                         return;
                     } else {
                         _this._selected = null;
                     }
                 }
 
-                if (!isDoubleClick) {
-                    _this._isDragged = true;
-                    _this._canvas.style.cursor = '-moz-grabbing;-webkit-grabbing;grabbing';
-                }
-
-                var item;
-                for (var i = _this.items.length - 1; i >= 0; i--) {
+                let item:Loira.Element;
+                for (let i:number = _this.items.length - 1; i >= 0; i--) {
                     item = _this.items[i];
                     if (item.checkCollision(real.x, real.y)) {
                         _this._selected = item;
@@ -507,7 +538,7 @@ module Loira{
 
             _this._canvas.onmousemove = function (evt) {
                 if (_this._isDragged) {
-                    let real = _this._getMouse(evt);
+                    let real:Point = _this._getMouse(evt);
                     let x:number = real.x - _this._tmp.pointer.x;
                     let y:number = real.y - _this._tmp.pointer.y;
 
@@ -542,8 +573,6 @@ module Loira{
                                         _this._selected.width += x;
                                         break;
                                 }
-                            } else {
-                                (<Common.Relation> _this._selected).movePoint(_this._tmp.transform, x, y);
                             }
 
                             _this.renderAll();
@@ -577,8 +606,8 @@ module Loira{
                 }
             };
             _this._canvas.onmouseup = function (evt) {
-                var real = _this._getMouse(evt);
-                //_this._canvas.style.cursor = 'default';
+                let real = _this._getMouse(evt);
+                _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
 
                 /**
@@ -601,12 +630,18 @@ module Loira{
                      * @property {string} type - Tipo de evento
                      */
                     _this.emit('object:released', new ObjectEvent(_this._selected, 'objectreleased'));
-                    _this._tmp.transform = false;
+                    _this._tmp.transform = null;
                     _this._selected.recalculateBorders();
                 }
             };
-            _this._canvas.onmouseleave =function(evt){
+
+            _this._canvas.onmouseenter = function(){
+                _this.renderAll();
+            };
+
+            _this._canvas.onmouseleave =function(){
                 _this._isDragged = false;
+                _this._canvas.style.cursor = 'default';
             };
 
             _this._canvas.onselectstart = function () {

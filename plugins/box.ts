@@ -8,7 +8,7 @@ module Box{
      *
      * @memberof Box
      * @class Box
-     * @augments Loira.Object
+     * @augments Loira.Element
      */
     export class Box extends Loira.Element{
         public color: string;

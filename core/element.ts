@@ -128,7 +128,7 @@ module Loira{
          * @private
          */
         drawSelected(ctx: CanvasRenderingContext2D) {
-            var x: number = this.x - 2,
+            let x: number = this.x - 2,
                 y: number = this.y - 2,
                 w: number = this.width,
                 h: number = this.height;
@@ -157,10 +157,10 @@ module Loira{
          * @memberof Loira.Object#
          * @param pX Posicion x del punto
          * @param pY Posicion y del punto
-         * @returns {any}
+         * @returns
          */
-        getSelectedCorner(pX: number, pY: number): any {
-            var x: number = this.x - 2,
+        getSelectedCorner(pX: number, pY: number): string {
+            let x: number = this.x - 2,
                 y: number = this.y - 2,
                 w: number = this.width,
                 h: number = this.height,

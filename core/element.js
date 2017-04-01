@@ -130,7 +130,7 @@ var Loira;
          * @memberof Loira.Object#
          * @param pX Posicion x del punto
          * @param pY Posicion y del punto
-         * @returns {any}
+         * @returns
          */
         Element.prototype.getSelectedCorner = function (pX, pY) {
             var x = this.x - 2, y = this.y - 2, w = this.width, h = this.height, mw = w / 2, mh = h / 2;

@@ -43,6 +43,19 @@ var Loira;
         };
         return FpsCounter;
     }());
+    var TmpData = (function () {
+        function TmpData() {
+        }
+        return TmpData;
+    }());
+    var ZoomData = (function () {
+        function ZoomData() {
+            this.update();
+        }
+        ZoomData.prototype.update = function () {
+        };
+        return ZoomData;
+    }());
     var Canvas = (function () {
         /**
          * Create a new instance of canvas
@@ -64,7 +77,7 @@ var Loira;
             /**
              * @property {Object}  _tmp - Almacena datos temporales
              */
-            this._tmp = {};
+            this._tmp = new TmpData();
             /**
              * @property { Loira.Element[] } items - Listado de objetos que posee el canvas
              */
@@ -132,9 +145,10 @@ var Loira;
             Loira.drawable.registerMap(Loira.Config.assetsPath, Loira.Config.regions, function () {
                 _this.renderAll();
             });
-            this._fps = new FpsCounter(config.fps);
             this._bind();
             this._setScrollContainer();
+            this._fps = new FpsCounter(config.fps);
+            this._zoom = new ZoomData();
         }
         /**
          * Dibuja las relaciones y simbolos dentro del canvas
@@ -251,7 +265,7 @@ var Loira;
                     }
                 }
                 toDelete.sort();
-                for (i = toDelete.length - 1; i >= 0; i--) {
+                for (var i = toDelete.length - 1; i >= 0; i--) {
                     _items.splice(toDelete[i], 1);
                 }
                 /**
@@ -383,18 +397,28 @@ var Loira;
                      */
                     _this.emit('mouse:down', new MouseEvent(real.x, real.y, 'mousedown'));
                 }
+                if (!isDoubleClick) {
+                    _this._isDragged = true;
+                    _this._canvas.style.cursor = 'move';
+                }
                 if (_this._selected) {
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
                     if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
+                        switch (_this._tmp.transform) {
+                            case 'tc':
+                            case 'bc':
+                                _this._canvas.style.cursor = 'ns-resize';
+                                break;
+                            case 'ml':
+                            case 'mr':
+                                _this._canvas.style.cursor = 'ew-resize';
+                                break;
+                        }
                         return;
                     }
                     else {
                         _this._selected = null;
                     }
-                }
-                if (!isDoubleClick) {
-                    _this._isDragged = true;
-                    _this._canvas.style.cursor = '-moz-grabbing;-webkit-grabbing;grabbing';
                 }
                 var item;
                 for (var i = _this.items.length - 1; i >= 0; i--) {
@@ -495,9 +519,6 @@ var Loira;
                                         break;
                                 }
                             }
-                            else {
-                                _this._selected.movePoint(_this._tmp.transform, x, y);
-                            }
                             _this.renderAll();
                         }
                         else {
@@ -530,7 +551,7 @@ var Loira;
             };
             _this._canvas.onmouseup = function (evt) {
                 var real = _this._getMouse(evt);
-                //_this._canvas.style.cursor = 'default';
+                _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
@@ -552,12 +573,16 @@ var Loira;
                      * @property {string} type - Tipo de evento
                      */
                     _this.emit('object:released', new ObjectEvent(_this._selected, 'objectreleased'));
-                    _this._tmp.transform = false;
+                    _this._tmp.transform = null;
                     _this._selected.recalculateBorders();
                 }
             };
-            _this._canvas.onmouseleave = function (evt) {
+            _this._canvas.onmouseenter = function () {
+                _this.renderAll();
+            };
+            _this._canvas.onmouseleave = function () {
                 _this._isDragged = false;
+                _this._canvas.style.cursor = 'default';
             };
             _this._canvas.onselectstart = function () {
                 return false;

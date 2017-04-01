@@ -1,21 +1,27 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var Common;
 (function (Common) {
     var Point = Loira.util.Point;
     var Relation = (function (_super) {
         __extends(Relation, _super);
         function Relation(options) {
-            _super.call(this, options);
-            this.start = options.start ? options.start : null;
-            this.end = options.end ? options.end : null;
-            this.isDashed = options.isDashed ? options.isDashed : false;
-            this.points = options.points ? options.points : [new Point(), new Point()];
-            this.icon = options.icon ? options.icon : '';
-            this.baseType = 'relation';
+            var _this = _super.call(this, options) || this;
+            _this.start = options.start ? options.start : null;
+            _this.end = options.end ? options.end : null;
+            _this.isDashed = options.isDashed ? options.isDashed : false;
+            _this.points = options.points ? options.points : [new Point(), new Point()];
+            _this.icon = options.icon ? options.icon : '';
+            _this.baseType = 'relation';
+            return _this;
         }
         /**
          * Renderiza el objeto
@@ -155,11 +161,10 @@ var Common;
             ctx.strokeStyle = '#000000';
         };
         Relation.prototype.addPoint = function () {
-            var _this = this;
-            var last = _this.points[1], init = _this.points[0];
+            var last = this.points[1], init = this.points[0];
             var x = Math.round((last.x - init.x) / 2) + init.x;
             var y = Math.round((last.y - init.y) / 2) + init.y;
-            _this.points.splice(1, 0, { x: x, y: y });
+            this.points.splice(1, 0, { x: x, y: y });
         };
         /**
          * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
@@ -196,13 +201,14 @@ var Common;
     var Symbol = (function (_super) {
         __extends(Symbol, _super);
         function Symbol(options) {
-            _super.call(this, options);
-            var link = this._linkSymbol;
-            this.on({
+            var _this = _super.call(this, options) || this;
+            var link = _this._linkSymbol;
+            _this.on({
                 icon: 'arrow',
                 click: link
             });
-            this.baseType = 'symbol';
+            _this.baseType = 'symbol';
+            return _this;
         }
         /**
          * Evento que se ejecuta cuando se realiza una relacion entre simbolos
@@ -211,17 +217,17 @@ var Common;
          * @protected
          */
         Symbol.prototype._linkSymbol = function () {
-            var _this = this;
+            var $this = this;
             var listener = this._canvas.on('mouse:down', function (evt) {
-                var canvas = _this._canvas;
-                var relations = canvas.getRelationsFromObject(_this, false, true);
-                if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
+                var canvas = $this._canvas;
+                var countRel = canvas.getRelationsFromObject($this, false, true).length;
+                if (!$this.maxOutGoingRelation || (countRel < $this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
                         if (item.baseType !== 'relation') {
                             if (item.checkCollision(evt.x, evt.y)) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                canvas.add(new instance({}).update(_this, item));
+                                canvas.add(new instance({}).update($this, item));
                                 break;
                             }
                         }
@@ -247,7 +253,7 @@ var Common;
             lines.push(buff);
             return lines;
         };
-        Symbol.prototype.drawText = function (ctx, line, horiAlign, vertAlign) {
+        Symbol.prototype.drawText = function (ctx, line) {
             var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2, lines;
             lines = this._splitText(ctx, line);
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
@@ -263,11 +269,12 @@ var Common;
     var Actor = (function (_super) {
         __extends(Actor, _super);
         function Actor(options) {
-            _super.call(this, options);
-            this.text = options.text ? options.text : 'Actor1';
-            this.width = 30;
-            this.height = 85;
-            this.type = 'actor';
+            var _this = _super.call(this, options) || this;
+            _this.text = options.text ? options.text : 'Actor1';
+            _this.width = 30;
+            _this.height = 85;
+            _this.type = 'actor';
+            return _this;
         }
         Actor.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
