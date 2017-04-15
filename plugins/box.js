@@ -34,7 +34,7 @@ var Box;
             _this.baseType = 'box';
             return _this;
         }
-        Box.prototype._render = function (ctx) {
+        Box.prototype.render = function (ctx) {
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.fillText(this.text, this.x, this.y - 10);

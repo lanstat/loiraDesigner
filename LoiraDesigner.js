@@ -5,12 +5,14 @@ var classes = [
 	"../../core/canvas.js",
 	"../../core/utils.js",
 	"../../core/element.js",
+    "../../core/animation.js",
 	"../../core/common.js",
     "../../core/relations.js",
 	"../../plugins/xmiparser.js",
 	"../../plugins/usecase.js",
 	"../../plugins/box.js",
 	"../../plugins/workflow.js",
+    "../../plugins/orgchart.js",
 	"../../core/drawable.js",
 	"../../core/config.js"
 ];

@@ -38,7 +38,7 @@ var UseCase;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        UseCase.prototype._render = function (ctx) {
+        UseCase.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             if (this.text) {
                 var kappa = .5522848, ox = (this.width / 2) * kappa, oy = (this.height / 2) * kappa, xe = this.x + this.width, ye = this.y + this.height, xm = this.x + this.width / 2, ym = this.y + this.height / 2;

@@ -22,7 +22,7 @@ module Phase{
             return undefined;
         }
 
-        _render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D): void {
             let kappa = .5522848,
                 ox = this.width * kappa,
                 oy = this.height * kappa,

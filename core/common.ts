@@ -30,7 +30,7 @@ module Common{
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
          * @protected
          */
-        public _render(ctx: CanvasRenderingContext2D): void {
+        public render(ctx: CanvasRenderingContext2D): void {
             let start:Symbol = this.start,
                 end:Symbol = this.end,
                 tmp: number,
@@ -376,7 +376,7 @@ module Common{
             return Math.sqrt(Math.pow((result.x - (this.x + this.width/2)), 2) + Math.pow((result.y - (this.y + this.height/2)), 2));
         }
 
-        public _render(ctx: CanvasRenderingContext2D): void {
+        public render(ctx: CanvasRenderingContext2D): void {
             let textW:number = ctx.measureText(this.text).width;
             if (textW > this.width){
                 this.x = this.x + this.width/2 - textW/2;

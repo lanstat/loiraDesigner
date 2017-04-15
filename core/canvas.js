@@ -23,6 +23,7 @@ var Loira;
             this.height = 0;
             this.viewportWidth = 0;
             this.viewportHeight = 0;
+            this.dragCanvas = false;
         }
         return CanvasConfig;
     }());
@@ -49,10 +50,17 @@ var Loira;
         return TmpData;
     }());
     var ZoomData = (function () {
-        function ZoomData() {
-            this.update();
+        function ZoomData(canvas) {
+            this._canvas = canvas;
+            this._scale = 1;
+            this.update(1);
         }
-        ZoomData.prototype.update = function () {
+        ZoomData.prototype.update = function (delta) {
+            this._scale += delta / Math.abs(delta);
+            if (this._scale < 9 && this._scale > 0) {
+                this.scrollX = Math.floor(this._canvas._config.width / 20);
+                this.scrollY = Math.floor(this._canvas._config.height / 20);
+            }
         };
         return ZoomData;
     }());
@@ -123,6 +131,7 @@ var Loira;
             this._canvas.style.top = '0';
             this._canvas.style.zIndex = '100';
             this._canvas.style.backgroundColor = Loira.Config.background;
+            this._canvas.tabIndex = 99;
             this.container.style.width = this.container.style.maxWidth = config.viewportWidth + 'px';
             this.container.style.height = this.container.style.maxHeight = config.viewportHeight + 'px';
             this.container.style.position = 'relative';
@@ -148,7 +157,7 @@ var Loira;
             this._bind();
             this._setScrollContainer();
             this._fps = new FpsCounter(config.fps);
-            this._zoom = new ZoomData();
+            this._zoom = new ZoomData(this);
         }
         /**
          * Dibuja las relaciones y simbolos dentro del canvas
@@ -161,14 +170,14 @@ var Loira;
                 ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
                 for (var i = 0; i < this.items.length; i++) {
                     ctx.save();
-                    this.items[i]._render(ctx);
+                    this.items[i].render(ctx);
                     ctx.restore();
                 }
                 if (this._selected) {
                     ctx.save();
                     this._selected.drawSelected(ctx);
                     ctx.restore();
-                    this._selected._renderButtons(ctx);
+                    this._selected.renderButtons(ctx);
                 }
             }
         };
@@ -188,7 +197,7 @@ var Loira;
             var _this = this;
             for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
                 var item = args_1[_i];
-                item._canvas = _this;
+                item.attach(_this);
                 if (item.baseType === 'relation') {
                     var index = _items.indexOf(item.start);
                     index = index < _items.indexOf(item.end) ? index : _items.indexOf(item.end);
@@ -252,6 +261,9 @@ var Loira;
             for (var _i = 0, args_2 = args; _i < args_2.length; _i++) {
                 var item = args_2[_i];
                 var toDelete = [];
+                if (item == this._selected) {
+                    this._selected = null;
+                }
                 item._canvas = null;
                 toDelete.push(_items.indexOf(item));
                 for (var i = 0; i < _items.length; i++) {
@@ -259,7 +271,7 @@ var Loira;
                         var relation = _items[i];
                         if (relation.start._uid === item._uid ||
                             relation.end._uid === item._uid) {
-                            relation._canvas = null;
+                            relation.destroy();
                             toDelete.push(i);
                         }
                     }
@@ -278,6 +290,7 @@ var Loira;
                  */
                 _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
             }
+            this.renderAll(true);
             this._selected = null;
         };
         /**
@@ -287,7 +300,7 @@ var Loira;
          */
         Canvas.prototype.removeAll = function () {
             for (var i = 0; i < this.items.length; i++) {
-                this.items[i]._canvas = null;
+                this.items[i].destroy();
             }
             this.items = [];
             this._selected = null;
@@ -362,12 +375,36 @@ var Loira;
          */
         Canvas.prototype._bind = function () {
             var _this = this;
-            _this._canvas.onkeydown = function (evt) {
-                var code = evt.keyCode;
-                if (code === 46) {
-                    if (_this._selected && _this._selected.baseType !== 'relation') {
-                        _this.remove(_this._selected);
+            var onKeyDown = function (evt, isGlobal) {
+                if (evt.keyCode == 18) {
+                    return;
+                }
+                _this._tmp.lastKey = evt.keyCode;
+                if (!isGlobal) {
+                    if (_this._tmp.lastKey === 46) {
+                        if (_this._selected) {
+                            _this.remove(_this._selected);
+                        }
                     }
+                }
+            };
+            _this._canvas.onkeydown = function (evt) {
+                onKeyDown(evt, false);
+            };
+            document.addEventListener('keydown', function (evt) {
+                onKeyDown(evt, true);
+            });
+            _this._canvas.onkeyup = function () {
+                _this._tmp.lastKey = null;
+            };
+            document.addEventListener('keyup', function () {
+                _this._tmp.lastKey = null;
+            });
+            _this._canvas.onmousewheel = function (evt) {
+                console.log(_this._tmp.lastKey);
+                if (_this._tmp.lastKey == 17) {
+                    _this._zoom.update(evt.deltaY);
+                    return false;
                 }
             };
             var onDown = function (evt, isDoubleClick) {
@@ -537,13 +574,16 @@ var Loira;
                         }
                     }
                     else {
-                        if (_this._canvas && _this._canvasContainer) {
-                            x = x === 0 ? x : x / Math.abs(x);
-                            y = y === 0 ? y : y / Math.abs(y);
-                            _this.container.scrollLeft -= 5 * x;
-                            _this.container.scrollTop -= 5 * y;
-                            _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
-                            _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                        if (_this._config.dragCanvas) {
+                            console.log(_this._zoom.scrollX, x);
+                            if (_this._canvas && _this._canvasContainer) {
+                                x = x === 0 ? x : x / Math.abs(x);
+                                y = y === 0 ? y : y / Math.abs(y);
+                                _this.container.scrollLeft -= _this._zoom.scrollX * x;
+                                _this.container.scrollTop -= _this._zoom.scrollY * y;
+                                _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
+                                _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                            }
                         }
                     }
                     _this._tmp.pointer = real;
@@ -737,6 +777,9 @@ var Loira;
                 this.container.scrollTop = y;
                 this.container.scrollLeft = x;
             }
+        };
+        Canvas.prototype.getContext = function () {
+            return this._canvas.getContext('2d');
         };
         return Canvas;
     }());

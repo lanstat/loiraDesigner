@@ -23,6 +23,7 @@ module Loira{
         public viewportWidth: number = 0;
         public viewportHeight: number = 0;
         public fps: number;
+        public dragCanvas: boolean = false;
     }
 
     class FpsCounter {
@@ -50,18 +51,27 @@ module Loira{
     class TmpData{
         public pointer:Point;
         public transform:string;
+        public lastKey:number;
     }
 
     class ZoomData{
         public scrollX: number;
         public scrollY: number;
+        private _scale: number;
+        private _canvas: Canvas;
 
-        constructor(){
-            this.update();
+        constructor(canvas: Canvas){
+            this._canvas = canvas;
+            this._scale = 1;
+            this.update(1);
         }
 
-        update(){
-
+        update(delta:number){
+            this._scale += delta / Math.abs(delta);
+            if (this._scale < 9 && this._scale > 0){
+                this.scrollX = Math.floor(this._canvas._config.width/20);
+                this.scrollY = Math.floor(this._canvas._config.height/20);
+            }
         }
     }
 
@@ -107,7 +117,7 @@ module Loira{
 
         private _border: any;
 
-        private _config: CanvasConfig;
+        public _config: CanvasConfig;
 
         private _fps: FpsCounter;
 
@@ -145,6 +155,7 @@ module Loira{
             this._canvas.style.top = '0';
             this._canvas.style.zIndex = '100';
             this._canvas.style.backgroundColor = Loira.Config.background;
+            this._canvas.tabIndex = 99;
 
             this.container.style.width = this.container.style.maxWidth = config.viewportWidth + 'px';
             this.container.style.height = this.container.style.maxHeight = config.viewportHeight + 'px';
@@ -177,7 +188,7 @@ module Loira{
             this._setScrollContainer();
 
             this._fps = new FpsCounter(config.fps);
-            this._zoom = new ZoomData();
+            this._zoom = new ZoomData(this);
         }
 
         /**
@@ -192,7 +203,7 @@ module Loira{
 
                 for (let i:number = 0; i < this.items.length; i++) {
                     ctx.save();
-                    this.items[i]._render(ctx);
+                    this.items[i].render(ctx);
                     ctx.restore();
                 }
 
@@ -200,7 +211,7 @@ module Loira{
                     ctx.save();
                     this._selected.drawSelected(ctx);
                     ctx.restore();
-                    this._selected._renderButtons(ctx);
+                    this._selected.renderButtons(ctx);
                 }
             }
         }
@@ -221,7 +232,7 @@ module Loira{
             let _this = this;
 
             for (let item of args){
-                item._canvas = _this;
+                item.attach(_this);
                 if (item.baseType === 'relation') {
                     let index:number = _items.indexOf(item.start);
                     index = index < _items.indexOf(item.end) ? index : _items.indexOf(item.end);
@@ -286,6 +297,10 @@ module Loira{
             for (let item of args){
                 let toDelete:number[] = [];
 
+                if (item == this._selected){
+                    this._selected = null;
+                }
+
                 item._canvas = null;
                 toDelete.push(_items.indexOf(item));
 
@@ -295,7 +310,7 @@ module Loira{
 
                         if (relation.start._uid === item._uid ||
                             relation.end._uid === item._uid) {
-                            relation._canvas = null;
+                            relation.destroy();
 
                             toDelete.push(i);
                         }
@@ -319,6 +334,8 @@ module Loira{
                 _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
             }
 
+            this.renderAll(true);
+
             this._selected = null;
         }
 
@@ -329,7 +346,7 @@ module Loira{
          */
         removeAll() {
             for (let i:number = 0; i < this.items.length; i++) {
-                this.items[i]._canvas = null;
+                this.items[i].destroy();
             }
             this.items = [];
             this._selected = null;
@@ -412,12 +429,40 @@ module Loira{
         _bind() {
             let _this = this;
 
-            _this._canvas.onkeydown = function (evt) {
-                let code = evt.keyCode;
-                if (code === 46) {
-                    if (_this._selected && _this._selected.baseType !== 'relation') {
-                        _this.remove(_this._selected);
+            let onKeyDown = function(evt, isGlobal){
+                if (evt.keyCode == 18){return;}
+                _this._tmp.lastKey = evt.keyCode;
+
+                if (!isGlobal){
+                    if (_this._tmp.lastKey === 46) {
+                        if (_this._selected) {
+                            _this.remove(_this._selected);
+                        }
                     }
+                }
+            };
+
+            _this._canvas.onkeydown = function (evt) {
+                onKeyDown(evt, false);
+            };
+
+            document.addEventListener('keydown', function(evt){
+                onKeyDown(evt, true);
+            });
+
+            _this._canvas.onkeyup = function(){
+                _this._tmp.lastKey = null;
+            };
+
+            document.addEventListener('keyup', function(){
+                _this._tmp.lastKey = null;
+            });
+
+            _this._canvas.onmousewheel = function(evt){
+                console.log(_this._tmp.lastKey);
+                if (_this._tmp.lastKey == 17){
+                    _this._zoom.update(evt.deltaY);
+                    return false;
                 }
             };
 
@@ -591,15 +636,18 @@ module Loira{
                             _this.renderAll();
                         }
                     } else {
-                        if (_this._canvas && _this._canvasContainer) {
-                            x = x === 0? x : x/Math.abs(x);
-                            y =  y === 0? y : y/Math.abs(y);
+                        if (_this._config.dragCanvas){
+                            console.log(_this._zoom.scrollX, x);
+                            if (_this._canvas && _this._canvasContainer) {
+                                x = x === 0? x : x/Math.abs(x);
+                                y =  y === 0? y : y/Math.abs(y);
 
-                            _this.container.scrollLeft -= 5*x;
-                            _this.container.scrollTop -= 5*y;
+                                _this.container.scrollLeft -= _this._zoom.scrollX*x;
+                                _this.container.scrollTop -= _this._zoom.scrollY*y;
 
-                            _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
-                            _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                                _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
+                                _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                            }
                         }
                     }
                     _this._tmp.pointer = real;
@@ -816,5 +864,10 @@ module Loira{
                 this.container.scrollLeft = x;
             }
         }
+
+        getContext(): CanvasRenderingContext2D {
+            return this._canvas.getContext('2d');
+        }
     }
 }
+

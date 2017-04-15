@@ -1,6 +1,7 @@
 module Loira{
     import BaseOption = Loira.util.BaseOption;
     import Region = Loira.util.Region;
+    import Point = Loira.util.Point;
 
     /**
      * Clase base para la creacion de nuevos objetos dibujables
@@ -17,11 +18,12 @@ module Loira{
         public centerObject: boolean;
         public maxOutGoingRelation: number;
         public _buttons: any[];
-        public _canvas: Loira.Canvas;
+        protected _canvas: Loira.Canvas;
         public type: string;
         public baseType: string;
         public extras: any;
         public text: string;
+        private animation: Animation;
 
         /**
          * Inicializa los valores de la clase
@@ -47,6 +49,8 @@ module Loira{
             this._canvas = null;
             this.type = '';
             this.baseType = '';
+
+            this.animation = new Animation(this);
         }
 
         /**
@@ -57,7 +61,10 @@ module Loira{
          * @protected
          * @abstract
          */
-        public abstract _render(ctx: CanvasRenderingContext2D): void;
+        render(ctx: CanvasRenderingContext2D): void {
+            this.animation.proccess();
+        }
+
         /**
          * Verifica si el punto dado se encuentra dentro de los limites del objeto
          *
@@ -86,13 +93,12 @@ module Loira{
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
          * @private
          */
-        public _renderButtons(ctx: CanvasRenderingContext2D): void {
+        public renderButtons(ctx: CanvasRenderingContext2D): void {
             let x: number = this.x + this.width + 10;
             let y: number = this.y;
             if (this._buttons.length > 0) {
                 this._buttons.forEach(function (item) {
                     drawable.render(item.icon, ctx, x, y);
-                    //ctx.drawImage(item.icon, x, y);
                     y += drawable.get(item.icon).height + 4;
                 });
             }
@@ -198,6 +204,19 @@ module Loira{
          * @memberof Loira.Element#
          * @abstract
          */
-        abstract recalculateBorders();
+        abstract recalculateBorders(): void;
+
+        attach(canvas: Loira.Canvas): void {
+            this._canvas = canvas;
+            this.animation.setFps(canvas._config.fps);
+        }
+
+        animateTo(point: Point, seconds: number = 1): void {
+            let time: number = this._canvas._config.fps * seconds;
+        }
+
+        destroy(): void {
+            this._canvas = null;
+        }
     }
 }

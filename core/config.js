@@ -14,6 +14,9 @@ var Loira;
         'spear2': { x: 34, y: 0, width: 25, height: 26 },
         'arrow': { x: 27, y: 26, width: 12, height: 16 }
     };
+    var _orgChart = {
+        levelColor: ['#124FFD', '#FF4FFD', '#12003D']
+    };
     var Config;
     (function (Config) {
         Config.fontSize = _fontSize;
@@ -22,6 +25,7 @@ var Loira;
         Config.background = _background;
         Config.assetsPath = _assetsPath;
         Config.regions = _regions;
+        Config.orgChart = _orgChart;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=config.js.map

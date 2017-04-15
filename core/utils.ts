@@ -6,17 +6,17 @@
  */
 module Loira.util{
     export class BaseOption{
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        centerObject: boolean;
-        maxOutGoingRelation: number;
-        _canvas: any;
+        x: number = 0;
+        y: number = 0;
+        width: number = 0;
+        height: number = 0;
+        centerObject: boolean = false;
+        maxOutGoingRelation: number = 0;
+        _canvas: Loira.Canvas;
         type: string;
         baseType: string;
-        extras: any;
-        text: string;
+        extras: any = {};
+        text: string = '';
     }
 
     export class RelOption extends BaseOption{

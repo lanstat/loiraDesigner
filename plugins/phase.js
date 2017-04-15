@@ -32,7 +32,7 @@ var Phase;
         Phase.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             return undefined;
         };
-        Phase.prototype._render = function (ctx) {
+        Phase.prototype.render = function (ctx) {
             var kappa = .5522848, ox = this.width * kappa, oy = this.height * kappa, xe = this.x + this.width, ye = this.y + this.height, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
             ctx.beginPath();
             ctx.moveTo(this.x, ym);

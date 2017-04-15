@@ -23,7 +23,7 @@ module Box{
             this.baseType = 'box';
         }
 
-        _render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D): void {
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
 

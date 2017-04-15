@@ -31,7 +31,7 @@ module UseCase{
             return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
         }
 
-        _render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             if (this.text) {
                 let kappa = .5522848,

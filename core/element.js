@@ -32,7 +32,19 @@ var Loira;
             this._canvas = null;
             this.type = '';
             this.baseType = '';
+            this.animation = new Animation(this);
         }
+        /**
+         * Renderiza el objeto
+         *
+         * @memberof Loira.Element#
+         * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+         * @protected
+         * @abstract
+         */
+        Element.prototype.render = function (ctx) {
+            this.animation.proccess();
+        };
         /**
          * Verifica si el punto dado se encuentra dentro de los limites del objeto
          *
@@ -61,13 +73,12 @@ var Loira;
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
          * @private
          */
-        Element.prototype._renderButtons = function (ctx) {
+        Element.prototype.renderButtons = function (ctx) {
             var x = this.x + this.width + 10;
             var y = this.y;
             if (this._buttons.length > 0) {
                 this._buttons.forEach(function (item) {
                     Loira.drawable.render(item.icon, ctx, x, y);
-                    //ctx.drawImage(item.icon, x, y);
                     y += Loira.drawable.get(item.icon).height + 4;
                 });
             }
@@ -159,6 +170,17 @@ var Loira;
          */
         Element.prototype.show = function () {
             this._canvas.centerToPoint((this.x + this.width / 2), (this.y + this.height / 2));
+        };
+        Element.prototype.attach = function (canvas) {
+            this._canvas = canvas;
+            this.animation.setFps(canvas._config.fps);
+        };
+        Element.prototype.animateTo = function (point, seconds) {
+            if (seconds === void 0) { seconds = 1; }
+            var time = this._canvas._config.fps * seconds;
+        };
+        Element.prototype.destroy = function () {
+            this._canvas = null;
         };
         return Element;
     }());

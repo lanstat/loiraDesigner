@@ -20,6 +20,14 @@ var Loira;
     (function (util) {
         var BaseOption = (function () {
             function BaseOption() {
+                this.x = 0;
+                this.y = 0;
+                this.width = 0;
+                this.height = 0;
+                this.centerObject = false;
+                this.maxOutGoingRelation = 0;
+                this.extras = {};
+                this.text = '';
             }
             return BaseOption;
         }());

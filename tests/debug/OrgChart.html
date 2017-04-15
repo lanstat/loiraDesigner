@@ -1,0 +1,41 @@
+<html>
+<head>
+    <script type="text/javascript" src="../../LoiraDesigner.js"></script>
+    <style>
+    </style>
+</head>
+<body>
+<div style="width: 1000px; height: 600px">
+    <div id="_canvas">
+    </div>
+</div>
+<button id="addObject">Agregar</button>
+<button id="setDirectRelation">Relacion directa</button>
+<script>
+    window.onload = function(){
+        Loira.Config.assetsPath = '../../assets/glyphs.png';
+
+        var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000});
+        var diagram = new OrgChart.Root();
+
+        var case1 = new OrgChart.Role({title:'CEO', root: diagram});
+
+        canvas.on('relation:selected', function(event){
+            console.log(event.selected)
+        });
+
+        canvas.add(case1);
+
+        document.getElementById('addObject').addEventListener('click', function(){
+            var case1 = new UseCase.UseCase({x:140,y:140, text:'Mostrar evento'});
+            canvas.add(case1);
+            canvas.renderAll();
+        });
+        document.getElementById('setDirectRelation').addEventListener('click', function(){
+            canvas.nextRelation = new Relation.DirectAssociation();
+        });
+
+    }
+</script>
+</body>
+</html>

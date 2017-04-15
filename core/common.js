@@ -30,7 +30,7 @@ var Common;
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
          * @protected
          */
-        Relation.prototype._render = function (ctx) {
+        Relation.prototype.render = function (ctx) {
             var start = this.start, end = this.end, tmp, init, last, xm, ym;
             this.points[0] = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
             this.points[this.points.length - 1] = { x: end.x + end.width / 2, y: end.y + end.height / 2 };
@@ -296,7 +296,7 @@ var Common;
             }
             return Math.sqrt(Math.pow((result.x - (this.x + this.width / 2)), 2) + Math.pow((result.y - (this.y + this.height / 2)), 2));
         };
-        Actor.prototype._render = function (ctx) {
+        Actor.prototype.render = function (ctx) {
             var textW = ctx.measureText(this.text).width;
             if (textW > this.width) {
                 this.x = this.x + this.width / 2 - textW / 2;

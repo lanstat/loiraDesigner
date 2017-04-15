@@ -110,7 +110,7 @@ module Workflow{
             return Math.sqrt(Math.pow(x, 2) + Math.pow(axis, 2));
         }
 
-        _render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
             ctx.beginPath();
@@ -152,7 +152,7 @@ module Workflow{
             return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
         }
 
-        _render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
             let x = this.x +20;
@@ -238,7 +238,7 @@ module Workflow{
             return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
         }
 
-        _render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
             let x = this.x +20;
@@ -304,7 +304,7 @@ module Workflow{
             return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
         }
 
-        _render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
             let x = this.x;

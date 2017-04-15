@@ -106,7 +106,7 @@ var Workflow;
             var axis = result.y - (this.y + this.height / 2);
             return Math.sqrt(Math.pow(x, 2) + Math.pow(axis, 2));
         };
-        Process.prototype._render = function (ctx) {
+        Process.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.beginPath();
             ctx.lineWidth = 2;
@@ -145,7 +145,7 @@ var Workflow;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        Terminator.prototype._render = function (ctx) {
+        Terminator.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             var x = this.x + 20;
             var y = this.y;
@@ -221,7 +221,7 @@ var Workflow;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        Data.prototype._render = function (ctx) {
+        Data.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             var x = this.x + 20;
             var y = this.y;
@@ -273,7 +273,7 @@ var Workflow;
             y = result.y - (this.y + this.height / 2);
             return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
         };
-        Decision.prototype._render = function (ctx) {
+        Decision.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             var x = this.x;
             var y = this.y;
