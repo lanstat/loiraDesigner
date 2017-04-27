@@ -1,5 +1,11 @@
 module OrgChart{
     import BaseController = Loira.BaseController;
+    import RelOption = Loira.util.RelOption;
+    import Point = Loira.util.Point;
+
+    let levelColor: string[] = ['#124FFD', '#FF4FFD', '#12003D'];
+    let levelHeight: number[];
+
     class RoleOption extends Loira.util.BaseOption{
         id: string;
         parent: OrgChart.Role;
@@ -15,6 +21,7 @@ module OrgChart{
         y: number;
         width: number;
         height: number;
+        level: number;
 
         constructor(role: Role){
             this.role = role;
@@ -23,7 +30,12 @@ module OrgChart{
 
         recalculate(level: number = 0) {
             this.width = 0;
+            this.level = level;
             let nextLevel: number = level + 1;
+
+            if (levelHeight.length <= level){
+                levelHeight.push(this.role.height);
+            }
 
             for (let i=0; i<this.children.length;i++){
                 let child:Group = this.children[i];
@@ -37,38 +49,46 @@ module OrgChart{
             }
 
             this.role.x = Math.floor(this.width/2 - this.role.width/2) + this.x;
-            this.role.y = (level * (this.height + 10)) + 5;
-            console.log(this.role.x, this.role.y);
+            this.role.color = levelColor[level];
+
+            if (levelHeight[level] < this.role.height){
+                levelHeight[level] = this.role.height;
+            }
         }
     }
 
-    export class Controller
-        extends BaseController{
-
+    export class Controller extends BaseController{
         private roots: Group[] = [];
         private elements: Group[] = [];
-        private canvas: Loira.Canvas;
+
+        constructor(colors?: string[]){
+            super();
+            if (colors){
+                levelColor = colors;
+            }
+        }
 
         bind(canvas: Loira.Canvas) {
-            let _this = this;
-            this.canvas = canvas;
+            let $this = this;
+
+            canvas.defaultRelation = 'OrgChart.Relation';
 
             canvas.on('object:added', function(evt: Loira.event.ObjectEvent){
                 let group: Group = new Group(<Role>evt.selected);
 
-                _this.roots.push(group);
-                _this.elements.push(group);
-                _this.reorderElements();
+                $this.roots.push(group);
+                $this.elements.push(group);
+                $this.reorderElements();
             });
 
             canvas.on('relation:added', function(evt: Loira.event.RelationEvent){
-                let index: number = Controller.getGroup(<Role>evt.selected.end, _this.roots).index;
+                let index: number = Controller.getGroup(<Role>evt.selected.end, $this.roots).index;
 
-                let child = Controller.getGroup(<Role>evt.selected.end, _this.elements).item;
-                let item = Controller.getGroup(<Role>evt.selected.start, _this.elements).item;
+                let child = Controller.getGroup(<Role>evt.selected.end, $this.elements).item;
+                let item = Controller.getGroup(<Role>evt.selected.start, $this.elements).item;
 
                 if (index>=0) {
-                    _this.roots.splice(index, 1);
+                    $this.roots.splice(index, 1);
                 } else {
                     let children: Group[] = child.parent.children;
                     index = Controller.getGroup(child.role, children).index;
@@ -78,18 +98,31 @@ module OrgChart{
                 child.parent = item;
                 item.children.push(child);
 
-                _this.reorderElements();
-            })
+                $this.reorderElements();
+            });
         }
 
         reorderElements() {
             let x: number = 0;
+            levelHeight = [];
 
             for(let root of this.roots){
                 root.x = x;
                 root.recalculate();
                 x += root.width;
             }
+
+            levelHeight[0] += 30;
+            for(let i:number = 1; i<levelHeight.length; i++){
+                levelHeight[i] += levelHeight[i-1] + 30;
+            }
+
+            for (let i:number = 0; i<this.elements.length; i++){
+                let group: Group = this.elements[i];
+                group.role.y = (group.level == 0)? 10 : levelHeight[group.level -1];
+            }
+
+            console.log(levelHeight);
         }
 
         private static getGroup(role: Role, groups: Group[]): {item: Group, index: number}{
@@ -111,30 +144,41 @@ module OrgChart{
      */
     export class Role extends Common.Symbol{
         public color: string;
-        public level: number;
         public parent: OrgChart.Role;
         public title: string;
-        private titleSize: number;
 
         constructor(options: RoleOption){
             super(options);
 
-            this.width = 30;
+            this.width = 150;
             this.height = 20;
 
             this.parent = options.parent;
             this.title = options.title;
 
             this.type = 'role';
-
-            this.recalculateLevel();
         }
 
         render(ctx: CanvasRenderingContext2D): void {
             super.render(ctx);
+            let y,
+                xm = this.x + this.width / 2,
+                lines: string[] = super.splitText(ctx, this.title);
+
+            y = this.y + Loira.Config.fontSize;
+            this.height = (Loira.Config.fontSize + 3) * lines.length + 5;
 
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
+
+            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+            ctx.fillStyle = "#FFFFFF";
+
+            for (let i:number = 0; i < lines.length; i++) {
+                let textW: number = ctx.measureText(lines[i]).width;
+                ctx.fillText(lines[i], xm - textW / 2, y + 3);
+                y = y + Loira.Config.fontSize + 3;
+            }
         }
 
         recalculateBorders() {
@@ -144,20 +188,43 @@ module OrgChart{
             return 0;
         }
 
-        recalculateLevel() {
-            if (this.parent){
-
-            } else {
-                this.level = 0;
-                this.color = Loira.Config.orgChart.levelColor[0];
-            }
-        }
-
         attach(canvas: Loira.Canvas): void {
             super.attach(canvas);
-            let ctx: CanvasRenderingContext2D = canvas.getContext();
+            let ctx = canvas.getContext();
+            this.height = (Loira.Config.fontSize + 3) * super.splitText(ctx, this.title).length + 5;
+        }
+    }
 
-            this.titleSize = ctx.measureText(this.title).width;
+    export class Relation extends Common.Relation {
+        constructor(options: RelOption){
+            super(options);
+            this.type = 'orgchart:relation';
+        }
+
+        render(ctx: CanvasRenderingContext2D): void{
+            let start:Role = <Role>this.start,
+                end:Role = <Role>this.end,
+                middleLine: number,
+                init: Point;
+
+            middleLine = end.y - 10;
+
+            init = {x: start.x + start.width/2, y: start.y + start.height/2};
+
+            this.points[0] = init;
+            this.points[1] = {x: init.x, y: middleLine};
+            this.points[2] = {x: end.x + end.width/2, y: middleLine};
+            this.points[3] = {x: end.x + end.width/2, y: end.y + end.height/2}
+
+            ctx.beginPath();
+            ctx.lineWidth = 4;
+            ctx.moveTo(init.x, init.y);
+            ctx.lineJoin = 'round';
+
+            for (let i:number = 1; i < this.points.length; i++){
+                ctx.lineTo(this.points[i].x, this.points[i].y);
+            }
+            ctx.stroke();
         }
     }
 }

@@ -1,9 +1,9 @@
-QUnit.test('Creacion de simbolos', function (assert) {
+QUnit.test('Symbol\'s creation', function (assert) {
     Loira.Config.assetsPath = '../../build/assets/';
 
     var _canvas = document.createElement('div');
 
-    var canvas = new Loira.Canvas(_canvas);
+    var canvas = new Loira.Canvas(_canvas, {width: 1800, height:1000, viewportWidth: 800, viewportHeight: 500});
     var actor = new Common.Actor({x:20, y:10, text:'Prueba'});
 
     canvas.add(actor);

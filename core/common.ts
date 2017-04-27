@@ -305,7 +305,7 @@ module Common{
          */
         abstract obtainBorderPos(xm: number, ym: number, points: Line, ctx: CanvasRenderingContext2D): number;
 
-        private _splitText(ctx: CanvasRenderingContext2D, text: string, padding: number = 10) {
+        protected splitText(ctx: CanvasRenderingContext2D, text: string, padding: number = 10) {
             let words:string[] = text.split(' ');
             let buff:string = '';
             let lines:string[] = [];
@@ -329,7 +329,7 @@ module Common{
                 ym = this.y + this.height / 2,
                 lines: string[];
 
-            lines = this._splitText(ctx, line);
+            lines = this.splitText(ctx, line);
 
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
 

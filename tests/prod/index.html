@@ -1,17 +1,19 @@
 <html>
 	<head>
-		<script type="text/javascript" src="../../build/js/loira.js"></script>
+		<script type="text/javascript" src="../../build/min/loira.js"></script>
         <style>
         </style>
 	</head>
 	<body>
-		<div id="_canvas">
-        </div>
+		<div style="width: 1000px; height: 600px">
+			<div id="_canvas">
+			</div>
+		</div>
         <button id="addObject">Agregar</button>
         <button id="setDirectRelation">Relacion directa</button>
 		<script>
 			window.onload = function(){
-                Loira.Config.assetsPath = '../../build/assets/';
+                Loira.Config.assetsPath = '../../assets/glyphs.png';
 
 				var canvas = new Loira.Canvas('_canvas', {width:800, height:500});
 

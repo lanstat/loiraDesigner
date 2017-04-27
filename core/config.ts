@@ -21,10 +21,6 @@ module Loira{
         'arrow': {x: 27, y: 26, width: 12, height: 16}
     };
 
-    let _orgChart = {
-        levelColor: ['#124FFD', '#FF4FFD', '#12003D']
-    };
-
     export module Config{
         export let fontSize = _fontSize;
         export let fontType = _fontType;
@@ -32,6 +28,5 @@ module Loira{
         export let background = _background;
         export let assetsPath = _assetsPath;
         export let regions = _regions;
-        export let orgChart = _orgChart;
     }
 }

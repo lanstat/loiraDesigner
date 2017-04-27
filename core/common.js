@@ -236,7 +236,7 @@ var Common;
                 canvas.fall('mouse:down', listener);
             });
         };
-        Symbol.prototype._splitText = function (ctx, text, padding) {
+        Symbol.prototype.splitText = function (ctx, text, padding) {
             if (padding === void 0) { padding = 10; }
             var words = text.split(' ');
             var buff = '';
@@ -255,7 +255,7 @@ var Common;
         };
         Symbol.prototype.drawText = function (ctx, line) {
             var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2, lines;
-            lines = this._splitText(ctx, line);
+            lines = this.splitText(ctx, line);
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
             for (var i = 0; i < lines.length; i++) {
                 var textW = ctx.measureText(lines[i]).width;

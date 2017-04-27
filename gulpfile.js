@@ -6,6 +6,7 @@ var path = require('path');
 var paths = {
     js: [
         './core/events.js',
+        './core/drawable.js',
         './core/canvas.js',
         './core/utils.js',
         './core/element.js',
@@ -14,7 +15,9 @@ var paths = {
         './plugins/xmiparser.js',
         './plugins/usecase.js',
         './plugins/box.js',
+        './core/animation.js',
         './plugins/workflow.js',
+        './plugins/orgchart.js',
         './core/config.js'
     ],
     build: './build'

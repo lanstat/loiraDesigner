@@ -53,6 +53,36 @@ var Loira;
 })(Loira || (Loira = {}));
 //# sourceMappingURL=events.js.map
 /**
+ * Created by juan.garson on 27/03/2017.
+ */
+var Loira;
+(function (Loira) {
+    var drawable;
+    (function (drawable) {
+        var regions;
+        var image;
+        function registerMap(path, regions, callback) {
+            this.image = new Image();
+            this.image.src = path;
+            this.image.onload = function () {
+                callback();
+            };
+            this.regions = regions;
+        }
+        drawable.registerMap = registerMap;
+        function render(id, canvas, x, y) {
+            var region = this.regions[id];
+            canvas.drawImage(this.image, region.x, region.y, region.width, region.height, x, y, region.width, region.height);
+        }
+        drawable.render = render;
+        function get(id) {
+            return this.regions[id];
+        }
+        drawable.get = get;
+    })(drawable = Loira.drawable || (Loira.drawable = {}));
+})(Loira || (Loira = {}));
+//# sourceMappingURL=drawable.js.map
+/**
  * Plugin para diseño de diagramas
  * @namespace
  * @license Apache-2.0
@@ -78,6 +108,7 @@ var Loira;
             this.viewportWidth = 0;
             this.viewportHeight = 0;
             this.dragCanvas = false;
+            this.controller = null;
         }
         return CanvasConfig;
     }());
@@ -177,9 +208,7 @@ var Loira;
             }
             config.viewportWidth = config.viewportWidth || this.container.parentElement.offsetWidth || config.width;
             config.viewportHeight = config.viewportHeight || this.container.parentElement.offsetHeight || config.height;
-            this._canvas = document.createElement('canvas');
-            this._canvas.width = config.width;
-            this._canvas.height = config.height;
+            this._canvas = this.createHiDPICanvas(config.width, config.height);
             this._canvas.style.position = 'absolute';
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
@@ -212,7 +241,39 @@ var Loira;
             this._setScrollContainer();
             this._fps = new FpsCounter(config.fps);
             this._zoom = new ZoomData(this);
+            this.controller = config.controller || null;
+            if (this.controller) {
+                this.controller.bind(this);
+            }
         }
+        /**
+         * Create a canvas with specific dpi for the screen
+         * https://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas/15666143#15666143
+         * @param width Width of the canvas
+         * @param height Height of the canvas
+         * @param ratio Ratio of dpi
+         * @returns {HTMLCanvasElement}
+         */
+        Canvas.prototype.createHiDPICanvas = function (width, height, ratio) {
+            var PIXEL_RATIO = (function () {
+                var ctx = document.createElement("canvas").getContext("2d"), dpr = window.devicePixelRatio || 1, bsr = ctx.webkitBackingStorePixelRatio ||
+                    ctx.mozBackingStorePixelRatio ||
+                    ctx.msBackingStorePixelRatio ||
+                    ctx.oBackingStorePixelRatio ||
+                    ctx.backingStorePixelRatio || 1;
+                return dpr / bsr;
+            })();
+            if (!ratio) {
+                ratio = PIXEL_RATIO;
+            }
+            var canvas = document.createElement("canvas");
+            canvas.width = width * ratio;
+            canvas.height = height * ratio;
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+            canvas.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+            return canvas;
+        };
         /**
          * Dibuja las relaciones y simbolos dentro del canvas
          * @memberof Loira.Canvas#
@@ -455,7 +516,6 @@ var Loira;
                 _this._tmp.lastKey = null;
             });
             _this._canvas.onmousewheel = function (evt) {
-                console.log(_this._tmp.lastKey);
                 if (_this._tmp.lastKey == 17) {
                     _this._zoom.update(evt.deltaY);
                     return false;
@@ -548,7 +608,7 @@ var Loira;
                                  *
                                  * @event relation:dblclick
                                  * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {object} selected - Objeto seleccionadonpm
                                  * @property {string} type - Tipo de evento
                                  */
                                 _this.emit('relation:dblclick', new ObjectEvent(item, 'relationdblclick'));
@@ -1384,7 +1444,7 @@ var Common;
                 canvas.fall('mouse:down', listener);
             });
         };
-        Symbol.prototype._splitText = function (ctx, text, padding) {
+        Symbol.prototype.splitText = function (ctx, text, padding) {
             if (padding === void 0) { padding = 10; }
             var words = text.split(' ');
             var buff = '';
@@ -1403,7 +1463,7 @@ var Common;
         };
         Symbol.prototype.drawText = function (ctx, line) {
             var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2, lines;
-            lines = this._splitText(ctx, line);
+            lines = this.splitText(ctx, line);
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
             for (var i = 0; i < lines.length; i++) {
                 var textW = ctx.measureText(lines[i]).width;
@@ -1881,6 +1941,29 @@ var Box;
     Box_1.Box = Box;
 })(Box || (Box = {}));
 //# sourceMappingURL=box.js.map
+var Animation = (function () {
+    function Animation(element) {
+        this._registers = [];
+        this._element = element;
+    }
+    Animation.prototype.moveTo = function (x, y, seconds) {
+        if (seconds === void 0) { seconds = 1; }
+        var times = this._fps * seconds;
+        this._isRunning = true;
+    };
+    Animation.prototype.setFps = function (fps) {
+        this._fps = fps;
+    };
+    Animation.prototype.proccess = function () {
+        if (this._isRunning) {
+            if (this._registers.length == 0) {
+                this._isRunning = false;
+            }
+        }
+    };
+    return Animation;
+}());
+//# sourceMappingURL=animation.js.map
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2184,6 +2267,201 @@ var Workflow;
     Workflow.Decision = Decision;
 })(Workflow || (Workflow = {}));
 //# sourceMappingURL=workflow.js.map
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var OrgChart;
+(function (OrgChart) {
+    var BaseController = Loira.BaseController;
+    var levelColor = ['#124FFD', '#FF4FFD', '#12003D'];
+    var levelHeight;
+    var RoleOption = (function (_super) {
+        __extends(RoleOption, _super);
+        function RoleOption() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return RoleOption;
+    }(Loira.util.BaseOption));
+    var Group = (function () {
+        function Group(role) {
+            this.children = [];
+            this.role = role;
+            this.height = 40;
+        }
+        Group.prototype.recalculate = function (level) {
+            if (level === void 0) { level = 0; }
+            this.width = 0;
+            this.level = level;
+            var nextLevel = level + 1;
+            if (levelHeight.length <= level) {
+                levelHeight.push(this.role.height);
+            }
+            for (var i = 0; i < this.children.length; i++) {
+                var child = this.children[i];
+                child.x = this.x + this.width;
+                child.recalculate(nextLevel);
+                this.width += child.width;
+            }
+            if (this.width == 0) {
+                this.width = this.role.width + 10;
+            }
+            this.role.x = Math.floor(this.width / 2 - this.role.width / 2) + this.x;
+            this.role.color = levelColor[level];
+            if (levelHeight[level] < this.role.height) {
+                levelHeight[level] = this.role.height;
+            }
+        };
+        return Group;
+    }());
+    var Controller = (function (_super) {
+        __extends(Controller, _super);
+        function Controller(colors) {
+            var _this = _super.call(this) || this;
+            _this.roots = [];
+            _this.elements = [];
+            if (colors) {
+                levelColor = colors;
+            }
+            return _this;
+        }
+        Controller.prototype.bind = function (canvas) {
+            var $this = this;
+            canvas.defaultRelation = 'OrgChart.Relation';
+            canvas.on('object:added', function (evt) {
+                var group = new Group(evt.selected);
+                $this.roots.push(group);
+                $this.elements.push(group);
+                $this.reorderElements();
+            });
+            canvas.on('relation:added', function (evt) {
+                var index = Controller.getGroup(evt.selected.end, $this.roots).index;
+                var child = Controller.getGroup(evt.selected.end, $this.elements).item;
+                var item = Controller.getGroup(evt.selected.start, $this.elements).item;
+                if (index >= 0) {
+                    $this.roots.splice(index, 1);
+                }
+                else {
+                    var children = child.parent.children;
+                    index = Controller.getGroup(child.role, children).index;
+                    children.splice(index, 1);
+                }
+                child.parent = item;
+                item.children.push(child);
+                $this.reorderElements();
+            });
+        };
+        Controller.prototype.reorderElements = function () {
+            var x = 0;
+            levelHeight = [];
+            for (var _i = 0, _a = this.roots; _i < _a.length; _i++) {
+                var root = _a[_i];
+                root.x = x;
+                root.recalculate();
+                x += root.width;
+            }
+            levelHeight[0] += 30;
+            for (var i = 1; i < levelHeight.length; i++) {
+                levelHeight[i] += levelHeight[i - 1] + 30;
+            }
+            for (var i = 0; i < this.elements.length; i++) {
+                var group = this.elements[i];
+                group.role.y = (group.level == 0) ? 10 : levelHeight[group.level - 1];
+            }
+            console.log(levelHeight);
+        };
+        Controller.getGroup = function (role, groups) {
+            for (var i = 0; i < groups.length; i++) {
+                if (groups[i].role == role) {
+                    return { item: groups[i], index: i };
+                }
+            }
+            return { item: null, index: -1 };
+        };
+        return Controller;
+    }(BaseController));
+    OrgChart.Controller = Controller;
+    /**
+     * Class for organization chart
+     *
+     * @memberof OrgChart
+     * @class Role
+     * @augments Loira.Element
+     */
+    var Role = (function (_super) {
+        __extends(Role, _super);
+        function Role(options) {
+            var _this = _super.call(this, options) || this;
+            _this.width = 150;
+            _this.height = 20;
+            _this.parent = options.parent;
+            _this.title = options.title;
+            _this.type = 'role';
+            return _this;
+        }
+        Role.prototype.render = function (ctx) {
+            _super.prototype.render.call(this, ctx);
+            var y, xm = this.x + this.width / 2, lines = _super.prototype.splitText.call(this, ctx, this.title);
+            y = this.y + Loira.Config.fontSize;
+            this.height = (Loira.Config.fontSize + 3) * lines.length + 5;
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+            ctx.fillStyle = "#FFFFFF";
+            for (var i = 0; i < lines.length; i++) {
+                var textW = ctx.measureText(lines[i]).width;
+                ctx.fillText(lines[i], xm - textW / 2, y + 3);
+                y = y + Loira.Config.fontSize + 3;
+            }
+        };
+        Role.prototype.recalculateBorders = function () {
+        };
+        Role.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
+            return 0;
+        };
+        Role.prototype.attach = function (canvas) {
+            _super.prototype.attach.call(this, canvas);
+            var ctx = canvas.getContext();
+            this.height = (Loira.Config.fontSize + 3) * _super.prototype.splitText.call(this, ctx, this.title).length + 5;
+        };
+        return Role;
+    }(Common.Symbol));
+    OrgChart.Role = Role;
+    var Relation = (function (_super) {
+        __extends(Relation, _super);
+        function Relation(options) {
+            var _this = _super.call(this, options) || this;
+            _this.type = 'orgchart:relation';
+            return _this;
+        }
+        Relation.prototype.render = function (ctx) {
+            var start = this.start, end = this.end, middleLine, init;
+            middleLine = end.y - 10;
+            init = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
+            this.points[0] = init;
+            this.points[1] = { x: init.x, y: middleLine };
+            this.points[2] = { x: end.x + end.width / 2, y: middleLine };
+            this.points[3] = { x: end.x + end.width / 2, y: end.y + end.height / 2 };
+            ctx.beginPath();
+            ctx.lineWidth = 4;
+            ctx.moveTo(init.x, init.y);
+            ctx.lineJoin = 'round';
+            for (var i = 1; i < this.points.length; i++) {
+                ctx.lineTo(this.points[i].x, this.points[i].y);
+            }
+            ctx.stroke();
+        };
+        return Relation;
+    }(Common.Relation));
+    OrgChart.Relation = Relation;
+})(OrgChart || (OrgChart = {}));
+//# sourceMappingURL=orgchart.js.map
 var Loira;
 (function (Loira) {
     var _fontSize = 12;
@@ -2200,9 +2478,6 @@ var Loira;
         'spear2': { x: 34, y: 0, width: 25, height: 26 },
         'arrow': { x: 27, y: 26, width: 12, height: 16 }
     };
-    var _orgChart = {
-        levelColor: ['#124FFD', '#FF4FFD', '#12003D']
-    };
     var Config;
     (function (Config) {
         Config.fontSize = _fontSize;
@@ -2211,7 +2486,6 @@ var Loira;
         Config.background = _background;
         Config.assetsPath = _assetsPath;
         Config.regions = _regions;
-        Config.orgChart = _orgChart;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=config.js.map

@@ -150,9 +150,7 @@ module Loira{
             config.viewportWidth = config.viewportWidth || this.container.parentElement.offsetWidth || config.width;
             config.viewportHeight = config.viewportHeight || this.container.parentElement.offsetHeight || config.height;
 
-            this._canvas = <HTMLCanvasElement> document.createElement('canvas');
-            this._canvas.width = config.width;
-            this._canvas.height = config.height;
+            this._canvas = this.createHiDPICanvas(config.width, config.height);
             this._canvas.style.position = 'absolute';
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
@@ -197,6 +195,39 @@ module Loira{
             if (this.controller){
                 this.controller.bind(this);
             }
+        }
+
+        /**
+         * Create a canvas with specific dpi for the screen
+         * https://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas/15666143#15666143
+         * @param width Width of the canvas
+         * @param height Height of the canvas
+         * @param ratio Ratio of dpi
+         * @returns {HTMLCanvasElement}
+         */
+        private createHiDPICanvas(width: number, height: number, ratio?: number) {
+            let PIXEL_RATIO: number = (function(): number{
+                let ctx: CanvasRenderingContext2D = document.createElement("canvas").getContext("2d"),
+                    dpr = window.devicePixelRatio || 1,
+                    bsr = ctx.webkitBackingStorePixelRatio ||
+                        ctx.mozBackingStorePixelRatio ||
+                        ctx.msBackingStorePixelRatio ||
+                        ctx.oBackingStorePixelRatio ||
+                        ctx.backingStorePixelRatio || 1;
+
+                return dpr / bsr;
+            })();
+
+            if (!ratio) {
+                ratio = PIXEL_RATIO;
+            }
+            let canvas : HTMLCanvasElement = document.createElement("canvas");
+            canvas.width = width * ratio;
+            canvas.height = height * ratio;
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+            canvas.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+            return canvas;
         }
 
         /**
@@ -561,7 +592,7 @@ module Loira{
                                  *
                                  * @event relation:dblclick
                                  * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {object} selected - Objeto seleccionadonpm
                                  * @property {string} type - Tipo de evento
                                  */
                                 _this.emit('relation:dblclick', new ObjectEvent(item, 'relationdblclick'));

@@ -1,32 +1,32 @@
 <html>
 <head>
+    <link href="main.css" rel="stylesheet">
+
     <script type="text/javascript" src="../../LoiraDesigner.js"></script>
-    <style>
-    </style>
 </head>
 <body>
 <div style="width: 1000px; height: 600px">
     <div id="_canvas">
     </div>
 </div>
+<input id="title" type="text">
 <button id="addObject">Agregar</button>
 <button id="setDirectRelation">Actualizar ubicacion</button>
 <script>
     window.onload = function(){
         Loira.Config.assetsPath = '../../assets/glyphs.png';
+        Loira.Config.background= '#757575';
+        Loira.Config.fontType = 'Lato';
 
-        var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000, controller: new OrgChart.Controller()});
-
+        var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000, controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'])});
         var case1 = new OrgChart.Role({title:'CEO'});
-
-        canvas.on('relation:selected', function(event){
-            console.log(event.selected)
-        });
 
         canvas.add(case1);
 
         document.getElementById('addObject').addEventListener('click', function(){
-            var case1 = new OrgChart.Role({title:'Gerente'});
+            var title = document.getElementById('title').value;
+            document.getElementById('title').value = '';
+            var case1 = new OrgChart.Role({title:title});
             canvas.add(case1);
             canvas.renderAll();
         });
@@ -34,7 +34,6 @@
             canvas.controller.reorderElements();
             canvas.renderAll();
         });
-
     }
 </script>
 </body>
