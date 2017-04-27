@@ -24,6 +24,7 @@ module Loira{
         public viewportHeight: number = 0;
         public fps: number;
         public dragCanvas: boolean = false;
+        public controller: Loira.BaseController = null;
     }
 
     class FpsCounter {
@@ -123,6 +124,8 @@ module Loira{
 
         private _zoom: ZoomData;
 
+        public controller: BaseController;
+
         /**
          * Create a new instance of canvas
          *
@@ -189,6 +192,11 @@ module Loira{
 
             this._fps = new FpsCounter(config.fps);
             this._zoom = new ZoomData(this);
+
+            this.controller = config.controller || null;
+            if (this.controller){
+                this.controller.bind(this);
+            }
         }
 
         /**
@@ -459,7 +467,6 @@ module Loira{
             });
 
             _this._canvas.onmousewheel = function(evt){
-                console.log(_this._tmp.lastKey);
                 if (_this._tmp.lastKey == 17){
                     _this._zoom.update(evt.deltaY);
                     return false;

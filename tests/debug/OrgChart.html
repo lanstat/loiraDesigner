@@ -10,15 +10,14 @@
     </div>
 </div>
 <button id="addObject">Agregar</button>
-<button id="setDirectRelation">Relacion directa</button>
+<button id="setDirectRelation">Actualizar ubicacion</button>
 <script>
     window.onload = function(){
         Loira.Config.assetsPath = '../../assets/glyphs.png';
 
-        var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000});
-        var diagram = new OrgChart.Root();
+        var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000, controller: new OrgChart.Controller()});
 
-        var case1 = new OrgChart.Role({title:'CEO', root: diagram});
+        var case1 = new OrgChart.Role({title:'CEO'});
 
         canvas.on('relation:selected', function(event){
             console.log(event.selected)
@@ -27,12 +26,13 @@
         canvas.add(case1);
 
         document.getElementById('addObject').addEventListener('click', function(){
-            var case1 = new UseCase.UseCase({x:140,y:140, text:'Mostrar evento'});
+            var case1 = new OrgChart.Role({title:'Gerente'});
             canvas.add(case1);
             canvas.renderAll();
         });
         document.getElementById('setDirectRelation').addEventListener('click', function(){
-            canvas.nextRelation = new Relation.DirectAssociation();
+            canvas.controller.reorderElements();
+            canvas.renderAll();
         });
 
     }

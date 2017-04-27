@@ -24,6 +24,7 @@ var Loira;
             this.viewportWidth = 0;
             this.viewportHeight = 0;
             this.dragCanvas = false;
+            this.controller = null;
         }
         return CanvasConfig;
     }());
@@ -158,6 +159,10 @@ var Loira;
             this._setScrollContainer();
             this._fps = new FpsCounter(config.fps);
             this._zoom = new ZoomData(this);
+            this.controller = config.controller || null;
+            if (this.controller) {
+                this.controller.bind(this);
+            }
         }
         /**
          * Dibuja las relaciones y simbolos dentro del canvas
@@ -401,7 +406,6 @@ var Loira;
                 _this._tmp.lastKey = null;
             });
             _this._canvas.onmousewheel = function (evt) {
-                console.log(_this._tmp.lastKey);
                 if (_this._tmp.lastKey == 17) {
                     _this._zoom.update(evt.deltaY);
                     return false;

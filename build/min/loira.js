@@ -71,15 +71,63 @@ var Loira;
         }
         return CanvasContainer;
     }());
+    var CanvasConfig = (function () {
+        function CanvasConfig() {
+            this.width = 0;
+            this.height = 0;
+            this.viewportWidth = 0;
+            this.viewportHeight = 0;
+            this.dragCanvas = false;
+        }
+        return CanvasConfig;
+    }());
+    var FpsCounter = (function () {
+        function FpsCounter(fps) {
+            if (fps === void 0) { fps = 32; }
+            this._fps = 1000 / fps;
+            this._elapsed = new Date().getTime();
+        }
+        FpsCounter.prototype.passed = function () {
+            var response = false;
+            var time = new Date().getTime();
+            if (time >= this._elapsed) {
+                this._elapsed = time + this._fps;
+                response = true;
+            }
+            return response;
+        };
+        return FpsCounter;
+    }());
+    var TmpData = (function () {
+        function TmpData() {
+        }
+        return TmpData;
+    }());
+    var ZoomData = (function () {
+        function ZoomData(canvas) {
+            this._canvas = canvas;
+            this._scale = 1;
+            this.update(1);
+        }
+        ZoomData.prototype.update = function (delta) {
+            this._scale += delta / Math.abs(delta);
+            if (this._scale < 9 && this._scale > 0) {
+                this.scrollX = Math.floor(this._canvas._config.width / 20);
+                this.scrollY = Math.floor(this._canvas._config.height / 20);
+            }
+        };
+        return ZoomData;
+    }());
     var Canvas = (function () {
         /**
-         * Crea una nueva instancia de canvas
+         * Create a new instance of canvas
          *
          * @memberof Loira
          * @class Canvas
-         * @param {object} canvas Identificador o elemento canvas
+         * @param {object} container Id of the element container or pointer of the container
+         * @param {CanvasConfig} config Canvas configurations
          */
-        function Canvas(canvas) {
+        function Canvas(container, config) {
             /**
              * @property {Object}  _selected - Objeto que se encuentra seleccionado
              */
@@ -91,33 +139,60 @@ var Loira;
             /**
              * @property {Object}  _tmp - Almacena datos temporales
              */
-            this._tmp = {};
+            this._tmp = new TmpData();
             /**
-             * @property { array } items - Listado de objetos que posee el canvas
+             * @property { Loira.Element[] } items - Listado de objetos que posee el canvas
              */
             this.items = [];
             /**
-             * @property {Object} _canvas - Puntero al objeto de renderizado de lienzo
+             * @property {HTMLCanvasElement} _canvas - Puntero al objeto de renderizado de lienzo
              */
             this._canvas = null;
             /**
-             * @property {Image} _background - Imagen de fondo
+             * @property {HTMLCanvasElement} _background - Imagen de fondo
              */
             this._background = null;
             /**
-             * @property {HtmlElement} _canvasContainer - Contenedor del canvas
+             * @property {Object} _canvasContainer - Contenedor del canvas
              */
             this._canvasContainer = null;
             /**
              * @property {String}  defaultRelation - Relacion que se usara por defecto cuando se agregue una nueva union
              */
             this.defaultRelation = null;
-            if (typeof canvas === 'string') {
-                this._canvas = document.getElementById(canvas);
+            /**
+             * @property {HTMLDivElement}  container - Canvas container
+             */
+            this.container = null;
+            if (typeof container === 'string') {
+                this.container = document.getElementById(container);
             }
             else {
-                this._canvas = canvas;
+                this.container = container;
             }
+            if (!config) {
+                config = new CanvasConfig();
+                config.width = this.container.parentElement.offsetWidth;
+                config.height = this.container.parentElement.offsetHeight;
+            }
+            config.viewportWidth = config.viewportWidth || this.container.parentElement.offsetWidth || config.width;
+            config.viewportHeight = config.viewportHeight || this.container.parentElement.offsetHeight || config.height;
+            this._canvas = document.createElement('canvas');
+            this._canvas.width = config.width;
+            this._canvas.height = config.height;
+            this._canvas.style.position = 'absolute';
+            this._canvas.style.left = '0';
+            this._canvas.style.top = '0';
+            this._canvas.style.zIndex = '100';
+            this._canvas.style.backgroundColor = Loira.Config.background;
+            this._canvas.tabIndex = 99;
+            this.container.style.width = this.container.style.maxWidth = config.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = config.viewportHeight + 'px';
+            this.container.style.position = 'relative';
+            this.container.style.overflow = 'auto';
+            this._config = config;
+            this._tmp.pointer = { x: 0, y: 0 };
+            this.container.appendChild(this._canvas);
             this._callbacks = {};
             this.items = [];
             this.defaultRelation = 'Relation.Association';
@@ -129,24 +204,35 @@ var Loira;
                     borderTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderTopWidth'], 10) || 0
                 };
             }
+            var _this = this;
+            Loira.drawable.registerMap(Loira.Config.assetsPath, Loira.Config.regions, function () {
+                _this.renderAll();
+            });
             this._bind();
+            this._setScrollContainer();
+            this._fps = new FpsCounter(config.fps);
+            this._zoom = new ZoomData(this);
         }
         /**
          * Dibuja las relaciones y simbolos dentro del canvas
          * @memberof Loira.Canvas#
          */
-        Canvas.prototype.renderAll = function () {
-            var ctx = this._canvas.getContext('2d');
-            ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-            if (this._background) {
-                ctx.drawImage(this._background, 0, 0);
-            }
-            for (var i = 0; i < this.items.length; i++) {
-                this.items[i]._render(ctx);
-            }
-            if (this._selected) {
-                this._selected.drawSelected(ctx);
-                this._selected._renderButtons(ctx);
+        Canvas.prototype.renderAll = function (forceRender) {
+            if (forceRender === void 0) { forceRender = false; }
+            if (this._fps.passed() || forceRender) {
+                var ctx = this._canvas.getContext('2d');
+                ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+                for (var i = 0; i < this.items.length; i++) {
+                    ctx.save();
+                    this.items[i].render(ctx);
+                    ctx.restore();
+                }
+                if (this._selected) {
+                    ctx.save();
+                    this._selected.drawSelected(ctx);
+                    ctx.restore();
+                    this._selected.renderButtons(ctx);
+                }
             }
         };
         /**
@@ -165,7 +251,7 @@ var Loira;
             var _this = this;
             for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
                 var item = args_1[_i];
-                item._canvas = _this;
+                item.attach(_this);
                 if (item.baseType === 'relation') {
                     var index = _items.indexOf(item.start);
                     index = index < _items.indexOf(item.end) ? index : _items.indexOf(item.end);
@@ -178,7 +264,7 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('relation:added', new RelationEvent(item, 'relationadded'));
+                    _this.emit('relation:added', new RelationEvent(item, 'relationadded'));
                 }
                 else if (item.baseType === 'container') {
                     _items.splice(0, 0, item);
@@ -190,7 +276,7 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('container:added', new ObjectEvent(item, 'objectadded'));
+                    _this.emit('container:added', new ObjectEvent(item, 'objectadded'));
                 }
                 else {
                     if (item.centerObject) {
@@ -212,7 +298,7 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('object:added', new ObjectEvent(item, 'objectadded'));
+                    _this.emit('object:added', new ObjectEvent(item, 'objectadded'));
                 }
             }
         };
@@ -229,6 +315,9 @@ var Loira;
             for (var _i = 0, args_2 = args; _i < args_2.length; _i++) {
                 var item = args_2[_i];
                 var toDelete = [];
+                if (item == this._selected) {
+                    this._selected = null;
+                }
                 item._canvas = null;
                 toDelete.push(_items.indexOf(item));
                 for (var i = 0; i < _items.length; i++) {
@@ -236,13 +325,13 @@ var Loira;
                         var relation = _items[i];
                         if (relation.start._uid === item._uid ||
                             relation.end._uid === item._uid) {
-                            relation._canvas = null;
+                            relation.destroy();
                             toDelete.push(i);
                         }
                     }
                 }
                 toDelete.sort();
-                for (i = toDelete.length - 1; i >= 0; i--) {
+                for (var i = toDelete.length - 1; i >= 0; i--) {
                     _items.splice(toDelete[i], 1);
                 }
                 /**
@@ -253,8 +342,9 @@ var Loira;
                  * @property {object} selected - Objeto seleccionado
                  * @property {string} type - Tipo de evento
                  */
-                _this._emit('object:removed', new ObjectEvent(item, 'objectremoved'));
+                _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
             }
+            this.renderAll(true);
             this._selected = null;
         };
         /**
@@ -264,7 +354,7 @@ var Loira;
          */
         Canvas.prototype.removeAll = function () {
             for (var i = 0; i < this.items.length; i++) {
-                this.items[i]._canvas = null;
+                this.items[i].destroy();
             }
             this.items = [];
             this._selected = null;
@@ -282,10 +372,13 @@ var Loira;
             this._canvas.ondblclick = null;
             this._canvas.onselectstart = null;
             if (this._canvasContainer) {
-                this._canvasContainer.element.removeEventListener('scroll', this._canvasContainer.listener);
+                this.container.removeEventListener('scroll', this._canvasContainer.listener);
             }
             this._canvasContainer = null;
             this._canvas = null;
+            while (this.container.firstChild) {
+                this.container.removeChild(this.container.firstChild);
+            }
         };
         /**
          * Agrega un nuevo escuchador al evento especifico
@@ -317,9 +410,9 @@ var Loira;
             return null;
         };
         /**
-         * Desregistra un evento
+         * Unregister a event
          *
-         * @param {string} evt - Nombre del evento
+         * @param {string} evt - Event's name
          * @param {function} callback - Funcion a desregistrar
          */
         Canvas.prototype.fall = function (evt, callback) {
@@ -336,12 +429,36 @@ var Loira;
          */
         Canvas.prototype._bind = function () {
             var _this = this;
-            _this._canvas.onkeydown = function (evt) {
-                var code = evt.keyCode;
-                if (code === 46) {
-                    if (_this._selected && _this._selected.baseType !== 'relation') {
-                        _this.remove(_this._selected);
+            var onKeyDown = function (evt, isGlobal) {
+                if (evt.keyCode == 18) {
+                    return;
+                }
+                _this._tmp.lastKey = evt.keyCode;
+                if (!isGlobal) {
+                    if (_this._tmp.lastKey === 46) {
+                        if (_this._selected) {
+                            _this.remove(_this._selected);
+                        }
                     }
+                }
+            };
+            _this._canvas.onkeydown = function (evt) {
+                onKeyDown(evt, false);
+            };
+            document.addEventListener('keydown', function (evt) {
+                onKeyDown(evt, true);
+            });
+            _this._canvas.onkeyup = function () {
+                _this._tmp.lastKey = null;
+            };
+            document.addEventListener('keyup', function () {
+                _this._tmp.lastKey = null;
+            });
+            _this._canvas.onmousewheel = function (evt) {
+                console.log(_this._tmp.lastKey);
+                if (_this._tmp.lastKey == 17) {
+                    _this._zoom.update(evt.deltaY);
+                    return false;
                 }
             };
             var onDown = function (evt, isDoubleClick) {
@@ -357,7 +474,7 @@ var Loira;
                      * @property {int} y - Posicion y del puntero
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('mouse:dblclick', new MouseEvent(real.x, real.y, 'dblclick'));
+                    _this.emit('mouse:dblclick', new MouseEvent(real.x, real.y, 'dblclick'));
                 }
                 else {
                     /**
@@ -369,11 +486,25 @@ var Loira;
                      * @property {int} y - Posicion y del puntero
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('mouse:down', new MouseEvent(real.x, real.y, 'mousedown'));
+                    _this.emit('mouse:down', new MouseEvent(real.x, real.y, 'mousedown'));
+                }
+                if (!isDoubleClick) {
+                    _this._isDragged = true;
+                    _this._canvas.style.cursor = 'move';
                 }
                 if (_this._selected) {
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
                     if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
+                        switch (_this._tmp.transform) {
+                            case 'tc':
+                            case 'bc':
+                                _this._canvas.style.cursor = 'ns-resize';
+                                break;
+                            case 'ml':
+                            case 'mr':
+                                _this._canvas.style.cursor = 'ew-resize';
+                                break;
+                        }
                         return;
                     }
                     else {
@@ -385,9 +516,6 @@ var Loira;
                     item = _this.items[i];
                     if (item.checkCollision(real.x, real.y)) {
                         _this._selected = item;
-                        if (!isDoubleClick) {
-                            _this._isDragged = true;
-                        }
                         if (item.baseType !== 'relation') {
                             if (isDoubleClick) {
                                 /**
@@ -398,7 +526,7 @@ var Loira;
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this._emit('object:dblclick', new ObjectEvent(item, 'objectdblclick'));
+                                _this.emit('object:dblclick', new ObjectEvent(item, 'objectdblclick'));
                             }
                             else {
                                 /**
@@ -409,7 +537,7 @@ var Loira;
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this._emit('object:selected', new ObjectEvent(item, 'objectselected'));
+                                _this.emit('object:selected', new ObjectEvent(item, 'objectselected'));
                             }
                             break;
                         }
@@ -423,7 +551,7 @@ var Loira;
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this._emit('relation:dblclick', new ObjectEvent(item, 'relationdblclick'));
+                                _this.emit('relation:dblclick', new ObjectEvent(item, 'relationdblclick'));
                             }
                             else {
                                 /**
@@ -434,7 +562,7 @@ var Loira;
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this._emit('relation:selected', new ObjectEvent(item, 'relationselected'));
+                                _this.emit('relation:selected', new ObjectEvent(item, 'relationselected'));
                             }
                             break;
                         }
@@ -446,56 +574,71 @@ var Loira;
                 onDown(evt, false);
             };
             _this._canvas.onmousemove = function (evt) {
-                var real = _this._getMouse(evt);
-                /**
-                 * Evento que encapsula el movimiento del mouse sobre el canvas
-                 *
-                 * @event mouse:move
-                 * @type { object }
-                 * @property {int} x - Posicion x del puntero
-                 * @property {int} y - Posicion y del puntero
-                 * @property {string} type - Tipo de evento
-                 */
-                _this._emit('mouse:move', new MouseEvent(real.x, real.y, 'mousemove'));
-                if (_this._selected) {
-                    if (_this._tmp.transform) {
-                        if (_this._selected.baseType !== 'relation') {
-                            switch (_this._tmp.transform) {
-                                case 'tc':
-                                    _this._selected.y += real.y - _this._tmp.pointer.y;
-                                    _this._selected.height -= real.y - _this._tmp.pointer.y;
-                                    break;
-                                case 'bc':
-                                    _this._selected.height += real.y - _this._tmp.pointer.y;
-                                    break;
-                                case 'ml':
-                                    _this._selected.x += real.x - _this._tmp.pointer.x;
-                                    _this._selected.width -= real.x - _this._tmp.pointer.x;
-                                    break;
-                                case 'mr':
-                                    _this._selected.width += real.x - _this._tmp.pointer.x;
-                                    break;
+                if (_this._isDragged) {
+                    var real = _this._getMouse(evt);
+                    var x = real.x - _this._tmp.pointer.x;
+                    var y = real.y - _this._tmp.pointer.y;
+                    /**
+                     * Evento que encapsula el movimiento del mouse sobre el canvas
+                     *
+                     * @event mouse:move
+                     * @type { object }
+                     * @property {int} x - Posicion x del puntero
+                     * @property {int} y - Posicion y del puntero
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this.emit('mouse:move', new MouseEvent(real.x, real.y, 'mousemove'));
+                    if (_this._selected) {
+                        if (_this._tmp.transform) {
+                            if (_this._selected.baseType !== 'relation') {
+                                x = Math.floor(x);
+                                y = Math.floor(y);
+                                switch (_this._tmp.transform) {
+                                    case 'tc':
+                                        _this._selected.y += y;
+                                        _this._selected.height -= y;
+                                        break;
+                                    case 'bc':
+                                        _this._selected.height += y;
+                                        break;
+                                    case 'ml':
+                                        _this._selected.x += x;
+                                        _this._selected.width -= x;
+                                        break;
+                                    case 'mr':
+                                        _this._selected.width += x;
+                                        break;
+                                }
                             }
+                            _this.renderAll();
                         }
                         else {
-                            _this._selected.movePoint(_this._tmp.transform, real.x - _this._tmp.pointer.x, real.y - _this._tmp.pointer.y);
+                            _this._selected.x += x;
+                            _this._selected.y += y;
+                            /**
+                             * Evento que encapsula el arrastre de un objeto
+                             *
+                             * @event object:dragging
+                             * @type { object }
+                             * @property {object} selected - Objeto seleccionado
+                             * @property {string} type - Tipo de evento
+                             */
+                            _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
+                            _this.renderAll();
                         }
-                        _this.renderAll();
                     }
-                    else if (_this._isDragged) {
-                        _this._selected.x += real.x - _this._tmp.pointer.x;
-                        _this._selected.y += real.y - _this._tmp.pointer.y;
-                        _this._canvas.style.cursor = 'move';
-                        /**
-                         * Evento que encapsula el arrastre de un objeto
-                         *
-                         * @event object:dragging
-                         * @type { object }
-                         * @property {object} selected - Objeto seleccionado
-                         * @property {string} type - Tipo de evento
-                         */
-                        _this._emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
-                        _this.renderAll();
+                    else {
+                        if (_this._config.dragCanvas) {
+                            console.log(_this._zoom.scrollX, x);
+                            if (_this._canvas && _this._canvasContainer) {
+                                x = x === 0 ? x : x / Math.abs(x);
+                                y = y === 0 ? y : y / Math.abs(y);
+                                _this.container.scrollLeft -= _this._zoom.scrollX * x;
+                                _this.container.scrollTop -= _this._zoom.scrollY * y;
+                                _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
+                                _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                            }
+                        }
                     }
                     _this._tmp.pointer = real;
                 }
@@ -503,6 +646,7 @@ var Loira;
             _this._canvas.onmouseup = function (evt) {
                 var real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
+                _this._isDragged = false;
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
                  *
@@ -512,7 +656,7 @@ var Loira;
                  * @property {int} y - Posicion y del puntero
                  * @property {string} type - Tipo de evento
                  */
-                _this._emit('mouse:up', new MouseEvent(real.x, real.y, 'mouseup'));
+                _this.emit('mouse:up', new MouseEvent(real.x, real.y, 'mouseup'));
                 if (_this._selected) {
                     /**
                      * Evento que encapsula la liberacion de un objeto
@@ -522,11 +666,17 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this._emit('object:released', new ObjectEvent(_this._selected, 'objectreleased'));
-                    _this._isDragged = false;
-                    _this._tmp.transform = false;
+                    _this.emit('object:released', new ObjectEvent(_this._selected, 'objectreleased'));
+                    _this._tmp.transform = null;
                     _this._selected.recalculateBorders();
                 }
+            };
+            _this._canvas.onmouseenter = function () {
+                _this.renderAll();
+            };
+            _this._canvas.onmouseleave = function () {
+                _this._isDragged = false;
+                _this._canvas.style.cursor = 'default';
             };
             _this._canvas.onselectstart = function () {
                 return false;
@@ -538,8 +688,13 @@ var Loira;
          * @memberof Loira.Canvas#
          * @param evt Nombre del evento a emitir
          * @param options Valores enviados junto al evento
+         * @param element Element that fire event
          */
-        Canvas.prototype._emit = function (evt, options) {
+        Canvas.prototype.emit = function (evt, options, element) {
+            if (typeof element !== 'undefined') {
+                var type = element.baseType === 'relation' ? 'relation' : 'object';
+                evt = type + ':' + evt;
+            }
             if (typeof this._callbacks[evt] !== 'undefined') {
                 for (var _i = 0, _a = this._callbacks[evt]; _i < _a.length; _i++) {
                     var item = _a[_i];
@@ -581,40 +736,57 @@ var Loira;
          * @param resizeToImage Define if the canvas should resize to image size
          */
         Canvas.prototype.setBackground = function (image, resizeToImage) {
-            this._background = image;
+            this._background = document.createElement('canvas');
+            this._background.width = image.width;
+            this._background.height = image.height;
+            this._background.style.position = 'absolute';
+            this._background.style.left = '0';
+            this._background.style.top = '0';
+            this._background.style.zIndex = '0';
+            this._background.getContext('2d').drawImage(image, 0, 0);
             if (resizeToImage) {
                 this._canvas.width = image.width;
                 this._canvas.height = image.height;
+                this._canvas.style.backgroundColor = 'transparent';
             }
+            this.container.insertBefore(this._background, this._canvas);
+        };
+        /**
+         * Clean the background
+         */
+        Canvas.prototype.cleanBackground = function () {
+            this.container.removeChild(this.container.firstChild);
+            this._canvas.width = this._config.width;
+            this._canvas.height = this._config.height;
+            this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
+            this._canvas.style.backgroundColor = Loira.Config.background;
         };
         /**
          * Define un elemento que contendra al canvas y servira de scroll
-         *
-         * @param container Contenedor del canvas
          */
-        Canvas.prototype.setScrollContainer = function (container) {
+        Canvas.prototype._setScrollContainer = function () {
             var _this = this;
             if (_this._canvasContainer) {
-                _this._canvasContainer.element.removeEventListener('scroll', _this._canvasContainer.listener);
+                _this.container.removeEventListener('scroll', _this._canvasContainer.listener);
             }
             _this._canvasContainer = {
                 x: 0,
                 y: 0,
                 w: 0,
                 h: 0,
-                element: document.getElementById(container),
                 listener: function () {
-                    _this._canvasContainer.y = _this._canvasContainer.element.scrollTop;
-                    _this._canvasContainer.x = _this._canvasContainer.element.scrollLeft;
+                    _this._canvasContainer.y = _this.container.scrollTop;
+                    _this._canvasContainer.x = _this.container.scrollLeft;
                     return true;
                 }
             };
-            _this._canvasContainer.w = _this._canvasContainer.element.clientWidth;
-            _this._canvasContainer.h = _this._canvasContainer.element.clientHeight;
-            _this._canvasContainer.element.addEventListener('scroll', _this._canvasContainer.listener);
+            _this._canvasContainer.w = _this.container.clientWidth;
+            _this._canvasContainer.h = _this.container.clientHeight;
+            _this.container.addEventListener('scroll', _this._canvasContainer.listener);
         };
         /**
-         * Obtiene las relaciones vinculadas a un objeto
+         * Obtain the linked relations to a object
          *
          * @param object {Loira.Element} Objeto del que se obtendra las relaciones
          * @param onlyIncoming {boolean} Indica si solo se deben listar relaciones entrantes
@@ -642,16 +814,42 @@ var Loira;
             }
             return relations;
         };
+        /**
+         * Center the canvas at the given point
+         *
+         * @param x X position
+         * @param y Y position
+         */
+        Canvas.prototype.centerToPoint = function (x, y) {
+            if (this._canvas && this._canvasContainer) {
+                x = x - this.container.offsetWidth / 2;
+                y = y - this.container.offsetHeight / 2;
+                x = x >= 0 ? x : 0;
+                y = y >= 0 ? y : 0;
+                this._canvasContainer.x = x;
+                this._canvasContainer.y = y;
+                this.container.scrollTop = y;
+                this.container.scrollLeft = x;
+            }
+        };
+        Canvas.prototype.getContext = function () {
+            return this._canvas.getContext('2d');
+        };
         return Canvas;
     }());
     Loira.Canvas = Canvas;
 })(Loira || (Loira = {}));
 //# sourceMappingURL=canvas.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * Clase base para la creacion de nuevos objetos dibujables
  *
@@ -664,6 +862,14 @@ var Loira;
     (function (util) {
         var BaseOption = (function () {
             function BaseOption() {
+                this.x = 0;
+                this.y = 0;
+                this.width = 0;
+                this.height = 0;
+                this.centerObject = false;
+                this.maxOutGoingRelation = 0;
+                this.extras = {};
+                this.text = '';
             }
             return BaseOption;
         }());
@@ -671,7 +877,7 @@ var Loira;
         var RelOption = (function (_super) {
             __extends(RelOption, _super);
             function RelOption() {
-                _super.apply(this, arguments);
+                return _super !== null && _super.apply(this, arguments) || this;
             }
             return RelOption;
         }(BaseOption));
@@ -682,6 +888,12 @@ var Loira;
             return Line;
         }());
         util.Line = Line;
+        var Region = (function () {
+            function Region() {
+            }
+            return Region;
+        }());
+        util.Region = Region;
         var Point = (function () {
             function Point(x, y) {
                 this.x = x;
@@ -760,7 +972,7 @@ var Loira;
          *
          * @memberof Loira.Element#
          * @protected
-         * @param { object } options Conjunto de valores iniciales
+         * @param { BaseOption } options Conjunto de valores iniciales
          */
         function Element(options) {
             this._uid = Loira.util.createRandom(8);
@@ -779,7 +991,19 @@ var Loira;
             this._canvas = null;
             this.type = '';
             this.baseType = '';
+            this.animation = new Animation(this);
         }
+        /**
+         * Renderiza el objeto
+         *
+         * @memberof Loira.Element#
+         * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+         * @protected
+         * @abstract
+         */
+        Element.prototype.render = function (ctx) {
+            this.animation.proccess();
+        };
         /**
          * Verifica si el punto dado se encuentra dentro de los limites del objeto
          *
@@ -799,12 +1023,7 @@ var Loira;
          */
         Element.prototype.on = function (args) {
             args = [].splice.call(arguments, 0);
-            for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
-                var button = args_1[_i];
-                var img = document.createElement('IMG');
-                img.src = button.icon;
-                this._buttons.push({ 'icon': img, 'click': button.click });
-            }
+            this._buttons = args;
         };
         /**
          * Renderiza los iconos de los botones laterales
@@ -813,13 +1032,13 @@ var Loira;
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
          * @private
          */
-        Element.prototype._renderButtons = function (ctx) {
+        Element.prototype.renderButtons = function (ctx) {
             var x = this.x + this.width + 10;
             var y = this.y;
             if (this._buttons.length > 0) {
                 this._buttons.forEach(function (item) {
-                    ctx.drawImage(item.icon, x, y);
-                    y += item.icon.height + 4;
+                    Loira.drawable.render(item.icon, ctx, x, y);
+                    y += Loira.drawable.get(item.icon).height + 4;
                 });
             }
         };
@@ -835,9 +1054,11 @@ var Loira;
         Element.prototype.callCustomButton = function (x, y) {
             var _x = this.x + this.width + 10;
             var _y = this.y;
+            var region;
             for (var _i = 0, _a = this._buttons; _i < _a.length; _i++) {
                 var item = _a[_i];
-                if (_x <= x && x <= _x + item.icon.width && _y <= y && y <= _y + item.icon.height) {
+                region = Loira.drawable.get(item.icon);
+                if (_x <= x && x <= _x + region.width && _y <= y && y <= _y + region.height) {
                     item.click.call(this);
                     return true;
                 }
@@ -879,7 +1100,7 @@ var Loira;
          * @memberof Loira.Object#
          * @param pX Posicion x del punto
          * @param pY Posicion y del punto
-         * @returns {any}
+         * @returns
          */
         Element.prototype.getSelectedCorner = function (pX, pY) {
             var x = this.x - 2, y = this.y - 2, w = this.width, h = this.height, mw = w / 2, mh = h / 2;
@@ -904,48 +1125,51 @@ var Loira;
         /**
          * Muestra el objeto si el canvas se encuentra en un contenedor
          *
-         * @memberof Loira.Object#
+         * @memberof Loira.Element#
          */
         Element.prototype.show = function () {
-            var _this = this;
-            if (this._canvas && this._canvas._canvasContainer) {
-                var pX = (_this.x + _this.width / 2) - this._canvas._canvasContainer.element.offsetWidth / 2;
-                var pY = (_this.y + _this.height / 2) - this._canvas._canvasContainer.element.offsetHeight / 2;
-                pX = pX >= 0 ? pX : 0;
-                pY = pY >= 0 ? pY : 0;
-                this._canvas._canvasContainer.x = pX;
-                this._canvas._canvasContainer.y = pY;
-                this._canvas._canvasContainer.element.scrollTop = pY;
-                this._canvas._canvasContainer.element.scrollLeft = pX;
-            }
+            this._canvas.centerToPoint((this.x + this.width / 2), (this.y + this.height / 2));
+        };
+        Element.prototype.attach = function (canvas) {
+            this._canvas = canvas;
+            this.animation.setFps(canvas._config.fps);
+        };
+        Element.prototype.animateTo = function (point, seconds) {
+            if (seconds === void 0) { seconds = 1; }
+            var time = this._canvas._config.fps * seconds;
+        };
+        Element.prototype.destroy = function () {
+            this._canvas = null;
         };
         return Element;
     }());
     Loira.Element = Element;
 })(Loira || (Loira = {}));
 //# sourceMappingURL=element.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var Common;
 (function (Common) {
     var Point = Loira.util.Point;
     var Relation = (function (_super) {
         __extends(Relation, _super);
         function Relation(options) {
-            _super.call(this, options);
-            this.start = options.start ? options.start : null;
-            this.end = options.end ? options.end : null;
-            this.isDashed = options.isDashed ? options.isDashed : false;
-            this.points = options.points ? options.points : [new Point(), new Point()];
-            this.img = null;
-            if (options.icon) {
-                this.img = document.createElement('IMG');
-                this.img.src = Loira.Config.assetsPath + options.icon;
-            }
-            this.baseType = 'relation';
+            var _this = _super.call(this, options) || this;
+            _this.start = options.start ? options.start : null;
+            _this.end = options.end ? options.end : null;
+            _this.isDashed = options.isDashed ? options.isDashed : false;
+            _this.points = options.points ? options.points : [new Point(), new Point()];
+            _this.icon = options.icon ? options.icon : '';
+            _this.baseType = 'relation';
+            return _this;
         }
         /**
          * Renderiza el objeto
@@ -954,7 +1178,7 @@ var Common;
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
          * @protected
          */
-        Relation.prototype._render = function (ctx) {
+        Relation.prototype.render = function (ctx) {
             var start = this.start, end = this.end, tmp, init, last, xm, ym;
             this.points[0] = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
             this.points[this.points.length - 1] = { x: end.x + end.width / 2, y: end.y + end.height / 2 };
@@ -971,7 +1195,7 @@ var Common;
             }
             ctx.stroke();
             ctx.setLineDash([]);
-            if (this.img) {
+            if (this.icon) {
                 init = this.points[this.points.length - 2];
                 last = this.points[this.points.length - 1];
                 xm = last.x - init.x;
@@ -982,12 +1206,14 @@ var Common;
                 }
                 ctx.translate(last.x, last.y);
                 ctx.rotate(tmp);
-                ctx.drawImage(this.img, -(15 + end.obtainBorderPos(xm, ym, { x1: init.x, y1: init.y, x2: last.x, y2: last.y }, ctx)), -7);
+                var region = Loira.drawable.get(this.icon);
+                var border = end.obtainBorderPos(xm, ym, { x1: init.x, y1: init.y, x2: last.x, y2: last.y }, ctx);
+                Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height / 2));
                 ctx.rotate(-tmp);
                 ctx.translate(-last.x, -last.y);
             }
             if (this.text || this.text.length > 0) {
-                ctx.font = "10px " + Loira.Config.fontType;
+                ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
                 var pivot = Math.round(this.points.length / 2);
                 init = this.points[pivot - 1];
                 last = this.points[pivot];
@@ -1083,11 +1309,10 @@ var Common;
             ctx.strokeStyle = '#000000';
         };
         Relation.prototype.addPoint = function () {
-            var _this = this;
-            var last = _this.points[1], init = _this.points[0];
+            var last = this.points[1], init = this.points[0];
             var x = Math.round((last.x - init.x) / 2) + init.x;
             var y = Math.round((last.y - init.y) / 2) + init.y;
-            _this.points.splice(1, 0, { x: x, y: y });
+            this.points.splice(1, 0, { x: x, y: y });
         };
         /**
          * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
@@ -1124,13 +1349,14 @@ var Common;
     var Symbol = (function (_super) {
         __extends(Symbol, _super);
         function Symbol(options) {
-            _super.call(this, options);
-            var link = this._linkSymbol;
-            this.on({
-                icon: Loira.Config.assetsPath + 'arrow.png',
+            var _this = _super.call(this, options) || this;
+            var link = _this._linkSymbol;
+            _this.on({
+                icon: 'arrow',
                 click: link
             });
-            this.baseType = 'symbol';
+            _this.baseType = 'symbol';
+            return _this;
         }
         /**
          * Evento que se ejecuta cuando se realiza una relacion entre simbolos
@@ -1139,17 +1365,17 @@ var Common;
          * @protected
          */
         Symbol.prototype._linkSymbol = function () {
-            var _this = this;
+            var $this = this;
             var listener = this._canvas.on('mouse:down', function (evt) {
-                var canvas = _this._canvas;
-                var relations = canvas.getRelationsFromObject(_this, false, true);
-                if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
+                var canvas = $this._canvas;
+                var countRel = canvas.getRelationsFromObject($this, false, true).length;
+                if (!$this.maxOutGoingRelation || (countRel < $this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
                         if (item.baseType !== 'relation') {
                             if (item.checkCollision(evt.x, evt.y)) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                canvas.add(new instance({}).update(_this, item));
+                                canvas.add(new instance({}).update($this, item));
                                 break;
                             }
                         }
@@ -1175,7 +1401,7 @@ var Common;
             lines.push(buff);
             return lines;
         };
-        Symbol.prototype.drawText = function (ctx, line, horiAlign, vertAlign) {
+        Symbol.prototype.drawText = function (ctx, line) {
             var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2, lines;
             lines = this._splitText(ctx, line);
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
@@ -1191,14 +1417,12 @@ var Common;
     var Actor = (function (_super) {
         __extends(Actor, _super);
         function Actor(options) {
-            _super.call(this, options);
-            this.img = document.createElement('IMG');
-            this.img.src = Loira.Config.assetsPath + 'actor.png';
-            this.img.onload = function () { };
-            this.text = options.text ? options.text : 'Actor1';
-            this.width = 30;
-            this.height = 85;
-            this.type = 'actor';
+            var _this = _super.call(this, options) || this;
+            _this.text = options.text ? options.text : 'Actor1';
+            _this.width = 30;
+            _this.height = 85;
+            _this.type = 'actor';
+            return _this;
         }
         Actor.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
@@ -1211,18 +1435,16 @@ var Common;
             if (xm < 0) {
                 angle += Math.PI;
             }
-            var result = { x: 100, y: this.y - 10 };
+            var result = null;
             if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)) {
                 result = Loira.util.intersectPointLine(points, { x1: this.x, y1: -100, x2: this.x, y2: 100 });
             }
             else {
                 result = Loira.util.intersectPointLine(points, { x1: -100, y1: this.y, x2: 100, y2: this.y });
             }
-            var x = result.x - (this.x + this.width / 2);
-            var y = result.y - (this.y + this.height / 2);
-            return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+            return Math.sqrt(Math.pow((result.x - (this.x + this.width / 2)), 2) + Math.pow((result.y - (this.y + this.height / 2)), 2));
         };
-        Actor.prototype._render = function (ctx) {
+        Actor.prototype.render = function (ctx) {
             var textW = ctx.measureText(this.text).width;
             if (textW > this.width) {
                 this.x = this.x + this.width / 2 - textW / 2;
@@ -1231,7 +1453,7 @@ var Common;
             ctx.fillStyle = Loira.Config.background;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.fillStyle = "#000000";
-            ctx.drawImage(this.img, this.x + this.width / 2 - 15, this.y);
+            Loira.drawable.render('actor', ctx, this.x + this.width / 2 - 15, this.y);
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#000000";
             ctx.fillText(this.text, this.x, this.y + 80);
@@ -1243,11 +1465,16 @@ var Common;
     Common.Actor = Actor;
 })(Common || (Common = {}));
 //# sourceMappingURL=common.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * Conjunto de relaciones comunes
  *
@@ -1266,8 +1493,9 @@ var Relation;
     var Association = (function (_super) {
         __extends(Association, _super);
         function Association(options) {
-            _super.call(this, options);
-            this.type = 'association';
+            var _this = _super.call(this, options) || this;
+            _this.type = 'association';
+            return _this;
         }
         return Association;
     }(Common.Relation));
@@ -1282,9 +1510,11 @@ var Relation;
     var DirectAssociation = (function (_super) {
         __extends(DirectAssociation, _super);
         function DirectAssociation(options) {
-            options.icon = 'spear.png';
-            _super.call(this, options);
-            this.type = 'direct_association';
+            var _this = this;
+            options.icon = 'spear';
+            _this = _super.call(this, options) || this;
+            _this.type = 'direct_association';
+            return _this;
         }
         return DirectAssociation;
     }(Common.Relation));
@@ -1299,9 +1529,11 @@ var Relation;
     var Generalization = (function (_super) {
         __extends(Generalization, _super);
         function Generalization(options) {
-            options.icon = 'spear2.png';
-            _super.call(this, options);
-            this.type = 'generalization';
+            var _this = this;
+            options.icon = 'spear2';
+            _this = _super.call(this, options) || this;
+            _this.type = 'generalization';
+            return _this;
         }
         return Generalization;
     }(Common.Relation));
@@ -1316,10 +1548,12 @@ var Relation;
     var Realization = (function (_super) {
         __extends(Realization, _super);
         function Realization(options) {
-            options.icon = 'spear2.png';
+            var _this = this;
+            options.icon = 'spear2';
             options.isDashed = true;
-            _super.call(this, options);
-            this.type = 'realization';
+            _this = _super.call(this, options) || this;
+            _this.type = 'realization';
+            return _this;
         }
         return Realization;
     }(Common.Relation));
@@ -1334,10 +1568,12 @@ var Relation;
     var Dependency = (function (_super) {
         __extends(Dependency, _super);
         function Dependency(options) {
-            options.icon = 'spear1.png';
+            var _this = this;
+            options.icon = 'spear1';
             options.isDashed = true;
-            _super.call(this, options);
-            this.type = 'dependency';
+            _this = _super.call(this, options) || this;
+            _this.type = 'dependency';
+            return _this;
         }
         return Dependency;
     }(Common.Relation));
@@ -1490,11 +1726,16 @@ Loira.XmiParser = {
         return obj;
     }
 };
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * Diagrama de Caso de uso
  *
@@ -1512,11 +1753,12 @@ var UseCase;
     var UseCase = (function (_super) {
         __extends(UseCase, _super);
         function UseCase(options) {
-            _super.call(this, options);
-            this.width = 100;
-            this.height = 70;
-            this.text = options.text;
-            this.type = 'use_case';
+            var _this = _super.call(this, options) || this;
+            _this.width = 100;
+            _this.height = 70;
+            _this.text = options.text;
+            _this.type = 'use_case';
+            return _this;
         }
         UseCase.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var a = this.width / 2;
@@ -1524,7 +1766,7 @@ var UseCase;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        UseCase.prototype._render = function (ctx) {
+        UseCase.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             if (this.text) {
                 var kappa = .5522848, ox = (this.width / 2) * kappa, oy = (this.height / 2) * kappa, xe = this.x + this.width, ye = this.y + this.height, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
@@ -1557,11 +1799,13 @@ var UseCase;
     var Extends = (function (_super) {
         __extends(Extends, _super);
         function Extends(options) {
-            options.icon = 'spear1.png';
+            var _this = this;
+            options.icon = 'spear1';
             options.text = '<< extends >>';
             options.isDashed = true;
-            _super.call(this, options);
-            this.type = 'extends';
+            _this = _super.call(this, options) || this;
+            _this.type = 'extends';
+            return _this;
         }
         return Extends;
     }(Common.Relation));
@@ -1576,28 +1820,35 @@ var UseCase;
     var Include = (function (_super) {
         __extends(Include, _super);
         function Include(options) {
-            options.icon = 'spear1.png';
+            var _this = this;
+            options.icon = 'spear1';
             options.text = '<< include >>';
             options.isDashed = true;
-            _super.call(this, options);
-            this.type = 'include';
+            _this = _super.call(this, options) || this;
+            _this.type = 'include';
+            return _this;
         }
         return Include;
     }(Common.Relation));
     UseCase_1.Include = Include;
 })(UseCase || (UseCase = {}));
 //# sourceMappingURL=usecase.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var Box;
 (function (Box_1) {
     var ColorOption = (function (_super) {
         __extends(ColorOption, _super);
         function ColorOption() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         return ColorOption;
     }(Loira.util.BaseOption));
@@ -1606,21 +1857,22 @@ var Box;
      *
      * @memberof Box
      * @class Box
-     * @augments Loira.Object
+     * @augments Loira.Element
      */
     var Box = (function (_super) {
         __extends(Box, _super);
         function Box(options) {
-            _super.call(this, options);
-            this.width = 'width' in options ? options.width : 30;
-            this.height = 'height' in options ? options.height : 30;
-            this.color = 'color' in options ? options.color : 'rgba(0,0,0,0.3)';
-            this.baseType = 'box';
+            var _this = _super.call(this, options) || this;
+            _this.width = 'width' in options ? options.width : 30;
+            _this.height = 'height' in options ? options.height : 30;
+            _this.color = 'color' in options ? options.color : 'rgba(0,0,0,0.3)';
+            _this.baseType = 'box';
+            return _this;
         }
-        Box.prototype._render = function (ctx) {
+        Box.prototype.render = function (ctx) {
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.fillStyle = "#000000";
+            ctx.fillText(this.text, this.x, this.y - 10);
         };
         Box.prototype.recalculateBorders = function () {
         };
@@ -1629,11 +1881,16 @@ var Box;
     Box_1.Box = Box;
 })(Box || (Box = {}));
 //# sourceMappingURL=box.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * Diagrama de flujo de trabajo
  *
@@ -1646,40 +1903,40 @@ var Workflow;
     var WorkflowOption = (function (_super) {
         __extends(WorkflowOption, _super);
         function WorkflowOption() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         return WorkflowOption;
     }(BaseOption));
     var Symbol = (function (_super) {
         __extends(Symbol, _super);
         function Symbol(options) {
-            _super.call(this, options);
-            this.startPoint = options.startPoint ? options.startPoint : false;
-            this.endPoint = options.endPoint ? options.endPoint : false;
+            var _this = _super.call(this, options) || this;
+            _this.startPoint = options.startPoint ? options.startPoint : false;
+            _this.endPoint = options.endPoint ? options.endPoint : false;
+            return _this;
         }
         Symbol.prototype._linkSymbol = function () {
-            var _this = this;
+            var $this = this;
             var listener = this._canvas.on('mouse:down', function (evt) {
-                var canvas = _this._canvas;
-                var relations = canvas.getRelationsFromObject(_this, false, true);
-                if (!_this.maxOutGoingRelation || (relations.length < _this.maxOutGoingRelation)) {
+                var canvas = $this._canvas;
+                if (!$this.maxOutGoingRelation || (canvas.getRelationsFromObject($this, false, true).length < $this.maxOutGoingRelation)) {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
-                        if (item.baseType !== 'relation' && !item.startPoint) {
-                            if (item.checkCollision(evt.x, evt.y) && !_this.endPoint) {
+                        if (item.baseType !== 'relation' && !item['startPoint']) {
+                            if (item.checkCollision(evt.x, evt.y) && !$this.endPoint) {
                                 var instance = Loira.util.stringToFunction(canvas.defaultRelation);
                                 var points = null;
-                                if (_this._uid == item._uid) {
-                                    var widthLeft = _this.x + _this.width + 30;
-                                    var heightHalf = _this.y + _this.height / 2;
+                                if ($this._uid == item._uid) {
+                                    var widthLeft = $this.x + $this.width + 30;
+                                    var heightHalf = $this.y + $this.height / 2;
                                     points = [];
                                     points.push(new Point());
                                     points.push(new Point(widthLeft, heightHalf));
-                                    points.push(new Point(widthLeft, _this.y - 30));
-                                    points.push(new Point(_this.x + _this.width / 2, _this.y - 30));
+                                    points.push(new Point(widthLeft, $this.y - 30));
+                                    points.push(new Point($this.x + $this.width / 2, $this.y - 30));
                                     points.push(new Point());
                                 }
-                                canvas.add(new instance({ points: points }).update(_this, item));
+                                canvas.add(new instance({ points: points }).update($this, item));
                                 break;
                             }
                         }
@@ -1700,19 +1957,21 @@ var Workflow;
     var Process = (function (_super) {
         __extends(Process, _super);
         function Process(options) {
+            var _this = this;
             options.width = options.width ? options.width : 100;
             options.height = options.height ? options.height : 70;
-            _super.call(this, options);
-            this.text = options.text;
-            this.type = 'process';
-            this.borders = {
+            _this = _super.call(this, options) || this;
+            _this.text = options.text;
+            _this.type = 'process';
+            _this.borders = {
                 bottomLeft: 0,
                 topLeft: 0,
                 topRight: 0,
                 bottomRight: 0
             };
-            this.recalculateBorders();
-            this.maxOutGoingRelation = 1;
+            _this.recalculateBorders();
+            _this.maxOutGoingRelation = 1;
+            return _this;
         }
         Process.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var angle = Math.atan(ym / xm);
@@ -1730,7 +1989,7 @@ var Workflow;
             var axis = result.y - (this.y + this.height / 2);
             return Math.sqrt(Math.pow(x, 2) + Math.pow(axis, 2));
         };
-        Process.prototype._render = function (ctx) {
+        Process.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.beginPath();
             ctx.lineWidth = 2;
@@ -1761,7 +2020,7 @@ var Workflow;
     var Terminator = (function (_super) {
         __extends(Terminator, _super);
         function Terminator() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         Terminator.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var a = this.width / 2;
@@ -1769,7 +2028,7 @@ var Workflow;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        Terminator.prototype._render = function (ctx) {
+        Terminator.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             var x = this.x + 20;
             var y = this.y;
@@ -1794,13 +2053,15 @@ var Workflow;
     var StartTerminator = (function (_super) {
         __extends(StartTerminator, _super);
         function StartTerminator(options) {
+            var _this = this;
             options.width = options.width ? options.width : 100;
             options.height = options.height ? options.height : 70;
-            _super.call(this, options);
-            this.text = 'INICIO';
-            this.startPoint = true;
-            this.maxOutGoingRelation = 1;
-            this.type = 'start_terminator';
+            _this = _super.call(this, options) || this;
+            _this.text = 'INICIO';
+            _this.startPoint = true;
+            _this.maxOutGoingRelation = 1;
+            _this.type = 'start_terminator';
+            return _this;
         }
         return StartTerminator;
     }(Terminator));
@@ -1808,12 +2069,13 @@ var Workflow;
     var EndTerminator = (function (_super) {
         __extends(EndTerminator, _super);
         function EndTerminator(options) {
-            _super.call(this, options);
-            this.width = 70;
-            this.height = 30;
-            this.text = 'FIN';
-            this.endPoint = true;
-            this.type = 'end_terminator';
+            var _this = _super.call(this, options) || this;
+            _this.width = 70;
+            _this.height = 30;
+            _this.text = 'FIN';
+            _this.endPoint = true;
+            _this.type = 'end_terminator';
+            return _this;
         }
         return EndTerminator;
     }(Terminator));
@@ -1828,11 +2090,13 @@ var Workflow;
     var Data = (function (_super) {
         __extends(Data, _super);
         function Data(options) {
+            var _this = this;
             options.width = options.width ? options.width : 100;
             options.height = options.height ? options.height : 70;
-            _super.call(this, options);
-            this.text = options.text;
-            this.type = 'data';
+            _this = _super.call(this, options) || this;
+            _this.text = options.text;
+            _this.type = 'data';
+            return _this;
         }
         Data.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var a = this.width / 2;
@@ -1840,7 +2104,7 @@ var Workflow;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        Data.prototype._render = function (ctx) {
+        Data.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             var x = this.x + 20;
             var y = this.y;
@@ -1867,11 +2131,13 @@ var Workflow;
     var Decision = (function (_super) {
         __extends(Decision, _super);
         function Decision(options) {
+            var _this = this;
             options.width = options.width ? options.width : 100;
             options.height = options.height ? options.height : 70;
-            _super.call(this, options);
-            this.text = options.text;
-            this.type = 'decision';
+            _this = _super.call(this, options) || this;
+            _this.text = options.text;
+            _this.type = 'decision';
+            return _this;
         }
         Decision.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             var x = this.x, y = this.y, xP = this.x + this.width / 2, yP = this.y + this.height / 2, xw = this.x + this.width;
@@ -1890,7 +2156,7 @@ var Workflow;
             y = result.y - (this.y + this.height / 2);
             return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
         };
-        Decision.prototype._render = function (ctx) {
+        Decision.prototype.render = function (ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             var x = this.x;
             var y = this.y;
@@ -1926,7 +2192,17 @@ var Loira;
         color: '#339966'
     };
     var _background = '#aacccc';
-    var _assetsPath = '../assets/';
+    var _assetsPath = '../assets/glyphs.png';
+    var _regions = {
+        'actor': { x: 0, y: 98, width: 35, height: 72 },
+        'spear': { x: 0, y: 0, width: 25, height: 25 },
+        'spear1': { x: 0, y: 31, width: 27, height: 28 },
+        'spear2': { x: 34, y: 0, width: 25, height: 26 },
+        'arrow': { x: 27, y: 26, width: 12, height: 16 }
+    };
+    var _orgChart = {
+        levelColor: ['#124FFD', '#FF4FFD', '#12003D']
+    };
     var Config;
     (function (Config) {
         Config.fontSize = _fontSize;
@@ -1934,6 +2210,8 @@ var Loira;
         Config.selected = _selected;
         Config.background = _background;
         Config.assetsPath = _assetsPath;
+        Config.regions = _regions;
+        Config.orgChart = _orgChart;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=config.js.map
