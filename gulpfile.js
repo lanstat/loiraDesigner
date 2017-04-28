@@ -8,17 +8,19 @@ var paths = {
         './core/events.js',
         './core/drawable.js',
         './core/canvas.js',
+        './core/controller.js',
         './core/utils.js',
         './core/element.js',
         './core/common.js',
+        './core/config.js',
         './core/relations.js',
         './plugins/xmiparser.js',
         './plugins/usecase.js',
         './plugins/box.js',
         './core/animation.js',
         './plugins/workflow.js',
-        './plugins/orgchart.js',
-        './core/config.js'
+        './plugins/orgchart.js'
+
     ],
     build: './build'
 };
