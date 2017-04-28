@@ -60,12 +60,15 @@ module OrgChart{
     export class Controller extends BaseController{
         private roots: Group[] = [];
         private elements: Group[] = [];
+        private autoRefresh: boolean;
 
-        constructor(colors?: string[]){
+        constructor(colors: string[] = null, autoRefresh: boolean = true){
             super();
             if (colors){
                 levelColor = colors;
             }
+
+            this.autoRefresh = autoRefresh;
         }
 
         bind(canvas: Loira.Canvas) {
@@ -78,7 +81,10 @@ module OrgChart{
 
                 $this.roots.push(group);
                 $this.elements.push(group);
-                $this.reorderElements();
+
+                if ($this.autoRefresh){
+                    $this.reorderElements();
+                }
             });
 
             canvas.on('relation:added', function(evt: Loira.event.RelationEvent){
@@ -98,7 +104,9 @@ module OrgChart{
                 child.parent = item;
                 item.children.push(child);
 
-                $this.reorderElements();
+                if ($this.autoRefresh){
+                    $this.reorderElements();
+                }
             });
         }
 
@@ -155,6 +163,8 @@ module OrgChart{
 
             this.parent = options.parent;
             this.title = options.title;
+            this.resizable = false;
+            this.draggable = false;
 
             this.type = 'role';
         }

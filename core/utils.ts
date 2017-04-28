@@ -17,6 +17,9 @@ module Loira.util{
         baseType: string;
         extras: any = {};
         text: string = '';
+        selectable: boolean = true;
+        resizable: boolean = true;
+        draggable: boolean = true;
     }
 
     export class RelOption extends BaseOption{

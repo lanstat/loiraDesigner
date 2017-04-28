@@ -17,7 +17,6 @@
 
 				var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000});
 
-                console.log(canvas);
 				var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});
 				var case2 = new UseCase.UseCase({x:500,y:200, text:'Iniciar sesion'});
                 var actor = new Common.Actor({x:20, y:10, text:'Administrador'});
@@ -36,7 +35,7 @@
                     canvas.renderAll();
                 });
                 document.getElementById('setDirectRelation').addEventListener('click', function(){
-                    canvas.nextRelation = new Relation.DirectAssociation();
+                    canvas.defaultRelation = 'Relation.DirectAssociation';
                 });
 
 			}

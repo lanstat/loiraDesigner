@@ -18,7 +18,7 @@
         Loira.Config.background= '#757575';
         Loira.Config.fontType = 'Lato';
 
-        var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000, controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'])});
+        var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000, controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true)});
         var case1 = new OrgChart.Role({title:'CEO'});
 
         canvas.add(case1);

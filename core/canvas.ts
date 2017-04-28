@@ -246,7 +246,7 @@ module Loira{
                     ctx.restore();
                 }
 
-                if (this._selected) {
+                if (this._selected && this._selected.selectable) {
                     ctx.save();
                     this._selected.drawSelected(ctx);
                     ctx.restore();
@@ -261,7 +261,6 @@ module Loira{
          * @memberof Loira.Canvas#
          * @param {Array.<Object>} args Elementos a agregar
          * @fires object:added
-         * @todo verificar que las relaciones se agreguen al final sino ocurre error de indices
          */
         add(args: any) {
             if (!args.length) {
@@ -660,22 +659,23 @@ module Loira{
 
                             _this.renderAll();
                         } else {
-                            _this._selected.x += x;
-                            _this._selected.y += y;
-                            /**
-                             * Evento que encapsula el arrastre de un objeto
-                             *
-                             * @event object:dragging
-                             * @type { object }
-                             * @property {object} selected - Objeto seleccionado
-                             * @property {string} type - Tipo de evento
-                             */
-                            _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
-                            _this.renderAll();
+                            if (_this._selected.draggable){
+                                _this._selected.x += x;
+                                _this._selected.y += y;
+                                /**
+                                 * Evento que encapsula el arrastre de un objeto
+                                 *
+                                 * @event object:dragging
+                                 * @type { object }
+                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {string} type - Tipo de evento
+                                 */
+                                _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
+                                _this.renderAll();
+                            }
                         }
                     } else {
                         if (_this._config.dragCanvas){
-                            console.log(_this._zoom.scrollX, x);
                             if (_this._canvas && _this._canvasContainer) {
                                 x = x === 0? x : x/Math.abs(x);
                                 y =  y === 0? y : y/Math.abs(y);
@@ -798,9 +798,7 @@ module Loira{
          * @param resizeToImage Define if the canvas should resize to image size
          */
         setBackground(image: HTMLImageElement, resizeToImage: boolean) {
-            this._background = <HTMLCanvasElement> document.createElement('canvas');
-            this._background.width = image.width;
-            this._background.height = image.height;
+            this._background = this.createHiDPICanvas(image.width, image.height);
             this._background.style.position = 'absolute';
             this._background.style.left = '0';
             this._background.style.top = '0';
@@ -809,8 +807,10 @@ module Loira{
             this._background.getContext('2d').drawImage(image, 0, 0);
 
             if (resizeToImage) {
-                this._canvas.width = image.width;
-                this._canvas.height = image.height;
+                this._canvas.width = this._background.width;
+                this._canvas.height = this._background.height;
+                this._canvas.style.width = this._background.width + 'px';
+                this._canvas.style.height = this._background.height + 'px';
                 this._canvas.style.backgroundColor = 'transparent';
             }
 
@@ -903,6 +903,11 @@ module Loira{
             }
         }
 
+        /**
+         * Get context from the current canvas
+         *
+         * @returns {CanvasRenderingContext2D|null}
+         */
         getContext(): CanvasRenderingContext2D {
             return this._canvas.getContext('2d');
         }

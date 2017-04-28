@@ -24,6 +24,9 @@ module Loira{
         public extras: any;
         public text: string;
         private animation: Animation;
+        public selectable: boolean;
+        public resizable: boolean;
+        public draggable: boolean;
 
         /**
          * Inicializa los valores de la clase
@@ -45,6 +48,10 @@ module Loira{
             this.maxOutGoingRelation = 'maxOutGoingRelation' in options ? options.maxOutGoingRelation : 0;
             this.extras = 'extras' in options ? options.extras : {};
             this.text = options.text? options.text : '';
+            this.selectable = options.selectable? options.selectable: true;
+            this.resizable = options.resizable? options.resizable: true;
+            this.draggable = options.draggable? options.draggable: true;
+
             this._buttons = [];
             this._canvas = null;
             this.type = '';
@@ -145,15 +152,19 @@ module Loira{
             ctx.rect(x, y, w + 4, h + 4);
             ctx.stroke();
             ctx.setLineDash([]);
-            ctx.fillStyle = Loira.Config.selected.color;
-            ctx.fillRect(x - 4, y - 4, 8, 8);
-            ctx.fillRect(x + w, y + h, 8, 8);
-            ctx.fillRect(x + w, y - 4, 8, 8);
-            ctx.fillRect(x - 4, y + h, 8, 8);
-            ctx.fillRect(x + w / 2, y - 4, 8, 8);
-            ctx.fillRect(x + w / 2, y + h, 8, 8);
-            ctx.fillRect(x - 4, y + h / 2, 8, 8);
-            ctx.fillRect(x + w, y + h / 2, 8, 8);
+
+            if (this.resizable){
+                ctx.fillStyle = Loira.Config.selected.color;
+                ctx.fillRect(x - 4, y - 4, 8, 8);
+                ctx.fillRect(x + w, y + h, 8, 8);
+                ctx.fillRect(x + w, y - 4, 8, 8);
+                ctx.fillRect(x - 4, y + h, 8, 8);
+                ctx.fillRect(x + w / 2, y - 4, 8, 8);
+                ctx.fillRect(x + w / 2, y + h, 8, 8);
+                ctx.fillRect(x - 4, y + h / 2, 8, 8);
+                ctx.fillRect(x + w, y + h / 2, 8, 8);
+            }
+
             ctx.strokeStyle = '#000000';
             ctx.fillStyle = '#000000';
         }
