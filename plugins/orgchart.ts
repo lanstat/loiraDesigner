@@ -6,14 +6,14 @@ module OrgChart{
     let levelColor: string[] = ['#124FFD', '#FF4FFD', '#12003D'];
     let levelHeight: number[];
 
-    class RoleOption extends Loira.util.BaseOption{
+    export class RoleOption extends Loira.util.BaseOption{
         id: string;
         parent: OrgChart.Role;
         name: string;
         title: string;
     }
 
-    class Group {
+    export class Group {
         role: Role;
         parent: Group;
         children: Group[] = [];
@@ -44,7 +44,7 @@ module OrgChart{
                 this.width += child.width;
             }
 
-            if (this.width == 0){
+            if (this.width === 0){
                 this.width = this.role.width + 10;
             }
 
@@ -54,6 +54,22 @@ module OrgChart{
             if (levelHeight[level] < this.role.height){
                 levelHeight[level] = this.role.height;
             }
+        }
+
+        getAllChildren(): Role[] {
+            let children: Role[] = [];
+
+            if (this.children.length > 0) {
+                for (let i: number = 0; i < this.children.length; i++){
+                    let records: Role[] = this.children[i].getAllChildren();
+                    children.push(this.children[i].role);
+                    for (let j: number =0;j < records.length; j++){
+                        children.push(records[j]);
+                    }
+                }
+            }
+
+            return children;
         }
     }
 
@@ -88,21 +104,68 @@ module OrgChart{
             });
 
             canvas.on('relation:added', function(evt: Loira.event.RelationEvent){
-                let index: number = Controller.getGroup(<Role>evt.selected.end, $this.roots).index;
+                let index: number = $this.getGroup(<Role>evt.selected.end, $this.roots).index;
 
-                let child = Controller.getGroup(<Role>evt.selected.end, $this.elements).item;
-                let item = Controller.getGroup(<Role>evt.selected.start, $this.elements).item;
+                let child = $this.getGroup(<Role>evt.selected.end, $this.elements).item;
+                let item = $this.getGroup(<Role>evt.selected.start, $this.elements).item;
 
                 if (index>=0) {
                     $this.roots.splice(index, 1);
                 } else {
                     let children: Group[] = child.parent.children;
-                    index = Controller.getGroup(child.role, children).index;
+                    index = $this.getGroup(child.role, children).index;
                     children.splice(index, 1);
+
+                    let relations: Common.Relation[] = canvas.getRelationsFromObject(evt.selected.end, true, false);
+                    let toDelete: Common.Relation[] = [];
+
+                    for (let relation of relations){
+                        if (relation.start != item.role){
+                            toDelete.push(relation);
+                        }
+                    }
+
+                    if (toDelete.length > 0){
+                        canvas.remove(toDelete, false);
+                    }
                 }
 
                 child.parent = item;
                 item.children.push(child);
+
+                if ($this.autoRefresh){
+                    $this.reorderElements();
+                    canvas.renderAll(true);
+                }
+            });
+
+            canvas.on('object:removed', function(evt: Loira.event.ObjectEvent){
+                let relation: Common.Relation;
+                let group: Group;
+                let index: number;
+
+                if (evt.selected.baseType === 'relation'){
+                    relation = <Common.Relation> evt.selected;
+                    group = $this.getGroup(<Role>relation.end, $this.elements).item;
+                } else {
+                    index =  $this.getGroup(<Role>evt.selected, $this.elements).index;
+                    group = $this.elements[index];
+                    $this.elements.splice(index, 1);
+                    canvas.remove(group.getAllChildren(), false);
+                }
+
+                if (group.parent){
+                    index = $this.getGroup(group.role, group.parent.children).index;
+                    group.parent.children.splice(index, 1);
+                } else {
+                    index = $this.getGroup(group.role, $this.roots).index;
+                    $this.roots.splice(index, 1);
+                }
+
+                if (relation){
+                    group.parent = null;
+                    $this.roots.push(group);
+                }
 
                 if ($this.autoRefresh){
                     $this.reorderElements();
@@ -127,13 +190,21 @@ module OrgChart{
 
             for (let i:number = 0; i<this.elements.length; i++){
                 let group: Group = this.elements[i];
-                group.role.y = (group.level == 0)? 10 : levelHeight[group.level -1];
+                group.role.y = (group.level === 0)? 10 : levelHeight[group.level -1];
             }
-
-            console.log(levelHeight);
         }
 
-        private static getGroup(role: Role, groups: Group[]): {item: Group, index: number}{
+        /**
+         * Get a group by a group
+         * @param role Role to search
+         * @param groups List of groups to search
+         * @returns {any}
+         */
+        getGroup(role: Role, groups?: Group[]): {item: Group, index: number}{
+            if (!groups){
+                groups = this.elements;
+            }
+
             for(let i=0;i<groups.length;i++){
                 if (groups[i].role == role){
                     return {item: groups[i], index: i};
@@ -205,6 +276,13 @@ module OrgChart{
         }
     }
 
+    /**
+     * Class for relation between roles
+     *
+     * @memberof OrgChart
+     * @class Relation
+     * @augments Common.Relation
+     */
     export class Relation extends Common.Relation {
         constructor(options: RelOption){
             super(options);
@@ -224,7 +302,7 @@ module OrgChart{
             this.points[0] = init;
             this.points[1] = {x: init.x, y: middleLine};
             this.points[2] = {x: end.x + end.width/2, y: middleLine};
-            this.points[3] = {x: end.x + end.width/2, y: end.y + end.height/2}
+            this.points[3] = {x: end.x + end.width/2, y: end.y + end.height/2};
 
             ctx.beginPath();
             ctx.lineWidth = 4;

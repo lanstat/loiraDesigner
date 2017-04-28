@@ -28,11 +28,10 @@
             document.getElementById('title').value = '';
             var case1 = new OrgChart.Role({title:title});
             canvas.add(case1);
-            canvas.renderAll();
+            canvas.renderAll(true);
         });
         document.getElementById('setDirectRelation').addEventListener('click', function(){
             canvas.controller.reorderElements();
-            canvas.renderAll();
         });
     }
 </script>

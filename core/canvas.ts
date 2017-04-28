@@ -9,7 +9,7 @@ module Loira{
     import MouseEvent = Loira.event.MouseEvent;
     import Point = Loira.util.Point;
 
-    class CanvasContainer {
+    export class CanvasContainer {
         public x: number = 0;
         public y: number = 0;
         public w: number = 0;
@@ -17,7 +17,7 @@ module Loira{
         public listener: () => boolean;
     }
 
-    class CanvasConfig {
+    export class CanvasConfig {
         public width: number = 0;
         public height: number = 0;
         public viewportWidth: number = 0;
@@ -327,8 +327,7 @@ module Loira{
          * @memberof Loira.Canvas#
          * @fires object:removed
          */
-        remove(args: any) {
-            args = [].splice.call(arguments, 0);
+        remove(args: Loira.Element[], fireEvent: boolean = true) {
             let _items:Loira.Element[] = this.items;
             let _this = this;
 
@@ -338,8 +337,6 @@ module Loira{
                 if (item == this._selected){
                     this._selected = null;
                 }
-
-                item._canvas = null;
                 toDelete.push(_items.indexOf(item));
 
                 for (let i:number = 0; i < _items.length; i++) {
@@ -361,15 +358,17 @@ module Loira{
                     _items.splice(toDelete[i], 1);
                 }
 
-                /**
-                 * Evento que encapsula la eliminacion de un objeto del canvas
-                 *
-                 * @event object:removed
-                 * @type { object }
-                 * @property {object} selected - Objeto seleccionado
-                 * @property {string} type - Tipo de evento
-                 */
-                _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
+                if (fireEvent){
+                    /**
+                     * Evento que encapsula la eliminacion de un objeto del canvas
+                     *
+                     * @event object:removed
+                     * @type { object }
+                     * @property {object} selected - Objeto seleccionado
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
+                }
             }
 
             this.renderAll(true);
@@ -474,7 +473,7 @@ module Loira{
                 if (!isGlobal){
                     if (_this._tmp.lastKey === 46) {
                         if (_this._selected) {
-                            _this.remove(_this._selected);
+                            _this.remove([_this._selected]);
                         }
                     }
                 }

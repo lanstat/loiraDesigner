@@ -101,6 +101,7 @@ var Loira;
         }
         return CanvasContainer;
     }());
+    Loira.CanvasContainer = CanvasContainer;
     var CanvasConfig = (function () {
         function CanvasConfig() {
             this.width = 0;
@@ -112,6 +113,7 @@ var Loira;
         }
         return CanvasConfig;
     }());
+    Loira.CanvasConfig = CanvasConfig;
     var FpsCounter = (function () {
         function FpsCounter(fps) {
             if (fps === void 0) { fps = 32; }
@@ -288,7 +290,7 @@ var Loira;
                     this.items[i].render(ctx);
                     ctx.restore();
                 }
-                if (this._selected) {
+                if (this._selected && this._selected.selectable) {
                     ctx.save();
                     this._selected.drawSelected(ctx);
                     ctx.restore();
@@ -302,7 +304,6 @@ var Loira;
          * @memberof Loira.Canvas#
          * @param {Array.<Object>} args Elementos a agregar
          * @fires object:added
-         * @todo verificar que las relaciones se agreguen al final sino ocurre error de indices
          */
         Canvas.prototype.add = function (args) {
             if (!args.length) {
@@ -673,23 +674,24 @@ var Loira;
                             _this.renderAll();
                         }
                         else {
-                            _this._selected.x += x;
-                            _this._selected.y += y;
-                            /**
-                             * Evento que encapsula el arrastre de un objeto
-                             *
-                             * @event object:dragging
-                             * @type { object }
-                             * @property {object} selected - Objeto seleccionado
-                             * @property {string} type - Tipo de evento
-                             */
-                            _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
-                            _this.renderAll();
+                            if (_this._selected.draggable) {
+                                _this._selected.x += x;
+                                _this._selected.y += y;
+                                /**
+                                 * Evento que encapsula el arrastre de un objeto
+                                 *
+                                 * @event object:dragging
+                                 * @type { object }
+                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {string} type - Tipo de evento
+                                 */
+                                _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
+                                _this.renderAll();
+                            }
                         }
                     }
                     else {
                         if (_this._config.dragCanvas) {
-                            console.log(_this._zoom.scrollX, x);
                             if (_this._canvas && _this._canvasContainer) {
                                 x = x === 0 ? x : x / Math.abs(x);
                                 y = y === 0 ? y : y / Math.abs(y);
@@ -796,17 +798,17 @@ var Loira;
          * @param resizeToImage Define if the canvas should resize to image size
          */
         Canvas.prototype.setBackground = function (image, resizeToImage) {
-            this._background = document.createElement('canvas');
-            this._background.width = image.width;
-            this._background.height = image.height;
+            this._background = this.createHiDPICanvas(image.width, image.height);
             this._background.style.position = 'absolute';
             this._background.style.left = '0';
             this._background.style.top = '0';
             this._background.style.zIndex = '0';
             this._background.getContext('2d').drawImage(image, 0, 0);
             if (resizeToImage) {
-                this._canvas.width = image.width;
-                this._canvas.height = image.height;
+                this._canvas.width = this._background.width;
+                this._canvas.height = this._background.height;
+                this._canvas.style.width = this._background.width + 'px';
+                this._canvas.style.height = this._background.height + 'px';
                 this._canvas.style.backgroundColor = 'transparent';
             }
             this.container.insertBefore(this._background, this._canvas);
@@ -892,6 +894,11 @@ var Loira;
                 this.container.scrollLeft = x;
             }
         };
+        /**
+         * Get context from the current canvas
+         *
+         * @returns {CanvasRenderingContext2D|null}
+         */
         Canvas.prototype.getContext = function () {
             return this._canvas.getContext('2d');
         };
@@ -940,6 +947,9 @@ var Loira;
                 this.maxOutGoingRelation = 0;
                 this.extras = {};
                 this.text = '';
+                this.selectable = true;
+                this.resizable = true;
+                this.draggable = true;
             }
             return BaseOption;
         }());
@@ -1057,6 +1067,9 @@ var Loira;
             this.maxOutGoingRelation = 'maxOutGoingRelation' in options ? options.maxOutGoingRelation : 0;
             this.extras = 'extras' in options ? options.extras : {};
             this.text = options.text ? options.text : '';
+            this.selectable = options.selectable ? options.selectable : true;
+            this.resizable = options.resizable ? options.resizable : true;
+            this.draggable = options.draggable ? options.draggable : true;
             this._buttons = [];
             this._canvas = null;
             this.type = '';
@@ -1152,15 +1165,17 @@ var Loira;
             ctx.rect(x, y, w + 4, h + 4);
             ctx.stroke();
             ctx.setLineDash([]);
-            ctx.fillStyle = Loira.Config.selected.color;
-            ctx.fillRect(x - 4, y - 4, 8, 8);
-            ctx.fillRect(x + w, y + h, 8, 8);
-            ctx.fillRect(x + w, y - 4, 8, 8);
-            ctx.fillRect(x - 4, y + h, 8, 8);
-            ctx.fillRect(x + w / 2, y - 4, 8, 8);
-            ctx.fillRect(x + w / 2, y + h, 8, 8);
-            ctx.fillRect(x - 4, y + h / 2, 8, 8);
-            ctx.fillRect(x + w, y + h / 2, 8, 8);
+            if (this.resizable) {
+                ctx.fillStyle = Loira.Config.selected.color;
+                ctx.fillRect(x - 4, y - 4, 8, 8);
+                ctx.fillRect(x + w, y + h, 8, 8);
+                ctx.fillRect(x + w, y - 4, 8, 8);
+                ctx.fillRect(x - 4, y + h, 8, 8);
+                ctx.fillRect(x + w / 2, y - 4, 8, 8);
+                ctx.fillRect(x + w / 2, y + h, 8, 8);
+                ctx.fillRect(x - 4, y + h / 2, 8, 8);
+                ctx.fillRect(x + w, y + h / 2, 8, 8);
+            }
             ctx.strokeStyle = '#000000';
             ctx.fillStyle = '#000000';
         };
@@ -1949,6 +1964,7 @@ var Box;
         }
         return ColorOption;
     }(Loira.util.BaseOption));
+    Box_1.ColorOption = ColorOption;
     /**
      * Class for color square
      *
@@ -2027,6 +2043,7 @@ var Workflow;
         }
         return WorkflowOption;
     }(BaseOption));
+    Workflow.WorkflowOption = WorkflowOption;
     var Symbol = (function (_super) {
         __extends(Symbol, _super);
         function Symbol(options) {
@@ -2067,6 +2084,7 @@ var Workflow;
         };
         return Symbol;
     }(Common.Symbol));
+    Workflow.Symbol = Symbol;
     /**
      * Process symbol
      *
@@ -2170,6 +2188,7 @@ var Workflow;
         Terminator.prototype.recalculateBorders = function () { };
         return Terminator;
     }(Symbol));
+    Workflow.Terminator = Terminator;
     var StartTerminator = (function (_super) {
         __extends(StartTerminator, _super);
         function StartTerminator(options) {
@@ -2326,6 +2345,7 @@ var OrgChart;
         }
         return RoleOption;
     }(Loira.util.BaseOption));
+    OrgChart.RoleOption = RoleOption;
     var Group = (function () {
         function Group(role) {
             this.children = [];
@@ -2357,15 +2377,19 @@ var OrgChart;
         };
         return Group;
     }());
+    OrgChart.Group = Group;
     var Controller = (function (_super) {
         __extends(Controller, _super);
-        function Controller(colors) {
+        function Controller(colors, autoRefresh) {
+            if (colors === void 0) { colors = null; }
+            if (autoRefresh === void 0) { autoRefresh = true; }
             var _this = _super.call(this) || this;
             _this.roots = [];
             _this.elements = [];
             if (colors) {
                 levelColor = colors;
             }
+            _this.autoRefresh = autoRefresh;
             return _this;
         }
         Controller.prototype.bind = function (canvas) {
@@ -2375,23 +2399,27 @@ var OrgChart;
                 var group = new Group(evt.selected);
                 $this.roots.push(group);
                 $this.elements.push(group);
-                $this.reorderElements();
+                if ($this.autoRefresh) {
+                    $this.reorderElements();
+                }
             });
             canvas.on('relation:added', function (evt) {
-                var index = Controller.getGroup(evt.selected.end, $this.roots).index;
-                var child = Controller.getGroup(evt.selected.end, $this.elements).item;
-                var item = Controller.getGroup(evt.selected.start, $this.elements).item;
+                var index = $this.getGroup(evt.selected.end, $this.roots).index;
+                var child = $this.getGroup(evt.selected.end, $this.elements).item;
+                var item = $this.getGroup(evt.selected.start, $this.elements).item;
                 if (index >= 0) {
                     $this.roots.splice(index, 1);
                 }
                 else {
                     var children = child.parent.children;
-                    index = Controller.getGroup(child.role, children).index;
+                    index = $this.getGroup(child.role, children).index;
                     children.splice(index, 1);
                 }
                 child.parent = item;
                 item.children.push(child);
-                $this.reorderElements();
+                if ($this.autoRefresh) {
+                    $this.reorderElements();
+                }
             });
         };
         Controller.prototype.reorderElements = function () {
@@ -2413,7 +2441,16 @@ var OrgChart;
             }
             console.log(levelHeight);
         };
-        Controller.getGroup = function (role, groups) {
+        /**
+         * Get a group by a group
+         * @param role Role to search
+         * @param groups List of groups to search
+         * @returns {any}
+         */
+        Controller.prototype.getGroup = function (role, groups) {
+            if (groups) {
+                groups = this.elements;
+            }
             for (var i = 0; i < groups.length; i++) {
                 if (groups[i].role == role) {
                     return { item: groups[i], index: i };
@@ -2439,6 +2476,8 @@ var OrgChart;
             _this.height = 20;
             _this.parent = options.parent;
             _this.title = options.title;
+            _this.resizable = false;
+            _this.draggable = false;
             _this.type = 'role';
             return _this;
         }
@@ -2470,6 +2509,13 @@ var OrgChart;
         return Role;
     }(Common.Symbol));
     OrgChart.Role = Role;
+    /**
+     * Class for relation between roles
+     *
+     * @memberof OrgChart
+     * @class Relation
+     * @augments Common.Relation
+     */
     var Relation = (function (_super) {
         __extends(Relation, _super);
         function Relation(options) {

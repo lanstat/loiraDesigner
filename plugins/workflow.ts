@@ -7,12 +7,12 @@ module Workflow{
     import BaseOption = Loira.util.BaseOption;
     import Point = Loira.util.Point;
 
-    class WorkflowOption extends BaseOption{
+    export class WorkflowOption extends BaseOption{
         startPoint: boolean;
         endPoint: boolean;
     }
 
-    abstract class Symbol extends Common.Symbol{
+    export abstract class Symbol extends Common.Symbol{
         protected startPoint: boolean;
         protected endPoint: boolean;
 
@@ -143,7 +143,7 @@ module Workflow{
      * @memberof Workflow
      * @augments Common.Symbol
      */
-    class Terminator extends Symbol{
+    export class Terminator extends Symbol{
         obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
             let a = this.width/2;
             let b = this.height/2;

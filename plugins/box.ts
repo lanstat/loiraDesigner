@@ -1,5 +1,5 @@
 module Box{
-    class ColorOption extends Loira.util.BaseOption{
+    export class ColorOption extends Loira.util.BaseOption{
         color: string
     }
 
