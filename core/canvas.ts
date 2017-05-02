@@ -147,8 +147,8 @@ module Loira{
                 config.height = this.container.parentElement.offsetHeight;
             }
 
-            config.viewportWidth = config.viewportWidth || this.container.parentElement.offsetWidth || config.width;
-            config.viewportHeight = config.viewportHeight || this.container.parentElement.offsetHeight || config.height;
+            config.viewportWidth = config.viewportWidth || this.container.offsetWidth || this.container.parentElement.offsetWidth || config.width;
+            config.viewportHeight = config.viewportHeight || this.container.offsetHeight || this.container.parentElement.offsetHeight || config.height;
 
             this._canvas = this.createHiDPICanvas(config.width, config.height);
             this._canvas.style.position = 'absolute';
@@ -260,22 +260,30 @@ module Loira{
          *
          * @memberof Loira.Canvas#
          * @param {Array.<Object>} args Elementos a agregar
+         * @param fireEvent Should fire the events
          * @fires object:added
          */
-        add(args: any) {
-            if (!args.length) {
-                args = [].splice.call(arguments, 0);
-            }
+        add(args: Loira.Element[]|Loira.Element, fireEvent: boolean = true) {
             let _items: Loira.Element[] = this.items;
             let _this = this;
+            let relation: Common.Relation;
+            let argument: Loira.Element[];
 
-            for (let item of args){
+            if (Object.prototype.toString.call(args) !== '[object Array]'){
+                argument = <Loira.Element[]>[args];
+            } else {
+                argument = <Loira.Element[]>args;
+            }
+
+            for (let item of argument){
                 item.attach(_this);
                 if (item.baseType === 'relation') {
-                    let index:number = _items.indexOf(item.start);
-                    index = index < _items.indexOf(item.end) ? index : _items.indexOf(item.end);
+                    relation = <Common.Relation>item;
+                    let index:number = _items.indexOf(relation.start);
+                    index = index < _items.indexOf(relation.end) ? index : _items.indexOf(relation.end);
 
                     _items.splice(index, 0, item);
+
                     /**
                      * Evento que encapsula la adicion de una relacion del canvas
                      *
@@ -284,7 +292,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('relation:added', new RelationEvent(item, 'relationadded'));
+                    _this.emit('relation:added', new RelationEvent(relation, 'relationadded'), fireEvent);
                 } else if (item.baseType === 'container') {
                     _items.splice(0, 0, item);
                     /**
@@ -295,7 +303,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('container:added', new ObjectEvent(item, 'objectadded'));
+                    _this.emit('container:added', new ObjectEvent(item, 'objectadded'), fireEvent);
                 } else {
                     if (item.centerObject) {
                         if (_this._canvasContainer) {
@@ -316,7 +324,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('object:added', new ObjectEvent(item, 'objectadded'));
+                    _this.emit('object:added', new ObjectEvent(item, 'objectadded'), fireEvent);
                 }
             }
         }
@@ -741,15 +749,10 @@ module Loira{
          * @memberof Loira.Canvas#
          * @param evt Nombre del evento a emitir
          * @param options Valores enviados junto al evento
-         * @param element Element that fire event
+         * @param fireEvent Should fire event
          */
-        public emit(evt: string, options: any, element?: Loira.Element) {
-            if (typeof  element !== 'undefined'){
-                let type:string = element.baseType === 'relation'? 'relation': 'object';
-                evt = type + ':' + evt;
-            }
-
-            if (typeof this._callbacks[evt] !== 'undefined') {
+        public emit(evt: string, options: any, fireEvent: boolean = true) {
+            if (fireEvent && typeof this._callbacks[evt] !== 'undefined') {
                 for (let item of this._callbacks[evt]) {
                     item.call(this, options);
                 }

@@ -46,7 +46,7 @@
                             <button class="btn btn-primary" id="add-child">Add child</button>
                             <div class="pull-right">
 
-                                <button class="btn btn-danger">Delete</button>
+                                <button class="btn btn-danger" id="delete-role">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -66,9 +66,8 @@
 <script>
     window.onload = function(){
         Loira.Config.assetsPath = '../../assets/glyphs.png';
-        Loira.Config.background= '#757575';
+        Loira.Config.background= 'rgba(0, 0, 0, 0.7)';
         Loira.Config.fontType = 'Lato';
-        // TODO ver porque se retrasa en el refresco de borrado de hijo
 
         var selected = null;
 
@@ -132,11 +131,10 @@
             width: 1800,
             height:1000,
             viewportHeight: 600,
-            controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], false)
+            controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true)
         });
-        var case1 = new OrgChart.Role({title:'CEO'});
 
-        canvas.add(case1);
+        canvas.controller.load([{id: 1, title: 'a', parent: 0},{id: 2, title: 'b', parent: 1},{id: 3, title: 'c', parent: 1}]);
         refreshData();
 
         document.getElementById('addObject').addEventListener('click', function(){
@@ -175,6 +173,10 @@
             canvas.add(relation);
 
             refreshData();
+        });
+
+        $('#delete-role').click(function(){
+            canvas.remove([selected.role]);
         });
     }
 </script>

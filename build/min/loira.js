@@ -208,8 +208,8 @@ var Loira;
                 config.width = this.container.parentElement.offsetWidth;
                 config.height = this.container.parentElement.offsetHeight;
             }
-            config.viewportWidth = config.viewportWidth || this.container.parentElement.offsetWidth || config.width;
-            config.viewportHeight = config.viewportHeight || this.container.parentElement.offsetHeight || config.height;
+            config.viewportWidth = config.viewportWidth || this.container.offsetWidth || this.container.parentElement.offsetWidth || config.width;
+            config.viewportHeight = config.viewportHeight || this.container.offsetHeight || this.container.parentElement.offsetHeight || config.height;
             this._canvas = this.createHiDPICanvas(config.width, config.height);
             this._canvas.style.position = 'absolute';
             this._canvas.style.left = '0';
@@ -370,8 +370,8 @@ var Loira;
          * @memberof Loira.Canvas#
          * @fires object:removed
          */
-        Canvas.prototype.remove = function (args) {
-            args = [].splice.call(arguments, 0);
+        Canvas.prototype.remove = function (args, fireEvent) {
+            if (fireEvent === void 0) { fireEvent = true; }
             var _items = this.items;
             var _this = this;
             for (var _i = 0, args_2 = args; _i < args_2.length; _i++) {
@@ -380,7 +380,6 @@ var Loira;
                 if (item == this._selected) {
                     this._selected = null;
                 }
-                item._canvas = null;
                 toDelete.push(_items.indexOf(item));
                 for (var i = 0; i < _items.length; i++) {
                     if (_items[i].baseType === 'relation') {
@@ -396,15 +395,17 @@ var Loira;
                 for (var i = toDelete.length - 1; i >= 0; i--) {
                     _items.splice(toDelete[i], 1);
                 }
-                /**
-                 * Evento que encapsula la eliminacion de un objeto del canvas
-                 *
-                 * @event object:removed
-                 * @type { object }
-                 * @property {object} selected - Objeto seleccionado
-                 * @property {string} type - Tipo de evento
-                 */
-                _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
+                if (fireEvent) {
+                    /**
+                     * Evento que encapsula la eliminacion de un objeto del canvas
+                     *
+                     * @event object:removed
+                     * @type { object }
+                     * @property {object} selected - Objeto seleccionado
+                     * @property {string} type - Tipo de evento
+                     */
+                    _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
+                }
             }
             this.renderAll(true);
             this._selected = null;
@@ -499,7 +500,7 @@ var Loira;
                 if (!isGlobal) {
                     if (_this._tmp.lastKey === 46) {
                         if (_this._selected) {
-                            _this.remove(_this._selected);
+                            _this.remove([_this._selected]);
                         }
                     }
                 }
@@ -570,6 +571,7 @@ var Loira;
                     }
                     else {
                         _this._selected = null;
+                        _this.emit('object:unselected', new MouseEvent(real.x, real.y, 'objectunselected'));
                     }
                 }
                 var item;
@@ -812,6 +814,9 @@ var Loira;
                 this._canvas.style.backgroundColor = 'transparent';
             }
             this.container.insertBefore(this._background, this._canvas);
+        };
+        Canvas.prototype.trigger = function (evt, selected) {
+            this.emit(evt, new ObjectEvent(selected, evt));
         };
         /**
          * Clean the background
@@ -2366,7 +2371,7 @@ var OrgChart;
                 child.recalculate(nextLevel);
                 this.width += child.width;
             }
-            if (this.width == 0) {
+            if (this.width === 0) {
                 this.width = this.role.width + 10;
             }
             this.role.x = Math.floor(this.width / 2 - this.role.width / 2) + this.x;
@@ -2374,6 +2379,19 @@ var OrgChart;
             if (levelHeight[level] < this.role.height) {
                 levelHeight[level] = this.role.height;
             }
+        };
+        Group.prototype.getAllChildren = function () {
+            var children = [];
+            if (this.children.length > 0) {
+                for (var i = 0; i < this.children.length; i++) {
+                    var records = this.children[i].getAllChildren();
+                    children.push(this.children[i].role);
+                    for (var j = 0; j < records.length; j++) {
+                        children.push(records[j]);
+                    }
+                }
+            }
+            return children;
         };
         return Group;
     }());
@@ -2414,9 +2432,51 @@ var OrgChart;
                     var children = child.parent.children;
                     index = $this.getGroup(child.role, children).index;
                     children.splice(index, 1);
+                    var relations = canvas.getRelationsFromObject(evt.selected.end, true, false);
+                    var toDelete = [];
+                    for (var _i = 0, relations_1 = relations; _i < relations_1.length; _i++) {
+                        var relation = relations_1[_i];
+                        if (relation.start != item.role) {
+                            toDelete.push(relation);
+                        }
+                    }
+                    if (toDelete.length > 0) {
+                        canvas.remove(toDelete, false);
+                    }
                 }
                 child.parent = item;
                 item.children.push(child);
+                if ($this.autoRefresh) {
+                    $this.reorderElements();
+                    canvas.renderAll(true);
+                }
+            });
+            canvas.on('object:removed', function (evt) {
+                var relation;
+                var group;
+                var index;
+                if (evt.selected.baseType === 'relation') {
+                    relation = evt.selected;
+                    group = $this.getGroup(relation.end, $this.elements).item;
+                }
+                else {
+                    index = $this.getGroup(evt.selected, $this.elements).index;
+                    group = $this.elements[index];
+                    $this.elements.splice(index, 1);
+                    canvas.remove(group.getAllChildren(), false);
+                }
+                if (group.parent) {
+                    index = $this.getGroup(group.role, group.parent.children).index;
+                    group.parent.children.splice(index, 1);
+                }
+                else {
+                    index = $this.getGroup(group.role, $this.roots).index;
+                    $this.roots.splice(index, 1);
+                }
+                if (relation) {
+                    group.parent = null;
+                    $this.roots.push(group);
+                }
                 if ($this.autoRefresh) {
                     $this.reorderElements();
                 }
@@ -2437,9 +2497,8 @@ var OrgChart;
             }
             for (var i = 0; i < this.elements.length; i++) {
                 var group = this.elements[i];
-                group.role.y = (group.level == 0) ? 10 : levelHeight[group.level - 1];
+                group.role.y = (group.level === 0) ? 10 : levelHeight[group.level - 1];
             }
-            console.log(levelHeight);
         };
         /**
          * Get a group by a group
@@ -2448,7 +2507,7 @@ var OrgChart;
          * @returns {any}
          */
         Controller.prototype.getGroup = function (role, groups) {
-            if (groups) {
+            if (!groups) {
                 groups = this.elements;
             }
             for (var i = 0; i < groups.length; i++) {
@@ -2486,8 +2545,33 @@ var OrgChart;
             var y, xm = this.x + this.width / 2, lines = _super.prototype.splitText.call(this, ctx, this.title);
             y = this.y + Loira.Config.fontSize;
             this.height = (Loira.Config.fontSize + 3) * lines.length + 5;
+            var radius = 5;
             ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 10;
+            if (!this.isSelected) {
+                ctx.shadowColor = '#000000';
+                ctx.strokeStyle = '#000000';
+            }
+            else {
+                ctx.shadowColor = '#00c0ff';
+                ctx.strokeStyle = '#00c0ff';
+                ctx.shadowBlur = 20;
+                this.isSelected = false;
+            }
+            ctx.beginPath();
+            ctx.moveTo(this.x + radius, this.y);
+            ctx.lineTo(this.x + this.width - radius, this.y);
+            ctx.quadraticCurveTo(this.x + this.width, this.y, this.x + this.width, this.y + radius);
+            ctx.lineTo(this.x + this.width, this.y + this.height - radius);
+            ctx.quadraticCurveTo(this.x + this.width, this.y + this.height, this.x + this.width - radius, this.y + this.height);
+            ctx.lineTo(this.x + radius, this.y + this.height);
+            ctx.quadraticCurveTo(this.x, this.y + this.height, this.x, this.y + this.height - radius);
+            ctx.lineTo(this.x, this.y + radius);
+            ctx.quadraticCurveTo(this.x, this.y, this.x + radius, this.y);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#FFFFFF";
             for (var i = 0; i < lines.length; i++) {
@@ -2500,6 +2584,10 @@ var OrgChart;
         };
         Role.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
             return 0;
+        };
+        Role.prototype.drawSelected = function (ctx) {
+            this.isSelected = true;
+            this.render(ctx);
         };
         Role.prototype.attach = function (canvas) {
             _super.prototype.attach.call(this, canvas);
@@ -2533,6 +2621,7 @@ var OrgChart;
             this.points[3] = { x: end.x + end.width / 2, y: end.y + end.height / 2 };
             ctx.beginPath();
             ctx.lineWidth = 4;
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
             ctx.moveTo(init.x, init.y);
             ctx.lineJoin = 'round';
             for (var i = 1; i < this.points.length; i++) {

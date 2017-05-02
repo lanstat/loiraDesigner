@@ -50,6 +50,7 @@ module OrgChart{
 
             this.role.x = Math.floor(this.width/2 - this.role.width/2) + this.x;
             this.role.color = levelColor[level];
+            this.role.level = level;
 
             if (levelHeight[level] < this.role.height){
                 levelHeight[level] = this.role.height;
@@ -77,6 +78,7 @@ module OrgChart{
         private roots: Group[] = [];
         private elements: Group[] = [];
         private autoRefresh: boolean;
+        private canvas: Loira.Canvas;
 
         constructor(colors: string[] = null, autoRefresh: boolean = true){
             super();
@@ -90,6 +92,7 @@ module OrgChart{
         bind(canvas: Loira.Canvas) {
             let $this = this;
 
+            this.canvas = canvas;
             canvas.defaultRelation = 'OrgChart.Relation';
 
             canvas.on('object:added', function(evt: Loira.event.ObjectEvent){
@@ -173,6 +176,41 @@ module OrgChart{
             });
         }
 
+        //TODO verificar porque al borrar falla el borrado en cascada
+        load(data: any){
+            let option: RoleOption;
+            let group: Group;
+            let optionRel: RelOption;
+            let elements: Role[] = [];
+            let relations: Relation[] = [];
+
+            for(let record of data){
+                option = new RoleOption();
+                option.id = <string>record.id;
+                option.title = <string>record.title;
+                group = new Group(new Role(option));
+
+                if (record.parent || record.parent !== 0){
+                    let parent = this.getGroupById(record.parent).item;
+                    parent.children.push(group);
+                    group.parent = parent;
+
+                    optionRel = new RelOption();
+                    optionRel.start = parent.role;
+                    optionRel.end = group.role;
+
+                    relations.push(new Relation(optionRel));
+                } else {
+                    this.roots.push(group);
+                }
+                this.elements.push(group);
+                elements.push(group.role);
+            }
+
+            this.canvas.add(elements, false);
+            this.canvas.add(relations, false);
+        }
+
         reorderElements() {
             let x: number = 0;
             levelHeight = [];
@@ -195,7 +233,7 @@ module OrgChart{
         }
 
         /**
-         * Get a group by a group
+         * Get a group by a role
          * @param role Role to search
          * @param groups List of groups to search
          * @returns {any}
@@ -207,6 +245,25 @@ module OrgChart{
 
             for(let i=0;i<groups.length;i++){
                 if (groups[i].role == role){
+                    return {item: groups[i], index: i};
+                }
+            }
+            return {item: null, index: -1};
+        }
+
+        /**
+         * Get a group by a role
+         * @param id Role to search
+         * @param groups List of groups to search
+         * @returns {object}
+         */
+        getGroupById(id: string, groups?: Group[]): {item: Group, index: number}{
+            if (!groups){
+                groups = this.elements;
+            }
+
+            for(let i=0;i<groups.length;i++){
+                if (groups[i].role.id == id){
                     return {item: groups[i], index: i};
                 }
             }
@@ -226,6 +283,8 @@ module OrgChart{
         public parent: OrgChart.Role;
         public title: string;
         private isSelected: boolean;
+        public level: number;
+        public id: string;
 
         constructor(options: RoleOption){
             super(options);
@@ -237,6 +296,7 @@ module OrgChart{
             this.title = options.title;
             this.resizable = false;
             this.draggable = false;
+            this.id = options.id;
 
             this.type = 'role';
         }
@@ -262,6 +322,7 @@ module OrgChart{
             } else {
                 ctx.shadowColor = '#00c0ff';
                 ctx.strokeStyle = '#00c0ff';
+                ctx.shadowBlur=20;
                 this.isSelected = false;
             }
 
@@ -338,6 +399,7 @@ module OrgChart{
 
             ctx.beginPath();
             ctx.lineWidth = 4;
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
             ctx.moveTo(init.x, init.y);
             ctx.lineJoin = 'round';
 
