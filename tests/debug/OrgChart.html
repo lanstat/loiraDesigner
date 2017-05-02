@@ -1,27 +1,143 @@
+<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link href="main.css" rel="stylesheet">
+    <style>
+        #children li {
+            height: 30px;
+        }
+    </style>
 
     <script type="text/javascript" src="../../LoiraDesigner.js"></script>
 </head>
 <body>
-<div style="width: 1000px; height: 600px">
-    <div id="_canvas">
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+            <div id="_canvas">
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div style="padding: 5px">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <button id="addObject" class="btn btn-primary">New role</button>
+                    </div>
+                    <div class="col-sm-6">
+                        <button id="refresh" class="btn btn-primary pull-right"><i class="glyphicon glyphicon-repeat"></i></button>
+                    </div>
+                </div>
+                <br>
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            <input type="type" class="form-control" id="title" placeholder="Title">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            <button class="btn btn-primary" id="add-child">Add child</button>
+                            <div class="pull-right">
+
+                                <button class="btn btn-danger">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            <ul id="children">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-<input id="title" type="text">
-<button id="addObject">Agregar</button>
-<button id="setDirectRelation">Actualizar ubicacion</button>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script>
     window.onload = function(){
         Loira.Config.assetsPath = '../../assets/glyphs.png';
         Loira.Config.background= '#757575';
         Loira.Config.fontType = 'Lato';
+        // TODO ver porque se retrasa en el refresco de borrado de hijo
 
-        var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000, controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true)});
+        var selected = null;
+
+        var refreshData = function(){
+            canvas.controller.reorderElements();
+            setTimeout(function(){
+                canvas.renderAll(true);
+            },200);
+        };
+
+        var refreshList = function(){
+            $('#children').html('');
+
+            for(var i=0; i < selected.children.length; i++){
+                $('#children').append('<li>'+selected.children[i].role.title+' <div class="pull-right">' +
+                    '<button class="btn btn-primary btn-xs btn-up" data-id="'+i+'"><i class="glyphicon glyphicon-arrow-up"></i></button> ' +
+                    '<button class="btn btn-primary btn-xs btn-down" data-id="'+i+'"><i class="glyphicon glyphicon-arrow-down"></i></button> ' +
+                    '<button class="btn btn-primary btn-xs btn-unlink" data-id="'+i+'"><i class="glyphicon glyphicon-remove"></i></button><br>' +
+                    '</div></li>');
+            }
+
+            $('.btn-up').click(function(){
+                var index = parseInt($(this).attr('data-id'));
+
+                var role = selected.children[index];
+
+                selected.children.splice(index, 1);
+                selected.children.splice(index - 1, 0, role);
+
+                refreshList();
+                refreshData();
+            });
+
+            $('.btn-down').click(function(){
+                var index = parseInt($(this).attr('data-id'));
+
+                var role = selected.children[index];
+
+                selected.children.splice(index, 1);
+                selected.children.splice(index + 1, 0, role);
+
+                refreshList();
+                refreshData();
+            });
+
+            $('.btn-unlink').click(function(){
+                var index = parseInt($(this).attr('data-id'));
+
+                var group = selected.children[index];
+
+                var relations = canvas.getRelationsFromObject(group.role, true, false);
+
+                canvas.remove(relations);
+
+                refreshList();
+                refreshData();
+            });
+        };
+
+        var canvas = new Loira.Canvas('_canvas', {
+            width: 1800,
+            height:1000,
+            viewportHeight: 600,
+            controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], false)
+        });
         var case1 = new OrgChart.Role({title:'CEO'});
 
         canvas.add(case1);
+        refreshData();
 
         document.getElementById('addObject').addEventListener('click', function(){
             var title = document.getElementById('title').value;
@@ -30,8 +146,35 @@
             canvas.add(case1);
             canvas.renderAll(true);
         });
-        document.getElementById('setDirectRelation').addEventListener('click', function(){
+        document.getElementById('refresh').addEventListener('click', function(){
             canvas.controller.reorderElements();
+        });
+
+        canvas.on('object:selected', function(evt){
+            $('#title').val(evt.selected.title);
+            selected = canvas.controller.getGroup(evt.selected).item;
+
+            refreshList();
+        });
+
+        canvas.on('object:unselected', function(){
+            $('#title').val('');
+            selected = null;
+            $('#children').html('');
+        });
+
+        $('#title').blur(function(){
+            selected.role.title = $(this).val();
+            canvas.renderAll(true);
+        });
+
+        $('#add-child').click(function(){
+            var child = new OrgChart.Role({title:''});
+            canvas.add(child);
+            var relation = new OrgChart.Relation({start: selected.role, end: child});
+            canvas.add(relation);
+
+            refreshData();
         });
     }
 </script>

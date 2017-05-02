@@ -225,6 +225,7 @@ module OrgChart{
         public color: string;
         public parent: OrgChart.Role;
         public title: string;
+        private isSelected: boolean;
 
         constructor(options: RoleOption){
             super(options);
@@ -249,8 +250,34 @@ module OrgChart{
             y = this.y + Loira.Config.fontSize;
             this.height = (Loira.Config.fontSize + 3) * lines.length + 5;
 
+            let radius = 5;
+
             ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.lineWidth= 4;
+            ctx.shadowBlur=10;
+
+            if (!this.isSelected){
+                ctx.shadowColor = '#000000';
+                ctx.strokeStyle = '#000000';
+            } else {
+                ctx.shadowColor = '#00c0ff';
+                ctx.strokeStyle = '#00c0ff';
+                this.isSelected = false;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(this.x + radius, this.y);
+            ctx.lineTo(this.x + this.width - radius, this.y);
+            ctx.quadraticCurveTo(this.x + this.width, this.y, this.x + this.width, this.y + radius);
+            ctx.lineTo(this.x + this.width, this.y + this.height - radius);
+            ctx.quadraticCurveTo(this.x + this.width, this.y + this.height, this.x + this.width - radius, this.y + this.height);
+            ctx.lineTo(this.x + radius, this.y + this.height);
+            ctx.quadraticCurveTo(this.x, this.y + this.height, this.x, this.y + this.height - radius);
+            ctx.lineTo(this.x, this.y + radius);
+            ctx.quadraticCurveTo(this.x, this.y, this.x + radius, this.y);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
 
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#FFFFFF";
@@ -267,6 +294,11 @@ module OrgChart{
 
         obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
             return 0;
+        }
+
+        drawSelected(ctx: CanvasRenderingContext2D) {
+            this.isSelected = true;
+            this.render(ctx);
         }
 
         attach(canvas: Loira.Canvas): void {

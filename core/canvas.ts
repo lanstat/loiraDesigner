@@ -551,6 +551,7 @@ module Loira{
                         return;
                     } else {
                         _this._selected = null;
+                        _this.emit('object:unselected', new MouseEvent(real.x, real.y, 'objectunselected'));
                     }
                 }
 
@@ -814,6 +815,10 @@ module Loira{
             }
 
             this.container.insertBefore(this._background, this._canvas);
+        }
+
+        trigger(evt: string, selected?: Loira.Element){
+            this.emit(evt, new ObjectEvent(selected, evt));
         }
 
         /**
