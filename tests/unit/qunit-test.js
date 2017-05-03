@@ -6,7 +6,7 @@ QUnit.test('Symbol\'s creation', function (assert) {
     var canvas = new Loira.Canvas(_canvas, {width: 1800, height:1000, viewportWidth: 800, viewportHeight: 500});
     var actor = new Common.Actor({x:20, y:10, text:'Prueba'});
 
-    canvas.add(actor);
+    canvas.add([actor]);
 
     assert.ok(actor._uid != '', 'No se creo el objeto');
     assert.ok(canvas.items.length == 1, 'No se agrego el objeto');
@@ -26,9 +26,9 @@ QUnit.test('Eliminacion de simbolos', function (assert) {
     var relation  = new Relation.Association({start:actor, end:actor2});
     var relation2  = new Relation.Association({start:actor, end:actor3});
 
-    canvas.add(actor, actor2, actor3 , relation, relation2);
+    canvas.add([actor, actor2, actor3 , relation, relation2]);
 
-    canvas.remove(actor);
+    canvas.remove([actor]);
 
     assert.ok(canvas.items.length == 2, 'No se elimino el objeto');
 });

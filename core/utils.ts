@@ -112,4 +112,14 @@ module Loira.util{
 
         return  fn;
     }
+
+    export function removeWhole(indexes:number[], vector: any[]){
+        indexes.sort(function (a, b) {
+            return a - b;
+        });
+
+        for (let i=indexes.length -1; i >= 0; i--){
+            vector.splice(indexes[i], 1);
+        }
+    }
 }

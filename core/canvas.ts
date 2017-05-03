@@ -360,23 +360,23 @@ module Loira{
                     }
                 }
 
-                toDelete.sort();
+                toDelete.sort(function (a, b) {
+                    return a - b;
+                });
 
                 for (let i:number = toDelete.length - 1; i >= 0; i--) {
                     _items.splice(toDelete[i], 1);
                 }
 
-                if (fireEvent){
-                    /**
-                     * Evento que encapsula la eliminacion de un objeto del canvas
-                     *
-                     * @event object:removed
-                     * @type { object }
-                     * @property {object} selected - Objeto seleccionado
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
-                }
+                /**
+                 * Evento que encapsula la eliminacion de un objeto del canvas
+                 *
+                 * @event object:removed
+                 * @type { object }
+                 * @property {object} selected - Objeto seleccionado
+                 * @property {string} type - Tipo de evento
+                 */
+                _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'), fireEvent);
             }
 
             this.renderAll(true);

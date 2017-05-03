@@ -303,20 +303,28 @@ var Loira;
          *
          * @memberof Loira.Canvas#
          * @param {Array.<Object>} args Elementos a agregar
+         * @param fireEvent Should fire the events
          * @fires object:added
          */
-        Canvas.prototype.add = function (args) {
-            if (!args.length) {
-                args = [].splice.call(arguments, 0);
-            }
+        Canvas.prototype.add = function (args, fireEvent) {
+            if (fireEvent === void 0) { fireEvent = true; }
             var _items = this.items;
             var _this = this;
-            for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
-                var item = args_1[_i];
+            var relation;
+            var argument;
+            if (Object.prototype.toString.call(args) !== '[object Array]') {
+                argument = [args];
+            }
+            else {
+                argument = args;
+            }
+            for (var _i = 0, argument_1 = argument; _i < argument_1.length; _i++) {
+                var item = argument_1[_i];
                 item.attach(_this);
                 if (item.baseType === 'relation') {
-                    var index = _items.indexOf(item.start);
-                    index = index < _items.indexOf(item.end) ? index : _items.indexOf(item.end);
+                    relation = item;
+                    var index = _items.indexOf(relation.start);
+                    index = index < _items.indexOf(relation.end) ? index : _items.indexOf(relation.end);
                     _items.splice(index, 0, item);
                     /**
                      * Evento que encapsula la adicion de una relacion del canvas
@@ -326,7 +334,7 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('relation:added', new RelationEvent(item, 'relationadded'));
+                    _this.emit('relation:added', new RelationEvent(relation, 'relationadded'), fireEvent);
                 }
                 else if (item.baseType === 'container') {
                     _items.splice(0, 0, item);
@@ -338,7 +346,7 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('container:added', new ObjectEvent(item, 'objectadded'));
+                    _this.emit('container:added', new ObjectEvent(item, 'objectadded'), fireEvent);
                 }
                 else {
                     if (item.centerObject) {
@@ -360,7 +368,7 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('object:added', new ObjectEvent(item, 'objectadded'));
+                    _this.emit('object:added', new ObjectEvent(item, 'objectadded'), fireEvent);
                 }
             }
         };
@@ -374,8 +382,8 @@ var Loira;
             if (fireEvent === void 0) { fireEvent = true; }
             var _items = this.items;
             var _this = this;
-            for (var _i = 0, args_2 = args; _i < args_2.length; _i++) {
-                var item = args_2[_i];
+            for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
+                var item = args_1[_i];
                 var toDelete = [];
                 if (item == this._selected) {
                     this._selected = null;
@@ -391,21 +399,21 @@ var Loira;
                         }
                     }
                 }
-                toDelete.sort();
+                toDelete.sort(function (a, b) {
+                    return a - b;
+                });
                 for (var i = toDelete.length - 1; i >= 0; i--) {
                     _items.splice(toDelete[i], 1);
                 }
-                if (fireEvent) {
-                    /**
-                     * Evento que encapsula la eliminacion de un objeto del canvas
-                     *
-                     * @event object:removed
-                     * @type { object }
-                     * @property {object} selected - Objeto seleccionado
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'));
-                }
+                /**
+                 * Evento que encapsula la eliminacion de un objeto del canvas
+                 *
+                 * @event object:removed
+                 * @type { object }
+                 * @property {object} selected - Objeto seleccionado
+                 * @property {string} type - Tipo de evento
+                 */
+                _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'), fireEvent);
             }
             this.renderAll(true);
             this._selected = null;
@@ -752,14 +760,11 @@ var Loira;
          * @memberof Loira.Canvas#
          * @param evt Nombre del evento a emitir
          * @param options Valores enviados junto al evento
-         * @param element Element that fire event
+         * @param fireEvent Should fire event
          */
-        Canvas.prototype.emit = function (evt, options, element) {
-            if (typeof element !== 'undefined') {
-                var type = element.baseType === 'relation' ? 'relation' : 'object';
-                evt = type + ':' + evt;
-            }
-            if (typeof this._callbacks[evt] !== 'undefined') {
+        Canvas.prototype.emit = function (evt, options, fireEvent) {
+            if (fireEvent === void 0) { fireEvent = true; }
+            if (fireEvent && typeof this._callbacks[evt] !== 'undefined') {
                 for (var _i = 0, _a = this._callbacks[evt]; _i < _a.length; _i++) {
                     var item = _a[_i];
                     item.call(this, options);
@@ -1039,6 +1044,15 @@ var Loira;
             return fn;
         }
         util.stringToFunction = stringToFunction;
+        function removeWhole(indexes, vector) {
+            indexes.sort(function (a, b) {
+                return a - b;
+            });
+            for (var i = indexes.length - 1; i >= 0; i--) {
+                vector.splice(indexes[i], 1);
+            }
+        }
+        util.removeWhole = removeWhole;
     })(util = Loira.util || (Loira.util = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=utils.js.map
@@ -2341,6 +2355,7 @@ var __extends = (this && this.__extends) || (function () {
 var OrgChart;
 (function (OrgChart) {
     var BaseController = Loira.BaseController;
+    var RelOption = Loira.util.RelOption;
     var levelColor = ['#124FFD', '#FF4FFD', '#12003D'];
     var levelHeight;
     var RoleOption = (function (_super) {
@@ -2376,6 +2391,7 @@ var OrgChart;
             }
             this.role.x = Math.floor(this.width / 2 - this.role.width / 2) + this.x;
             this.role.color = levelColor[level];
+            this.role.level = level;
             if (levelHeight[level] < this.role.height) {
                 levelHeight[level] = this.role.height;
             }
@@ -2385,7 +2401,7 @@ var OrgChart;
             if (this.children.length > 0) {
                 for (var i = 0; i < this.children.length; i++) {
                     var records = this.children[i].getAllChildren();
-                    children.push(this.children[i].role);
+                    children.push(this.children[i]);
                     for (var j = 0; j < records.length; j++) {
                         children.push(records[j]);
                     }
@@ -2412,6 +2428,7 @@ var OrgChart;
         }
         Controller.prototype.bind = function (canvas) {
             var $this = this;
+            this.canvas = canvas;
             canvas.defaultRelation = 'OrgChart.Relation';
             canvas.on('object:added', function (evt) {
                 var group = new Group(evt.selected);
@@ -2463,7 +2480,15 @@ var OrgChart;
                     index = $this.getGroup(evt.selected, $this.elements).index;
                     group = $this.elements[index];
                     $this.elements.splice(index, 1);
-                    canvas.remove(group.getAllChildren(), false);
+                    var children = group.getAllChildren();
+                    var roles = [];
+                    var toDelete = [];
+                    for (var i = 0; i < children.length; i++) {
+                        toDelete.push($this.elements.indexOf(children[i]));
+                        roles.push(children[i].role);
+                    }
+                    Loira.util.removeWhole(toDelete, $this.elements);
+                    canvas.remove(roles, false);
                 }
                 if (group.parent) {
                     index = $this.getGroup(group.role, group.parent.children).index;
@@ -2481,6 +2506,45 @@ var OrgChart;
                     $this.reorderElements();
                 }
             });
+        };
+        Controller.prototype.load = function (data) {
+            var option;
+            var group;
+            var optionRel;
+            var elements = [];
+            var relations = [];
+            for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+                var record = data_1[_i];
+                option = new RoleOption();
+                option.id = record.id;
+                option.title = record.title;
+                group = new Group(new Role(option));
+                if (record.parent) {
+                    var parent_1 = this.getGroupById(record.parent).item;
+                    parent_1.children.push(group);
+                    group.parent = parent_1;
+                    optionRel = new RelOption();
+                    optionRel.start = parent_1.role;
+                    optionRel.end = group.role;
+                    relations.push(new Relation(optionRel));
+                }
+                else {
+                    this.roots.push(group);
+                }
+                this.elements.push(group);
+                elements.push(group.role);
+            }
+            this.canvas.add(elements, false);
+            this.canvas.add(relations, false);
+        };
+        Controller.prototype.exportData = function () {
+            var data = [];
+            for (var _i = 0, _a = this.elements; _i < _a.length; _i++) {
+                var element = _a[_i];
+                var parent_2 = element.parent;
+                data.push({ id: element.role.id, level: element.role.level, parent: (parent_2 ? parent_2.role.id : null) });
+            }
+            return data;
         };
         Controller.prototype.reorderElements = function () {
             var x = 0;
@@ -2501,7 +2565,7 @@ var OrgChart;
             }
         };
         /**
-         * Get a group by a group
+         * Get a group by a role
          * @param role Role to search
          * @param groups List of groups to search
          * @returns {any}
@@ -2512,6 +2576,23 @@ var OrgChart;
             }
             for (var i = 0; i < groups.length; i++) {
                 if (groups[i].role == role) {
+                    return { item: groups[i], index: i };
+                }
+            }
+            return { item: null, index: -1 };
+        };
+        /**
+         * Get a group by a role
+         * @param id Role to search
+         * @param groups List of groups to search
+         * @returns {object}
+         */
+        Controller.prototype.getGroupById = function (id, groups) {
+            if (!groups) {
+                groups = this.elements;
+            }
+            for (var i = 0; i < groups.length; i++) {
+                if (groups[i].role.id == id) {
                     return { item: groups[i], index: i };
                 }
             }
@@ -2537,6 +2618,7 @@ var OrgChart;
             _this.title = options.title;
             _this.resizable = false;
             _this.draggable = false;
+            _this.id = options.id;
             _this.type = 'role';
             return _this;
         }

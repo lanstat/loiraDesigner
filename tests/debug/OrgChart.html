@@ -31,6 +31,7 @@
                         <button id="addObject" class="btn btn-primary">New role</button>
                     </div>
                     <div class="col-sm-6">
+                        <button id="store" class="btn btn-primary pull-right"><i class="glyphicon glyphicon-floppy"></i></button>
                         <button id="refresh" class="btn btn-primary pull-right"><i class="glyphicon glyphicon-repeat"></i></button>
                     </div>
                 </div>
@@ -134,7 +135,14 @@
             controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true)
         });
 
-        canvas.controller.load([{id: 1, title: 'a', parent: 0},{id: 2, title: 'b', parent: 1},{id: 3, title: 'c', parent: 1}]);
+        canvas.controller.load([
+            {id: 1, title: '1', parent: 0},
+            {id: 2, title: '2', parent: 1},
+            {id: 3, title: '3', parent: 1},
+            {id: 4, title: '4', parent: 1},
+            {id: 5, title: '5', parent: 3},
+            {id: 6, title: '6', parent: 3}
+        ]);
         refreshData();
 
         document.getElementById('addObject').addEventListener('click', function(){
@@ -164,6 +172,10 @@
         $('#title').blur(function(){
             selected.role.title = $(this).val();
             canvas.renderAll(true);
+        });
+
+        $('#store').click(function(){
+            console.log(canvas.controller.exportData());
         });
 
         $('#add-child').click(function(){

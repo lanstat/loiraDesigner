@@ -57,13 +57,13 @@ module OrgChart{
             }
         }
 
-        getAllChildren(): Role[] {
-            let children: Role[] = [];
+        getAllChildren(): Group[] {
+            let children: Group[] = [];
 
             if (this.children.length > 0) {
                 for (let i: number = 0; i < this.children.length; i++){
-                    let records: Role[] = this.children[i].getAllChildren();
-                    children.push(this.children[i].role);
+                    let records: Group[] = this.children[i].getAllChildren();
+                    children.push(this.children[i]);
                     for (let j: number =0;j < records.length; j++){
                         children.push(records[j]);
                     }
@@ -154,7 +154,17 @@ module OrgChart{
                     index =  $this.getGroup(<Role>evt.selected, $this.elements).index;
                     group = $this.elements[index];
                     $this.elements.splice(index, 1);
-                    canvas.remove(group.getAllChildren(), false);
+                    let children = group.getAllChildren();
+                    let roles: Role[] = [];
+                    let toDelete: number[] = [];
+
+                    for (let i = 0; i< children.length; i++){
+                        toDelete.push($this.elements.indexOf(children[i]));
+                        roles.push(children[i].role);
+                    }
+
+                    Loira.util.removeWhole(toDelete, $this.elements);
+                    canvas.remove(roles, false);
                 }
 
                 if (group.parent){
@@ -176,7 +186,6 @@ module OrgChart{
             });
         }
 
-        //TODO verificar porque al borrar falla el borrado en cascada
         load(data: any){
             let option: RoleOption;
             let group: Group;
@@ -190,7 +199,7 @@ module OrgChart{
                 option.title = <string>record.title;
                 group = new Group(new Role(option));
 
-                if (record.parent || record.parent !== 0){
+                if (record.parent){
                     let parent = this.getGroupById(record.parent).item;
                     parent.children.push(group);
                     group.parent = parent;
@@ -209,6 +218,16 @@ module OrgChart{
 
             this.canvas.add(elements, false);
             this.canvas.add(relations, false);
+        }
+
+        exportData(): {id: string, parent: string, level: number}[]{
+            let data: {id: string, parent: string, level: number}[]= [];
+
+            for (let element of this.elements){
+                let parent = element.parent;
+                data.push({id: element.role.id, level: element.role.level, parent: (parent? parent.role.id : null)});
+            }
+            return data;
         }
 
         reorderElements() {
