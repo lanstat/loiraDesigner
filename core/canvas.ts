@@ -292,7 +292,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('relation:added', new RelationEvent(relation, 'relationadded'), fireEvent);
+                    _this.emit('relation:added', new RelationEvent(relation), fireEvent);
                 } else if (item.baseType === 'container') {
                     _items.splice(0, 0, item);
                     /**
@@ -303,7 +303,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('container:added', new ObjectEvent(item, 'objectadded'), fireEvent);
+                    _this.emit('container:added', new ObjectEvent(item), fireEvent);
                 } else {
                     if (item.centerObject) {
                         if (_this._canvasContainer) {
@@ -324,7 +324,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('object:added', new ObjectEvent(item, 'objectadded'), fireEvent);
+                    _this.emit('object:added', new ObjectEvent(item), fireEvent);
                 }
             }
         }
@@ -376,7 +376,7 @@ module Loira{
                  * @property {object} selected - Objeto seleccionado
                  * @property {string} type - Tipo de evento
                  */
-                _this.emit('object:removed', new ObjectEvent(item, 'objectremoved'), fireEvent);
+                _this.emit('object:removed', new ObjectEvent(item), fireEvent);
             }
 
             this.renderAll(true);
@@ -524,7 +524,7 @@ module Loira{
                      * @property {int} y - Posicion y del puntero
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('mouse:dblclick', new MouseEvent(real.x, real.y, 'dblclick'));
+                    _this.emit('mouse:dblclick', new MouseEvent(real.x, real.y));
                 } else {
                     /**
                      * Evento que encapsula un click sobre el canvas
@@ -535,7 +535,7 @@ module Loira{
                      * @property {int} y - Posicion y del puntero
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('mouse:down', new MouseEvent(real.x, real.y, 'mousedown'));
+                    _this.emit('mouse:down', new MouseEvent(real.x, real.y));
                 }
 
                 if (!isDoubleClick) {
@@ -559,7 +559,7 @@ module Loira{
                         return;
                     } else {
                         _this._selected = null;
-                        _this.emit('object:unselected', new MouseEvent(real.x, real.y, 'objectunselected'));
+                        _this.emit('object:unselected', new MouseEvent(real.x, real.y));
                     }
                 }
 
@@ -579,7 +579,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('object:dblclick', new ObjectEvent(item, 'objectdblclick'));
+                                _this.emit('object:dblclick', new ObjectEvent(item));
                             } else {
                                 /**
                                  * Evento que encapsula un click sobre un objeto
@@ -589,7 +589,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('object:selected', new ObjectEvent(item, 'objectselected'));
+                                _this.emit('object:selected', new ObjectEvent(item));
                             }
                             break;
                         } else {
@@ -602,7 +602,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionadonpm
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('relation:dblclick', new ObjectEvent(item, 'relationdblclick'));
+                                _this.emit('relation:dblclick', new ObjectEvent(item));
                             } else {
                                 /**
                                  * Evento que encapsula un click sobre una relacion
@@ -612,7 +612,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('relation:selected', new ObjectEvent(item, 'relationselected'));
+                                _this.emit('relation:selected', new ObjectEvent(item));
                             }
                             break;
                         }
@@ -624,6 +624,10 @@ module Loira{
 
             _this._canvas.onmousedown = function (evt) {
                 onDown(evt, false);
+            };
+
+            _this._canvas.oncontextmenu = function(evt){
+                return false;
             };
 
             _this._canvas.onmousemove = function (evt) {
@@ -641,7 +645,7 @@ module Loira{
                      * @property {int} y - Posicion y del puntero
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('mouse:move', new MouseEvent(real.x, real.y, 'mousemove'));
+                    _this.emit('mouse:move', new MouseEvent(real.x, real.y));
                     if (_this._selected) {
                         if (_this._tmp.transform) {
                             if (_this._selected.baseType !== 'relation') {
@@ -678,7 +682,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('object:dragging', new ObjectEvent(_this._selected, 'objectdragging'));
+                                _this.emit('object:dragging', new ObjectEvent(_this._selected));
                                 _this.renderAll();
                             }
                         }
@@ -713,7 +717,7 @@ module Loira{
                  * @property {int} y - Posicion y del puntero
                  * @property {string} type - Tipo de evento
                  */
-                _this.emit('mouse:up', new MouseEvent(real.x, real.y, 'mouseup'));
+                _this.emit('mouse:up', new MouseEvent(real.x, real.y));
                 if (_this._selected) {
                     /**
                      * Evento que encapsula la liberacion de un objeto
@@ -723,7 +727,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('object:released', new ObjectEvent(_this._selected, 'objectreleased'));
+                    _this.emit('object:released', new ObjectEvent(_this._selected));
                     _this._tmp.transform = null;
                     _this._selected.recalculateBorders();
                 }
@@ -751,7 +755,7 @@ module Loira{
          * @param options Valores enviados junto al evento
          * @param fireEvent Should fire event
          */
-        public emit(evt: string, options: any, fireEvent: boolean = true) {
+        public emit(evt: string, options: Loira.event.Event, fireEvent: boolean = true) {
             if (fireEvent && typeof this._callbacks[evt] !== 'undefined') {
                 for (let item of this._callbacks[evt]) {
                     item.call(this, options);
@@ -821,7 +825,7 @@ module Loira{
         }
 
         trigger(evt: string, selected?: Loira.Element){
-            this.emit(evt, new ObjectEvent(selected, evt));
+            this.emit(evt, new ObjectEvent(selected));
         }
 
         /**
@@ -917,6 +921,68 @@ module Loira{
          */
         getContext(): CanvasRenderingContext2D {
             return this._canvas.getContext('2d');
+        }
+
+        getImage(padding: number = 0): string{
+            let maxX, maxY, minX, minY, dX, dY: number;
+            let offSetX, offSetY: number;
+
+            maxX = maxY = Number.MIN_VALUE;
+            minX = minY = Number.MAX_VALUE;
+
+            for (let element of this.items){
+                if (element.baseType !== 'relation'){
+                    if (element.x < minX){
+                        minX = element.x;
+                    }
+                    if (element.y < minY){
+                        minY = element.y;
+                    }
+
+                    if (element.width + element.x > maxX){
+                        maxX = element.width + element.x;
+                    }
+
+                    if (element.y + element.height > maxY){
+                        maxY = element.y + element.height;
+                    }
+                }
+            }
+
+            dX = maxX - minX + 10 + (padding *2);
+            dY = maxY - minY + 10 + (padding *2);
+
+            let virtual: HTMLCanvasElement = this.createHiDPICanvas(dX, dY, 1);
+            let ctx = virtual.getContext('2d');
+
+            ctx.fillStyle = Config.background;
+            ctx.fillRect(0, 0, dX, dY);
+            //context.drawImage(this._canvas, 0, 0, 400, 100, 0, 0, dX, dY);
+
+            offSetY = (minY - padding) - 5;
+            offSetX = (minX - padding) - 5;
+
+            for (let i:number = 0; i < this.items.length; i++) {
+                ctx.save();
+
+                if (this.items[i].baseType !== 'relation') {
+                    this.items[i].x -= offSetX;
+                    this.items[i].y -= offSetY;
+                    this.items[i].render(ctx);
+                    this.items[i].x += offSetX;
+                    this.items[i].y += offSetY;
+                } else {
+                    this.items[i].render(ctx);
+                }
+                ctx.restore();
+            }
+
+            //ctx.setTransform(0.75, 0, 0, 0.75, 0, 0);
+
+            // virtual.width = dX * 0.75;
+            // virtual.height = dY * 0.75;
+
+            return virtual.toDataURL("image/png");
         }
     }
 }

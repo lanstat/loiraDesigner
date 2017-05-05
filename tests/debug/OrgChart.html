@@ -39,7 +39,7 @@
                 <div class="form-horizontal">
                     <div class="form-group">
                         <div class="col-sm-12">
-                            <input type="type" class="form-control" id="title" placeholder="Title">
+                            <input type="text" class="form-control" id="title" placeholder="Title">
                         </div>
                     </div>
                     <div class="form-group">
@@ -175,7 +175,10 @@
         });
 
         $('#store').click(function(){
-            console.log(canvas.controller.exportData());
+            //console.log(canvas.controller.exportData());
+            var d= canvas.getImage(10);
+            var w=window.open('about:blank','image from canvas');
+            w.document.write("<img src='"+d+"' alt='from canvas'/>");
         });
 
         $('#add-child').click(function(){
