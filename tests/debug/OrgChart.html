@@ -39,7 +39,7 @@
                 <div class="form-horizontal">
                     <div class="form-group">
                         <div class="col-sm-12">
-                            <input type="type" class="form-control" id="title" placeholder="Title">
+                            <input type="text" class="form-control" id="title" placeholder="Title">
                         </div>
                     </div>
                     <div class="form-group">
@@ -67,7 +67,7 @@
 <script>
     window.onload = function(){
         Loira.Config.assetsPath = '../../assets/glyphs.png';
-        Loira.Config.background= 'rgba(0, 0, 0, 0.7)';
+        Loira.Config.background= 'rgba(70, 70, 70, 1)';
         Loira.Config.fontType = 'Lato';
 
         var selected = null;
@@ -175,7 +175,10 @@
         });
 
         $('#store').click(function(){
-            console.log(canvas.controller.exportData());
+            //console.log(canvas.controller.exportData());
+            var d= canvas.getImage(10);
+            var w=window.open('about:blank','image from canvas');
+            w.document.write("<img src='"+d+"' alt='from canvas'/>");
         });
 
         $('#add-child').click(function(){
