@@ -132,7 +132,8 @@
             width: 1800,
             height:1000,
             viewportHeight: 600,
-            controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true)
+            controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true),
+            readOnly: true
         });
 
         canvas.controller.load([
@@ -175,7 +176,6 @@
         });
 
         $('#store').click(function(){
-            //console.log(canvas.controller.exportData());
             var d= canvas.getImage(10);
             var w=window.open('about:blank','image from canvas');
             w.document.write("<img src='"+d+"' alt='from canvas'/>");

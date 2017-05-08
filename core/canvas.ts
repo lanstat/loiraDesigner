@@ -25,6 +25,7 @@ module Loira{
         public fps: number;
         public dragCanvas: boolean = false;
         public controller: Loira.BaseController = null;
+        public readOnly: boolean = false;
     }
 
     class FpsCounter {
@@ -116,6 +117,8 @@ module Loira{
 
         public _callbacks: any;
 
+        public readOnly: boolean = false;
+
         private _border: any;
 
         public _config: CanvasConfig;
@@ -162,6 +165,7 @@ module Loira{
             this.container.style.height = this.container.style.maxHeight = config.viewportHeight + 'px';
             this.container.style.position = 'relative';
             this.container.style.overflow = 'auto';
+            this.readOnly = config.readOnly || false;
             this._config = config;
             this._tmp.pointer = {x: 0, y: 0};
 
@@ -264,6 +268,8 @@ module Loira{
          * @fires object:added
          */
         add(args: Loira.Element[]|Loira.Element, fireEvent: boolean = true) {
+            if (this.readOnly){return;}
+
             let _items: Loira.Element[] = this.items;
             let _this = this;
             let relation: Common.Relation;
@@ -488,18 +494,22 @@ module Loira{
             };
 
             _this._canvas.onkeydown = function (evt) {
+                if (_this.readOnly){return;}
                 onKeyDown(evt, false);
             };
 
             document.addEventListener('keydown', function(evt){
+                if (_this.readOnly){return;}
                 onKeyDown(evt, true);
             });
 
             _this._canvas.onkeyup = function(){
+                if (_this.readOnly){return;}
                 _this._tmp.lastKey = null;
             };
 
             document.addEventListener('keyup', function(){
+                if (_this.readOnly){return;}
                 _this._tmp.lastKey = null;
             });
 
@@ -538,12 +548,12 @@ module Loira{
                     _this.emit('mouse:down', new MouseEvent(real.x, real.y));
                 }
 
-                if (!isDoubleClick) {
+                if (!isDoubleClick && !_this.readOnly) {
                     _this._isDragged = true;
                     _this._canvas.style.cursor = 'move';
                 }
 
-                if (_this._selected) {
+                if (_this._selected && !_this.readOnly) {
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
                     if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
                         switch (_this._tmp.transform) {
@@ -626,11 +636,38 @@ module Loira{
                 onDown(evt, false);
             };
 
+            document.getElementsByTagName('body')[0].appendChild(function(){
+                let div = document.createElement('ul');
+                div.id = 'loira-context-menu';
+                return div;
+            }());
             _this._canvas.oncontextmenu = function(evt){
+                let point: Point = _this._getMouse(evt);
+                let element: Element = _this.getElementByPosition(point.x, point.y);
+                if (element && element.menu){
+                    let menuItem;
+                    let container =document.getElementById('loira-context-menu');
+
+                    for (let item of element.menu){
+                        menuItem = document.createElement('li');
+                        menuItem.innerHTML = item.item;
+                        menuItem.onclick = function(){
+                            item.callback();
+                        };
+                        container.appendChild(menuItem);
+                    }
+
+                    container.style.top = evt.screenY + 'px';
+                    container.style.left = evt.screenX + 'px';
+
+                    container.style.opacity = '1';
+                }
+
                 return false;
             };
 
             _this._canvas.onmousemove = function (evt) {
+                if (_this.readOnly){return;}
                 if (_this._isDragged) {
                     let real:Point = _this._getMouse(evt);
                     let x:number = real.x - _this._tmp.pointer.x;
@@ -704,6 +741,7 @@ module Loira{
                 }
             };
             _this._canvas.onmouseup = function (evt) {
+                if (_this.readOnly){return;}
                 let real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
@@ -981,6 +1019,18 @@ module Loira{
                 ctx.restore();
             }
             return virtual.toDataURL("image/png");
+        }
+
+        getElementByPosition(x: number, y: number): Element {
+            let item:Loira.Element;
+            for (let i:number = this.items.length - 1; i >= 0; i--) {
+                item = this.items[i];
+                if (item.checkCollision(x, y)) {
+                    return item;
+                }
+            }
+
+            return null;
         }
     }
 }

@@ -18,6 +18,10 @@ var classes = [
 	"../../core/config.js"
 ];
 
+var styles = [
+	'../../styles/context-menu.css'
+];
+
 
 window.autoload = function(iter){
 	if (iter >= classes.length){
@@ -31,4 +35,15 @@ window.autoload = function(iter){
 	document.getElementsByTagName('head')[0].appendChild(script);
 };
 
+var autoStyles = function(){
+	for (var i=0; i<styles.length; i++){
+		var style = document.createElement('link');
+		style.href = styles[i];
+		style.rel = 'stylesheet';
+        document.getElementsByTagName('head')[0].appendChild(style);
+	}
+};
+
+autoStyles();
 autoload(0);
+
