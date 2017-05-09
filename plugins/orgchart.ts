@@ -192,6 +192,7 @@ module OrgChart{
             let optionRel: RelOption;
             let elements: Role[] = [];
             let relations: Relation[] = [];
+            let readOnly: boolean = this.canvas.readOnly;
 
             this.canvas.readOnly = false;
 
@@ -221,7 +222,7 @@ module OrgChart{
             this.canvas.add(elements, false);
             this.canvas.add(relations, false);
 
-            this.canvas.readOnly = true;
+            this.canvas.readOnly = readOnly;
         }
 
         exportData(): {id: string, parent: string, level: number}[]{
@@ -320,11 +321,6 @@ module OrgChart{
             this.resizable = false;
             this.draggable = false;
             this.id = options.id;
-
-            this.menu = [
-                {item:'Hola', callback: function(){}},
-                {item:'Mundo', callback: function(){}}
-            ];
 
             this.type = 'role';
         }

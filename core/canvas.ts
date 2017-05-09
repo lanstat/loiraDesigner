@@ -480,6 +480,11 @@ module Loira{
         _bind() {
             let _this = this;
 
+            let contextMenu = document.createElement('ul');
+            contextMenu.id = 'loira-context-menu';
+            contextMenu.oncontextmenu = function(){return false;};
+            document.getElementsByTagName('body')[0].appendChild(contextMenu);
+
             let onKeyDown = function(evt, isGlobal){
                 if (evt.keyCode == 18){return;}
                 _this._tmp.lastKey = evt.keyCode;
@@ -633,34 +638,34 @@ module Loira{
             };
 
             _this._canvas.onmousedown = function (evt) {
+                contextMenu.style.display = 'none';
                 onDown(evt, false);
             };
 
-            document.getElementsByTagName('body')[0].appendChild(function(){
-                let div = document.createElement('ul');
-                div.id = 'loira-context-menu';
-                return div;
-            }());
             _this._canvas.oncontextmenu = function(evt){
+                contextMenu.style.display = 'none';
                 let point: Point = _this._getMouse(evt);
                 let element: Element = _this.getElementByPosition(point.x, point.y);
+
                 if (element && element.menu){
                     let menuItem;
-                    let container =document.getElementById('loira-context-menu');
+                    contextMenu.innerHTML = '';
 
                     for (let item of element.menu){
                         menuItem = document.createElement('li');
                         menuItem.innerHTML = item.item;
                         menuItem.onclick = function(){
-                            item.callback();
+                            item.callback(this, element);
+                            contextMenu.style.display = 'none';
                         };
-                        container.appendChild(menuItem);
+                        contextMenu.appendChild(menuItem);
                     }
 
-                    container.style.top = evt.screenY + 'px';
-                    container.style.left = evt.screenX + 'px';
+                    contextMenu.style.top = evt.clientY + 'px';
+                    contextMenu.style.left = evt.clientX + 'px';
+                    contextMenu.style.display = 'block';
 
-                    container.style.opacity = '1';
+                    contextMenu.style.opacity = '1';
                 }
 
                 return false;

@@ -27,7 +27,7 @@ module Loira{
         public selectable: boolean;
         public resizable: boolean;
         public draggable: boolean;
-        public menu: {item: string, callback: () => void}[];
+        public menu: {item: string, callback: (evt: any, element: Element) => void}[];
 
         /**
          * Inicializa los valores de la clase

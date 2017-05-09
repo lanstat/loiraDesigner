@@ -18,3 +18,12 @@
     color: white;
     box-shadow: 0 0 15px black;
 }
+
+#loira-context-menu li{
+    padding: 5px 8px;
+    cursor: pointer;
+}
+
+#loira-context-menu li:hover {
+    background-color: #284160;
+}

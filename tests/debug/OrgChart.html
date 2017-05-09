@@ -132,8 +132,7 @@
             width: 1800,
             height:1000,
             viewportHeight: 600,
-            controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true),
-            readOnly: true
+            controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true)
         });
 
         canvas.controller.load([
@@ -150,6 +149,16 @@
             var title = document.getElementById('title').value;
             document.getElementById('title').value = '';
             var case1 = new OrgChart.Role({title:title});
+
+            case1.menu = [
+                {item:'Hola', callback: function(evt, item){
+                    console.log(item);
+                }},
+                {item:'Mundo', callback: function(){
+                    console.log('asdasdasd');
+                }}
+            ];
+
             canvas.add(case1);
             canvas.renderAll(true);
         });
