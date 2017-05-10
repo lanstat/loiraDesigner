@@ -3,6 +3,7 @@
 var classes = [
 	"../../core/events.js",
 	"../../core/canvas.js",
+    "../../core/shape.js",
     "../../core/controller.js",
 	"../../core/utils.js",
 	"../../core/element.js",

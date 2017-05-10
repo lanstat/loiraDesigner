@@ -709,6 +709,8 @@ module Loira{
                                         _this._selected.width += x;
                                         break;
                                 }
+                            } else {
+                                (<Common.Relation>_this._selected).movePoint(parseInt(_this._tmp.transform), x, y);
                             }
 
                             _this.renderAll();

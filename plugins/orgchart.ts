@@ -2,6 +2,7 @@ module OrgChart{
     import BaseController = Loira.BaseController;
     import RelOption = Loira.util.RelOption;
     import Point = Loira.util.Point;
+    import fontSize = Loira.Config.fontSize;
 
     let levelColor: string[] = ['#124FFD', '#FF4FFD', '#12003D'];
     let levelHeight: number[];
@@ -11,6 +12,7 @@ module OrgChart{
         parent: OrgChart.Role;
         name: string;
         title: string;
+        personName: string;
     }
 
     export class Group {
@@ -199,6 +201,7 @@ module OrgChart{
             for(let record of data){
                 option = new RoleOption();
                 option.id = <string>record.id;
+                option.personName = <string>record.personName;
                 option.title = <string>record.title;
                 group = new Group(new Role(option));
 
@@ -306,6 +309,7 @@ module OrgChart{
         public color: string;
         public parent: OrgChart.Role;
         public title: string;
+        public personName: string;
         private isSelected: boolean;
         public level: number;
         public id: string;
@@ -321,6 +325,7 @@ module OrgChart{
             this.resizable = false;
             this.draggable = false;
             this.id = options.id;
+            this.personName = options.personName? options.personName : '';
 
             this.type = 'role';
         }
@@ -329,10 +334,31 @@ module OrgChart{
             super.render(ctx);
             let y,
                 xm = this.x + this.width / 2,
-                lines: string[] = super.splitText(ctx, this.title);
+                height: number = 0;
+            let personData,
+                titleData;
+
+            if (this.personName){
+                personData = {
+                    fontSize: Loira.Config.fontSize,
+                    lines: super.splitText(ctx, this.personName)
+                };
+
+                height = (personData.fontSize + 3) * personData.lines.length + 5;
+            }
+
+            if (this.title){
+                titleData = {
+                    fontSize: Loira.Config.fontSize - (personData? 3: 0),
+                    lines: super.splitText(ctx, this.title)
+                };
+
+                height += (titleData.fontSize + 3) * titleData.lines.length + 5;
+            }
 
             y = this.y + Loira.Config.fontSize;
-            this.height = (Loira.Config.fontSize + 3) * lines.length + 5;
+
+            this.height = height;
 
             let radius = 5;
 
@@ -350,27 +376,27 @@ module OrgChart{
                 this.isSelected = false;
             }
 
-            ctx.beginPath();
-            ctx.moveTo(this.x + radius, this.y);
-            ctx.lineTo(this.x + this.width - radius, this.y);
-            ctx.quadraticCurveTo(this.x + this.width, this.y, this.x + this.width, this.y + radius);
-            ctx.lineTo(this.x + this.width, this.y + this.height - radius);
-            ctx.quadraticCurveTo(this.x + this.width, this.y + this.height, this.x + this.width - radius, this.y + this.height);
-            ctx.lineTo(this.x + radius, this.y + this.height);
-            ctx.quadraticCurveTo(this.x, this.y + this.height, this.x, this.y + this.height - radius);
-            ctx.lineTo(this.x, this.y + radius);
-            ctx.quadraticCurveTo(this.x, this.y, this.x + radius, this.y);
-            ctx.closePath();
-            ctx.stroke();
-            ctx.fill();
+            Loira.shape.drawRoundRect(ctx, this.x, this.y, this.width, this.height, radius);
 
-            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#FFFFFF";
+            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
-            for (let i:number = 0; i < lines.length; i++) {
-                let textW: number = ctx.measureText(lines[i]).width;
-                ctx.fillText(lines[i], xm - textW / 2, y + 3);
-                y = y + Loira.Config.fontSize + 3;
+            if (personData){
+                for (let i:number = 0; i < personData.lines.length; i++) {
+                    let textW: number = ctx.measureText(personData.lines[i]).width;
+                    ctx.fillText(personData.lines[i], xm - textW / 2, y + 3);
+                    y = y + titleData.fontSize + 3;
+                }
+                y += 5;
+                ctx.font = 'bold ' + titleData.fontSize + 'px ' + Loira.Config.fontType;
+            }
+
+            if (titleData){
+                for (let i:number = 0; i < titleData.lines.length; i++) {
+                    let textW: number = ctx.measureText(titleData.lines[i]).width;
+                    ctx.fillText(titleData.lines[i], xm - textW / 2, y + 3);
+                    y = y + titleData.fontSize + 3;
+                }
             }
         }
 
@@ -389,7 +415,17 @@ module OrgChart{
         attach(canvas: Loira.Canvas): void {
             super.attach(canvas);
             let ctx = canvas.getContext();
-            this.height = (Loira.Config.fontSize + 3) * super.splitText(ctx, this.title).length + 5;
+            let height: number = 0;
+
+            if (this.personName){
+                height += (Loira.Config.fontSize + 3) * super.splitText(ctx, this.personName).length + 5;
+            }
+
+            if (this.title){
+                height += (Loira.Config.fontSize + 3 - (this.personName? 3 : 0)) * super.splitText(ctx, this.title).length + 5;
+            }
+
+            this.height = height;
         }
     }
 

@@ -4,12 +4,19 @@ module Common{
     import Line = Loira.util.Line;
     import Region = Loira.util.Region;
 
-    export class Relation extends Loira.Element{
+    export enum TypeLine{
+        STRAIGHT = 1,
+        CURVE = 2,
+        CARTESIAN = 3
+    }
+
+    export abstract class Relation extends Loira.Element{
         public start: Symbol;
         public end: Symbol;
         public isDashed: boolean;
         public points: Point[];
         public icon: string;
+        public typeLine: TypeLine;
 
         constructor(options: RelOption){
             super(options);
@@ -19,6 +26,7 @@ module Common{
             this.isDashed = options.isDashed? options.isDashed : false;
             this.points = options.points? options.points : [new Point(), new Point()];
             this.icon = options.icon? options.icon: '';
+            this.typeLine = options.typeLine? options.typeLine: TypeLine.STRAIGHT;
 
             this.baseType = 'relation';
         }

@@ -139,6 +139,7 @@ var Loira;
             this.viewportHeight = 0;
             this.dragCanvas = false;
             this.controller = null;
+            this.readOnly = false;
         }
         return CanvasConfig;
     }());
@@ -226,6 +227,7 @@ var Loira;
              * @property {HTMLDivElement}  container - Canvas container
              */
             this.container = null;
+            this.readOnly = false;
             if (typeof container === 'string') {
                 this.container = document.getElementById(container);
             }
@@ -250,6 +252,7 @@ var Loira;
             this.container.style.height = this.container.style.maxHeight = config.viewportHeight + 'px';
             this.container.style.position = 'relative';
             this.container.style.overflow = 'auto';
+            this.readOnly = config.readOnly || false;
             this._config = config;
             this._tmp.pointer = { x: 0, y: 0 };
             this.container.appendChild(this._canvas);
@@ -337,6 +340,9 @@ var Loira;
          */
         Canvas.prototype.add = function (args, fireEvent) {
             if (fireEvent === void 0) { fireEvent = true; }
+            if (this.readOnly) {
+                return;
+            }
             var _items = this.items;
             var _this = this;
             var relation;
@@ -529,6 +535,10 @@ var Loira;
          */
         Canvas.prototype._bind = function () {
             var _this = this;
+            var contextMenu = document.createElement('ul');
+            contextMenu.id = 'loira-context-menu';
+            contextMenu.oncontextmenu = function () { return false; };
+            document.getElementsByTagName('body')[0].appendChild(contextMenu);
             var onKeyDown = function (evt, isGlobal) {
                 if (evt.keyCode == 18) {
                     return;
@@ -543,15 +553,27 @@ var Loira;
                 }
             };
             _this._canvas.onkeydown = function (evt) {
+                if (_this.readOnly) {
+                    return;
+                }
                 onKeyDown(evt, false);
             };
             document.addEventListener('keydown', function (evt) {
+                if (_this.readOnly) {
+                    return;
+                }
                 onKeyDown(evt, true);
             });
             _this._canvas.onkeyup = function () {
+                if (_this.readOnly) {
+                    return;
+                }
                 _this._tmp.lastKey = null;
             };
             document.addEventListener('keyup', function () {
+                if (_this.readOnly) {
+                    return;
+                }
                 _this._tmp.lastKey = null;
             });
             _this._canvas.onmousewheel = function (evt) {
@@ -587,11 +609,11 @@ var Loira;
                      */
                     _this.emit('mouse:down', new MouseEvent(real.x, real.y));
                 }
-                if (!isDoubleClick) {
+                if (!isDoubleClick && !_this.readOnly) {
                     _this._isDragged = true;
                     _this._canvas.style.cursor = 'move';
                 }
-                if (_this._selected) {
+                if (_this._selected && !_this.readOnly) {
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
                     if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
                         switch (_this._tmp.transform) {
@@ -671,12 +693,40 @@ var Loira;
                 _this.renderAll();
             };
             _this._canvas.onmousedown = function (evt) {
+                contextMenu.style.display = 'none';
                 onDown(evt, false);
             };
             _this._canvas.oncontextmenu = function (evt) {
+                contextMenu.style.display = 'none';
+                var point = _this._getMouse(evt);
+                var element = _this.getElementByPosition(point.x, point.y);
+                if (element && element.menu) {
+                    var menuItem = void 0;
+                    contextMenu.innerHTML = '';
+                    var _loop_1 = function (item) {
+                        menuItem = document.createElement('li');
+                        menuItem.innerHTML = item.item;
+                        menuItem.onclick = function () {
+                            item.callback(this, element);
+                            contextMenu.style.display = 'none';
+                        };
+                        contextMenu.appendChild(menuItem);
+                    };
+                    for (var _i = 0, _a = element.menu; _i < _a.length; _i++) {
+                        var item = _a[_i];
+                        _loop_1(item);
+                    }
+                    contextMenu.style.top = evt.clientY + 'px';
+                    contextMenu.style.left = evt.clientX + 'px';
+                    contextMenu.style.display = 'block';
+                    contextMenu.style.opacity = '1';
+                }
                 return false;
             };
             _this._canvas.onmousemove = function (evt) {
+                if (_this.readOnly) {
+                    return;
+                }
                 if (_this._isDragged) {
                     var real = _this._getMouse(evt);
                     var x = real.x - _this._tmp.pointer.x;
@@ -748,6 +798,9 @@ var Loira;
                 }
             };
             _this._canvas.onmouseup = function (evt) {
+                if (_this.readOnly) {
+                    return;
+                }
                 var real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
@@ -994,6 +1047,16 @@ var Loira;
                 ctx.restore();
             }
             return virtual.toDataURL("image/png");
+        };
+        Canvas.prototype.getElementByPosition = function (x, y) {
+            var item;
+            for (var i = this.items.length - 1; i >= 0; i--) {
+                item = this.items[i];
+                if (item.checkCollision(x, y)) {
+                    return item;
+                }
+            }
+            return null;
         };
         return Canvas;
     }());
@@ -2596,10 +2659,13 @@ var OrgChart;
             var optionRel;
             var elements = [];
             var relations = [];
+            var readOnly = this.canvas.readOnly;
+            this.canvas.readOnly = false;
             for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
                 var record = data_1[_i];
                 option = new RoleOption();
                 option.id = record.id;
+                option.personName = record.personName;
                 option.title = record.title;
                 group = new Group(new Role(option));
                 if (record.parent) {
@@ -2619,6 +2685,7 @@ var OrgChart;
             }
             this.canvas.add(elements, false);
             this.canvas.add(relations, false);
+            this.canvas.readOnly = readOnly;
         };
         Controller.prototype.exportData = function () {
             var data = [];
@@ -2702,14 +2769,30 @@ var OrgChart;
             _this.resizable = false;
             _this.draggable = false;
             _this.id = options.id;
+            _this.personName = options.personName ? options.personName : '';
             _this.type = 'role';
             return _this;
         }
         Role.prototype.render = function (ctx) {
             _super.prototype.render.call(this, ctx);
-            var y, xm = this.x + this.width / 2, lines = _super.prototype.splitText.call(this, ctx, this.title);
+            var y, xm = this.x + this.width / 2, height = 0;
+            var personData, titleData;
+            if (this.personName) {
+                personData = {
+                    fontSize: Loira.Config.fontSize,
+                    lines: _super.prototype.splitText.call(this, ctx, this.personName)
+                };
+                height = (personData.fontSize + 3) * personData.lines.length + 5;
+            }
+            if (this.title) {
+                titleData = {
+                    fontSize: Loira.Config.fontSize - (personData ? 3 : 0),
+                    lines: _super.prototype.splitText.call(this, ctx, this.title)
+                };
+                height += (titleData.fontSize + 3) * titleData.lines.length + 5;
+            }
             y = this.y + Loira.Config.fontSize;
-            this.height = (Loira.Config.fontSize + 3) * lines.length + 5;
+            this.height = height;
             var radius = 5;
             ctx.fillStyle = this.color;
             ctx.lineWidth = 4;
@@ -2737,12 +2820,23 @@ var OrgChart;
             ctx.closePath();
             ctx.stroke();
             ctx.fill();
-            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#FFFFFF";
-            for (var i = 0; i < lines.length; i++) {
-                var textW = ctx.measureText(lines[i]).width;
-                ctx.fillText(lines[i], xm - textW / 2, y + 3);
-                y = y + Loira.Config.fontSize + 3;
+            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+            if (personData) {
+                for (var i = 0; i < personData.lines.length; i++) {
+                    var textW = ctx.measureText(personData.lines[i]).width;
+                    ctx.fillText(personData.lines[i], xm - textW / 2, y + 3);
+                    y = y + titleData.fontSize + 3;
+                }
+                y += 5;
+                ctx.font = 'bold ' + titleData.fontSize + 'px ' + Loira.Config.fontType;
+            }
+            if (titleData) {
+                for (var i = 0; i < titleData.lines.length; i++) {
+                    var textW = ctx.measureText(titleData.lines[i]).width;
+                    ctx.fillText(titleData.lines[i], xm - textW / 2, y + 3);
+                    y = y + titleData.fontSize + 3;
+                }
             }
         };
         Role.prototype.recalculateBorders = function () {
@@ -2757,7 +2851,14 @@ var OrgChart;
         Role.prototype.attach = function (canvas) {
             _super.prototype.attach.call(this, canvas);
             var ctx = canvas.getContext();
-            this.height = (Loira.Config.fontSize + 3) * _super.prototype.splitText.call(this, ctx, this.title).length + 5;
+            var height = 0;
+            if (this.personName) {
+                height += (Loira.Config.fontSize + 3) * _super.prototype.splitText.call(this, ctx, this.personName).length + 5;
+            }
+            if (this.title) {
+                height += (Loira.Config.fontSize + 3 - (this.personName ? 3 : 0)) * _super.prototype.splitText.call(this, ctx, this.title).length + 5;
+            }
+            this.height = height;
         };
         return Role;
     }(Common.Symbol));
