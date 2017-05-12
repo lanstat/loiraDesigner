@@ -91,8 +91,12 @@ module Loira{
          * @param {Array.<Object>} args Iconos laterales a agregar
          */
         on(args: any): void {
-            args = [].splice.call(arguments, 0);
-            this._buttons = args;
+            if (args){
+                args = [].splice.call(arguments, 0);
+                this._buttons = args;
+            } else {
+                this._buttons = [];
+            }
         }
         /**
          * Renderiza los iconos de los botones laterales

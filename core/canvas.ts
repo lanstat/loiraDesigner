@@ -959,6 +959,10 @@ module Loira{
             }
         }
 
+        setSelectedElement(element: Element){
+            this._selected = element;
+        }
+
         /**
          * Get context from the current canvas
          *

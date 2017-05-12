@@ -13,6 +13,7 @@ module OrgChart{
         name: string;
         title: string;
         personName: string;
+        isDuplicate: boolean;
     }
 
     export class Group {
@@ -51,7 +52,9 @@ module OrgChart{
             }
 
             this.role.x = Math.floor(this.width/2 - this.role.width/2) + this.x;
-            this.role.color = levelColor[level];
+            if (!this.role.isDuplicate){
+                this.role.color = levelColor[level];
+            }
             this.role.level = level;
 
             if (levelHeight[level] < this.role.height){
@@ -78,7 +81,7 @@ module OrgChart{
 
     export class Controller extends BaseController{
         private roots: Group[] = [];
-        private elements: Group[] = [];
+        public elements: Group[] = [];
         private autoRefresh: boolean;
         private canvas: Loira.Canvas;
 
@@ -108,11 +111,32 @@ module OrgChart{
                 }
             });
 
+            canvas.on('object:selected', function(evt: Loira.event.ObjectEvent){
+                let role: Role = <Role>evt.selected;
+
+                if (role.isDuplicate){
+                    canvas.centerToPoint(role.rolePrimary.x, role.rolePrimary.y);
+                    canvas.setSelectedElement(role.rolePrimary);
+                    setTimeout(function () {
+                        canvas.trigger('object:selected', role.rolePrimary);
+                    }, 300);
+                }
+            });
+
             canvas.on('relation:added', function(evt: Loira.event.RelationEvent){
                 let index: number = $this.getGroup(<Role>evt.selected.end, $this.roots).index;
 
                 let child = $this.getGroup(<Role>evt.selected.end, $this.elements).item;
                 let item = $this.getGroup(<Role>evt.selected.start, $this.elements).item;
+
+                let listChild: Group[] = child.getAllChildren();
+                listChild.push(child);
+                for (let i: number = 0; i<listChild.length;i++){
+                    if (listChild[i].role.id === item.role.id){
+                        canvas.remove([evt.selected], false);
+                        return;
+                    }
+                }
 
                 if (index>=0) {
                     $this.roots.splice(index, 1);
@@ -200,13 +224,18 @@ module OrgChart{
 
             for(let record of data){
                 option = new RoleOption();
-                option.id = <string>record.id;
-                option.personName = <string>record.personName;
-                option.title = <string>record.title;
+                option.id = record.id? record.id.toString(): '';
+                option.personName = record.personName? record.personName.toString(): null;
+                option.title = record.title? record.title.toString() : null;
+
+                if (this.getGroupById(option.id).item){
+                    option.isDuplicate = true;
+                }
+
                 group = new Group(new Role(option));
 
                 if (record.parent){
-                    let parent = this.getGroupById(record.parent).item;
+                    let parent = this.getGroupById(record.parent?record.parent.toString():'').item;
                     parent.children.push(group);
                     group.parent = parent;
 
@@ -218,6 +247,7 @@ module OrgChart{
                 } else {
                     this.roots.push(group);
                 }
+
                 this.elements.push(group);
                 elements.push(group.role);
             }
@@ -288,9 +318,10 @@ module OrgChart{
             if (!groups){
                 groups = this.elements;
             }
+            id = id.trim();
 
             for(let i=0;i<groups.length;i++){
-                if (groups[i].role.id == id){
+                if (id !== '' && groups[i].role.id == id){
                     return {item: groups[i], index: i};
                 }
             }
@@ -313,6 +344,8 @@ module OrgChart{
         private isSelected: boolean;
         public level: number;
         public id: string;
+        public isDuplicate: boolean;
+        public rolePrimary: OrgChart.Role;
 
         constructor(options: RoleOption){
             super(options);
@@ -326,6 +359,7 @@ module OrgChart{
             this.draggable = false;
             this.id = options.id;
             this.personName = options.personName? options.personName : '';
+            this.isDuplicate = options.isDuplicate? options.isDuplicate : false;
 
             this.type = 'role';
         }
@@ -362,7 +396,7 @@ module OrgChart{
 
             let radius = 5;
 
-            ctx.fillStyle = this.color;
+            ctx.fillStyle = this.isDuplicate? '#651FFF' : this.color;
             ctx.lineWidth= 4;
             ctx.shadowBlur=10;
 
@@ -370,8 +404,14 @@ module OrgChart{
                 ctx.shadowColor = '#000000';
                 ctx.strokeStyle = '#000000';
             } else {
-                ctx.shadowColor = '#00c0ff';
-                ctx.strokeStyle = '#00c0ff';
+                if(this.isDuplicate){
+                    ctx.shadowColor = '#651FFF';
+                    ctx.strokeStyle = '#651FFF';
+                } else {
+                    ctx.shadowColor = '#00c0ff';
+                    ctx.strokeStyle = '#00c0ff';
+                }
+
                 ctx.shadowBlur=20;
                 this.isSelected = false;
             }
@@ -426,6 +466,23 @@ module OrgChart{
             }
 
             this.height = height;
+
+            if (this.isDuplicate) {
+                this.setDuplicate();
+            }
+        }
+
+        setDuplicate(): void{
+            let elements = (<Controller>this._canvas.controller).elements;
+
+            for (let i: number=0; i < elements.length; i++){
+                if (elements[i].role !== this && elements[i].role.id == this.id.trim() && !elements[i].role.isDuplicate){
+                    this.isDuplicate = true;
+                    this.on(null);
+                    this.rolePrimary = elements[i].role;
+                    break;
+                }
+            }
         }
     }
 

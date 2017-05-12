@@ -140,6 +140,7 @@
             {id: 2, title: '2', parent: 1},
             {id: 3, title: '3', parent: 1},
             {id: 4, title: '4', parent: 1},
+            {id: 6, title: '6', parent: 4},
             {id: 5, title: '5', parent: 3},
             {id: 6, title: '6', parent: 3}
         ]);
@@ -148,7 +149,7 @@
         document.getElementById('addObject').addEventListener('click', function(){
             var title = document.getElementById('title').value;
             document.getElementById('title').value = '';
-            var case1 = new OrgChart.Role({title:title});
+            var case1 = new OrgChart.Role({title:' '});
 
             case1.menu = [
                 {item:'Hola', callback: function(evt, item){
@@ -180,7 +181,11 @@
         });
 
         $('#title').blur(function(){
-            selected.role.title = $(this).val();
+            var id = $(this).val().trim();
+            selected.role.title = id;
+            selected.role.id = id;
+            selected.role.setDuplicate();
+
             canvas.renderAll(true);
         });
 
@@ -191,7 +196,7 @@
         });
 
         $('#add-child').click(function(){
-            var child = new OrgChart.Role({title:''});
+            var child = new OrgChart.Role({title:' '});
             canvas.add(child);
             var relation = new OrgChart.Relation({start: selected.role, end: child});
             canvas.add(relation);

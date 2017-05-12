@@ -15,3 +15,5 @@
 - [ ] Funcion de generacion de imagen jpg o png
 - [ ] Agregar soporte de multiples diagramas en un solo canvas
 - [ ] Agregar soporte para zoom
+- [ ] Agregar soporte para leyenda
+- [ ] Agregar soporte para minimapa
