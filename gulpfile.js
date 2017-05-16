@@ -9,6 +9,7 @@ var paths = {
     js: [
         './core/events.js',
         './core/drawable.js',
+        './core/shape.js',
         './core/canvas.js',
         './core/controller.js',
         './core/utils.js',

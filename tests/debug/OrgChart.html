@@ -69,6 +69,8 @@
         Loira.Config.assetsPath = '../../assets/glyphs.png';
         Loira.Config.background= 'rgba(70, 70, 70, 1)';
         Loira.Config.fontType = 'Lato';
+        Loira.Config.fontSize = 11;
+        Loira.Config.debug = true;
 
         var selected = null;
 
@@ -135,14 +137,17 @@
             controller: new OrgChart.Controller(['#9C27B0', '#2196F3', '#F44336', '#673AB7'], true)
         });
 
+//        canvas.controller.load([
+//            {id: 1, title: 'Especialista en plantas y demases yerbas afines', personName: 'Javier', parent: 0},
+//            {id: 2, title: '2', parent: 1},
+//            {id: 3, title: '3', parent: 1},
+//            {id: 4, title: '4', parent: 1},
+//            {id: 6, title: '6', parent: 4},
+//            {id: 5, title: '5', parent: 3},
+//            {id: 6, title: '6', parent: 3}
+//        ]);
         canvas.controller.load([
-            {id: 1, title: 'Especialista en plantas y demases yerbas afines', personName: 'Javier', parent: 0},
-            {id: 2, title: '2', parent: 1},
-            {id: 3, title: '3', parent: 1},
-            {id: 4, title: '4', parent: 1},
-            {id: 6, title: '6', parent: 4},
-            {id: 5, title: '5', parent: 3},
-            {id: 6, title: '6', parent: 3}
+            {id: 1, title: 'Especialista en plantas y demases yerbas afines', personName: 'Javier', parent: 0}
         ]);
         refreshData();
 
@@ -182,10 +187,8 @@
 
         $('#title').blur(function(){
             var id = $(this).val().trim();
-            selected.role.title = id;
-            selected.role.id = id;
-            selected.role.setDuplicate();
 
+            selected.role.update({title: id, id: id});
             canvas.renderAll(true);
         });
 

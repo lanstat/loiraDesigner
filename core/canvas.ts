@@ -28,6 +28,13 @@ module Loira{
         public readOnly: boolean = false;
     }
 
+    export enum UserAgent {
+        FIREFOX = 1,
+        IE = 2,
+        CHROME = 3,
+        UNKNOWN = 4
+    }
+
     class FpsCounter {
         private _fps: number;
         private _elapsed: number;
@@ -75,6 +82,18 @@ module Loira{
                 this.scrollY = Math.floor(this._canvas._config.height/20);
             }
         }
+    }
+
+    function checkUserAgent(): UserAgent{
+        let agent;
+        if (/firefox/i.test(navigator.userAgent)){
+            agent = UserAgent.FIREFOX;
+        } else {
+            agent = UserAgent.UNKNOWN
+        }
+
+        util.logger(LogLevel.SYSTEM, navigator.userAgent);
+        return agent;
     }
 
     export class Canvas {
@@ -129,6 +148,8 @@ module Loira{
 
         public controller: BaseController;
 
+        public userAgent: UserAgent;
+
         /**
          * Create a new instance of canvas
          *
@@ -153,43 +174,22 @@ module Loira{
             config.viewportWidth = config.viewportWidth || this.container.offsetWidth || this.container.parentElement.offsetWidth || config.width;
             config.viewportHeight = config.viewportHeight || this.container.offsetHeight || this.container.parentElement.offsetHeight || config.height;
 
-            this._canvas = this.createHiDPICanvas(config.width, config.height);
-            this._canvas.style.position = 'absolute';
-            this._canvas.style.left = '0';
-            this._canvas.style.top = '0';
-            this._canvas.style.zIndex = '100';
-            this._canvas.style.backgroundColor = Loira.Config.background;
-            this._canvas.tabIndex = 99;
-
-            this.container.style.width = this.container.style.maxWidth = config.viewportWidth + 'px';
-            this.container.style.height = this.container.style.maxHeight = config.viewportHeight + 'px';
-            this.container.style.position = 'relative';
-            this.container.style.overflow = 'auto';
             this.readOnly = config.readOnly || false;
             this._config = config;
             this._tmp.pointer = {x: 0, y: 0};
-
-            this.container.appendChild(this._canvas);
 
             this._callbacks = {};
             this.items = [];
 
             this.defaultRelation = 'Relation.Association';
-            if (document.defaultView && document.defaultView.getComputedStyle) {
-                this._border = {
-                    paddingLeft: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['paddingLeft'], 10) || 0,
-                    paddingTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['paddingTop'], 10) || 0,
-                    borderLeft: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderLeftWidth'], 10) || 0,
-                    borderTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderTopWidth'], 10) || 0
-                }
-            }
+
+            this.refreshScreen();
 
             let _this = this;
             drawable.registerMap(Config.assetsPath, Config.regions, function(){
                 _this.renderAll();
             });
 
-            this._bind();
             this._setScrollContainer();
 
             this._fps = new FpsCounter(config.fps);
@@ -199,6 +199,45 @@ module Loira{
             if (this.controller){
                 this.controller.bind(this);
             }
+
+            this.userAgent = checkUserAgent();
+            this.bindResizeWindow();
+        }
+
+        refreshScreen() {
+            this.destroy();
+
+            this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
+            this.container.style.position = 'relative';
+            this.container.style.overflow = 'auto';
+
+            this._canvas = this.createHiDPICanvas(this._config.width, this._config.height);
+            this._canvas.style.position = 'absolute';
+            this._canvas.style.left = '0';
+            this._canvas.style.top = '0';
+            this._canvas.style.zIndex = '100';
+            this._canvas.style.backgroundColor = Loira.Config.background;
+            this._canvas.tabIndex = 99;
+
+            this.container.appendChild(this._canvas);
+
+            if (document.defaultView && document.defaultView.getComputedStyle) {
+                this._border = {
+                    paddingLeft: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['paddingLeft'], 10) || 0,
+                    paddingTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['paddingTop'], 10) || 0,
+                    borderLeft: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderLeftWidth'], 10) || 0,
+                    borderTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderTopWidth'], 10) || 0
+                }
+            }
+
+            this._bind();
+
+            let _this = this;
+
+            setTimeout(function(){
+                _this.renderAll(true);
+            }, 200);
         }
 
         /**
@@ -239,6 +278,7 @@ module Loira{
          * @memberof Loira.Canvas#
          */
         renderAll(forceRender:boolean = false) {
+            util.logger(LogLevel.INFO, 'Draw');
             if (this._fps.passed() || forceRender){
                 let ctx: CanvasRenderingContext2D = this._canvas.getContext('2d');
 
@@ -251,6 +291,7 @@ module Loira{
                 }
 
                 if (this._selected && this._selected.selectable) {
+                    util.logger(LogLevel.INFO, 'Selected');
                     ctx.save();
                     this._selected.drawSelected(ctx);
                     ctx.restore();
@@ -409,20 +450,24 @@ module Loira{
          * @memberof Loira.Canvas#
          */
         destroy() {
-            this._canvas.onmousemove = null;
-            this._canvas.onkeydown = null;
-            this._canvas.onmousedown = null;
-            this._canvas.onmouseup = null;
-            this._canvas.ondblclick = null;
-            this._canvas.onselectstart = null;
+            if (this._canvas){
+                this._canvas.onmousemove = null;
+                this._canvas.onkeydown = null;
+                this._canvas.onmousedown = null;
+                this._canvas.onmouseup = null;
+                this._canvas.ondblclick = null;
+                this._canvas.onselectstart = null;
+            }
 
             if (this._canvasContainer) {
                 this.container.removeEventListener('scroll', this._canvasContainer.listener);
             }
+            document.createElement('ul').remove();
 
             this._canvasContainer = null;
 
             this._canvas = null;
+
             while(this.container.firstChild){
                 this.container.removeChild(this.container.firstChild);
             }
@@ -528,6 +573,7 @@ module Loira{
             let onDown = function (evt, isDoubleClick) {
                 let real:Point = _this._getMouse(evt);
                 _this._tmp.pointer = real;
+                console.log(real);
 
                 if (isDoubleClick) {
                     /**
@@ -596,6 +642,7 @@ module Loira{
                                  */
                                 _this.emit('object:dblclick', new ObjectEvent(item));
                             } else {
+                                util.logger(LogLevel.INFO, 'down');
                                 /**
                                  * Evento que encapsula un click sobre un objeto
                                  *
@@ -638,6 +685,7 @@ module Loira{
             };
 
             _this._canvas.onmousedown = function (evt) {
+                util.logger(LogLevel.INFO,'Mouse');
                 contextMenu.style.display = 'none';
                 onDown(evt, false);
             };
@@ -747,6 +795,7 @@ module Loira{
                     _this._tmp.pointer = real;
                 }
             };
+
             _this._canvas.onmouseup = function (evt) {
                 if (_this.readOnly){return;}
                 let real = _this._getMouse(evt);
@@ -790,6 +839,21 @@ module Loira{
             _this._canvas.onselectstart = function () {
                 return false;
             };
+        }
+
+        private bindResizeWindow(){
+            let resizeID: number = -1;
+            let _this = this;
+
+            let resizeHandler = function(){
+                clearTimeout(resizeID);
+                resizeID = setTimeout(function (){
+                    //_this.refreshScreen();
+                }, 500);
+            };
+
+            window.removeEventListener('resize', resizeHandler);
+            window.addEventListener('resize', resizeHandler);
         }
 
         /**

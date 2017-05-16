@@ -77,6 +77,18 @@ module OrgChart{
 
             return children;
         }
+
+        getAllParent(): Group[] {
+            let parent: Group[] = [];
+            let gr: Group = this;
+
+            while (gr.parent){
+                parent.push(gr.parent);
+                gr = gr.parent;
+            }
+
+            return parent;
+        }
     }
 
     export class Controller extends BaseController{
@@ -395,25 +407,27 @@ module OrgChart{
             this.height = height;
 
             let radius = 5;
+            let shadowColor: string;
+            let shadowBlur: number;
 
-            ctx.fillStyle = this.isDuplicate? '#651FFF' : this.color;
+            ctx.fillStyle = this.isDuplicate? '#000000' : this.color;
             ctx.lineWidth= 4;
-            ctx.shadowBlur=10;
 
             if (!this.isSelected){
-                ctx.shadowColor = '#000000';
+                shadowColor = '#000000';
+                shadowBlur=10;
                 ctx.strokeStyle = '#000000';
             } else {
-                if(this.isDuplicate){
-                    ctx.shadowColor = '#651FFF';
-                    ctx.strokeStyle = '#651FFF';
-                } else {
-                    ctx.shadowColor = '#00c0ff';
-                    ctx.strokeStyle = '#00c0ff';
-                }
-
-                ctx.shadowBlur=20;
+                shadowColor = '#00c0ff';
+                shadowBlur=20;
+                ctx.strokeStyle = '#00c0ff';
                 this.isSelected = false;
+            }
+
+            // Blocked to Firefox because performance leaks
+            if (this._canvas.userAgent != Loira.UserAgent.FIREFOX){
+                ctx.shadowColor = shadowColor;
+                ctx.shadowBlur = shadowBlur;
             }
 
             Loira.shape.drawRoundRect(ctx, this.x, this.y, this.width, this.height, radius);
@@ -474,15 +488,35 @@ module OrgChart{
 
         setDuplicate(): void{
             let elements = (<Controller>this._canvas.controller).elements;
+            let cursor: Group = (<Controller>this._canvas.controller).getGroup(this).item;
+            let listing: Group[] = cursor.getAllParent();
+            let passed: boolean = true;
 
-            for (let i: number=0; i < elements.length; i++){
-                if (elements[i].role !== this && elements[i].role.id == this.id.trim() && !elements[i].role.isDuplicate){
-                    this.isDuplicate = true;
-                    this.on(null);
-                    this.rolePrimary = elements[i].role;
+            for (let i: number=0; i<listing.length; i++){
+                if (this.id && listing[i].role.id === this.id){
+                    this.title = ' ';
+                    this.id = '';
+                    passed = false;
                     break;
                 }
             }
+
+            if (passed){
+                for (let i: number=0; i < elements.length; i++){
+                    if (elements[i].role !== this && elements[i].role.id == this.id.trim() && !elements[i].role.isDuplicate){
+                        this.isDuplicate = true;
+                        this.on(null);
+                        this.rolePrimary = elements[i].role;
+                        break;
+                    }
+                }
+            }
+        }
+
+        update(data: {title: string, id: string}): void{
+            this.title = data.title;
+            this.id = data.id.trim();
+            this.setDuplicate();
         }
     }
 

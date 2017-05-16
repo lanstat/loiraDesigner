@@ -124,4 +124,14 @@ module Loira.util{
             vector.splice(indexes[i], 1);
         }
     }
+
+    export function logger(logLevel: Loira.LogLevel, message?: string, data?: string){
+        // let padStr = function(i){
+        //     return (i < 10)? '0' + i : '' + i;
+        // };
+
+        if (Loira.Config.debug && logLevel <= Loira.Config.logLevel ){
+            console.log('[Canvas ' + new Date().getTime() + '] ' + message);
+        }
+    }
 }
