@@ -131,7 +131,7 @@ module Loira.util{
         // };
 
         if (Loira.Config.debug && logLevel <= Loira.Config.logLevel ){
-            console.log('[Canvas ' + new Date().getTime() + '] ' + message);
+            console.log('[Loira ' + new Date().getTime() + '] ' + message);
         }
     }
 }

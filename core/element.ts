@@ -16,6 +16,7 @@ module Loira{
         public width: number;
         public height: number;
         public centerObject: boolean;
+        public maxIncomingRelation: number;
         public maxOutGoingRelation: number;
         public _buttons: any[];
         protected _canvas: Loira.Canvas;

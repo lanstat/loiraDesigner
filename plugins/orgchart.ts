@@ -123,6 +123,27 @@ module OrgChart{
                 }
             });
 
+            canvas.on('relation:pre-add', function(evt: Loira.event.RelationEvent){
+                let relations: Common.Relation[] = canvas.getRelationsFromObject(evt.selected.start, false, true);
+
+                for (let relation of relations){
+                    if (relation.end == evt.selected.end){
+                        return false;
+                    }
+                }
+
+                let child = $this.getGroup(<Role>evt.selected.end, $this.elements).item;
+                if (child){
+                    let listChild: Group[] = child.getAllChildren();
+                    listChild.push(child);
+                    for (let i: number = 0; i<listChild.length;i++){
+                        if (listChild[i].role.id === (<Role>evt.selected.start).id && listChild[i].role != evt.selected.start){
+                            return false;
+                        }
+                    }
+                }
+            });
+
             canvas.on('object:selected', function(evt: Loira.event.ObjectEvent){
                 let role: Role = <Role>evt.selected;
 
@@ -141,17 +162,11 @@ module OrgChart{
                 let child = $this.getGroup(<Role>evt.selected.end, $this.elements).item;
                 let item = $this.getGroup(<Role>evt.selected.start, $this.elements).item;
 
-                let listChild: Group[] = child.getAllChildren();
-                listChild.push(child);
-                for (let i: number = 0; i<listChild.length;i++){
-                    if (listChild[i].role.id === item.role.id){
-                        canvas.remove([evt.selected], false);
-                        return;
-                    }
-                }
-
                 if (index>=0) {
                     $this.roots.splice(index, 1);
+                    if (item.parent == child){ //If new parent was a child from the new child
+                        $this.roots.push(item);
+                    }
                 } else {
                     let children: Group[] = child.parent.children;
                     index = $this.getGroup(child.role, children).index;
@@ -169,6 +184,13 @@ module OrgChart{
                     if (toDelete.length > 0){
                         canvas.remove(toDelete, false);
                     }
+                }
+
+                if (item.parent == child){
+                    item.parent = child.parent;
+                    index = $this.getGroup(item.role, child.children).index;
+                    child.children.splice(index, 1);
+                    canvas.removeRelation(child.role, item.role);
                 }
 
                 child.parent = item;
@@ -368,7 +390,7 @@ module OrgChart{
             this.parent = options.parent;
             this.title = options.title;
             this.resizable = false;
-            this.draggable = false;
+            //this.draggable = false;
             this.id = options.id;
             this.personName = options.personName? options.personName : '';
             this.isDuplicate = options.isDuplicate? options.isDuplicate : false;
@@ -480,6 +502,10 @@ module OrgChart{
             }
 
             this.height = height;
+
+            if (canvas.readOnly){
+                this.on(null);
+            }
 
             if (this.isDuplicate) {
                 this.setDuplicate();

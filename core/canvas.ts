@@ -326,6 +326,9 @@ module Loira{
                 item.attach(_this);
                 if (item.baseType === 'relation') {
                     relation = <Common.Relation>item;
+
+                    if (!_this.emit('relation:pre-add', new RelationEvent(relation))){ return; }
+
                     let index:number = _items.indexOf(relation.start);
                     index = index < _items.indexOf(relation.end) ? index : _items.indexOf(relation.end);
 
@@ -573,7 +576,6 @@ module Loira{
             let onDown = function (evt, isDoubleClick) {
                 let real:Point = _this._getMouse(evt);
                 _this._tmp.pointer = real;
-                console.log(real);
 
                 if (isDoubleClick) {
                     /**
@@ -864,12 +866,16 @@ module Loira{
          * @param options Valores enviados junto al evento
          * @param fireEvent Should fire event
          */
-        public emit(evt: string, options: Loira.event.Event, fireEvent: boolean = true) {
+        public emit(evt: string, options: Loira.event.Event, fireEvent: boolean = true): boolean {
             if (fireEvent && typeof this._callbacks[evt] !== 'undefined') {
                 for (let item of this._callbacks[evt]) {
-                    item.call(this, options);
+                    let respo = item.call(this, options);
+                    if (respo === false){
+                        return false;
+                    }
                 }
             }
+            return true;
         }
 
         /**
@@ -905,6 +911,21 @@ module Loira{
             }
 
             return response;
+        }
+
+        removeRelation(start: Loira.Element, end: Loira.Element){
+            let relations: Common.Relation[] = this.getRelationsFromObject(start, false, true);
+            let toDelete: Common.Relation[] = [];
+
+            for (let relation of relations){
+                if (relation.end == end){
+                    toDelete.push(relation);
+                }
+            }
+
+            if (toDelete.length > 0){
+                this.remove(toDelete, false);
+            }
         }
 
         /**

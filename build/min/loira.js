@@ -182,6 +182,13 @@ var Loira;
         return CanvasConfig;
     }());
     Loira.CanvasConfig = CanvasConfig;
+    var UserAgent;
+    (function (UserAgent) {
+        UserAgent[UserAgent["FIREFOX"] = 1] = "FIREFOX";
+        UserAgent[UserAgent["IE"] = 2] = "IE";
+        UserAgent[UserAgent["CHROME"] = 3] = "CHROME";
+        UserAgent[UserAgent["UNKNOWN"] = 4] = "UNKNOWN";
+    })(UserAgent = Loira.UserAgent || (Loira.UserAgent = {}));
     var FpsCounter = (function () {
         function FpsCounter(fps) {
             if (fps === void 0) { fps = 32; }
@@ -219,6 +226,17 @@ var Loira;
         };
         return ZoomData;
     }());
+    function checkUserAgent() {
+        var agent;
+        if (/firefox/i.test(navigator.userAgent)) {
+            agent = UserAgent.FIREFOX;
+        }
+        else {
+            agent = UserAgent.UNKNOWN;
+        }
+        Loira.util.logger(Loira.LogLevel.SYSTEM, navigator.userAgent);
+        return agent;
+    }
     var Canvas = (function () {
         /**
          * Create a new instance of canvas
@@ -279,24 +297,41 @@ var Loira;
             }
             config.viewportWidth = config.viewportWidth || this.container.offsetWidth || this.container.parentElement.offsetWidth || config.width;
             config.viewportHeight = config.viewportHeight || this.container.offsetHeight || this.container.parentElement.offsetHeight || config.height;
-            this._canvas = this.createHiDPICanvas(config.width, config.height);
+            this.readOnly = config.readOnly || false;
+            this._config = config;
+            this._tmp.pointer = { x: 0, y: 0 };
+            this._callbacks = {};
+            this.items = [];
+            this.defaultRelation = 'Relation.Association';
+            this.refreshScreen();
+            var _this = this;
+            Loira.drawable.registerMap(Loira.Config.assetsPath, Loira.Config.regions, function () {
+                _this.renderAll();
+            });
+            this._setScrollContainer();
+            this._fps = new FpsCounter(config.fps);
+            this._zoom = new ZoomData(this);
+            this.controller = config.controller || null;
+            if (this.controller) {
+                this.controller.bind(this);
+            }
+            this.userAgent = checkUserAgent();
+            this.bindResizeWindow();
+        }
+        Canvas.prototype.refreshScreen = function () {
+            this.destroy();
+            this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
+            this.container.style.position = 'relative';
+            this.container.style.overflow = 'auto';
+            this._canvas = this.createHiDPICanvas(this._config.width, this._config.height);
             this._canvas.style.position = 'absolute';
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
             this._canvas.style.zIndex = '100';
             this._canvas.style.backgroundColor = Loira.Config.background;
             this._canvas.tabIndex = 99;
-            this.container.style.width = this.container.style.maxWidth = config.viewportWidth + 'px';
-            this.container.style.height = this.container.style.maxHeight = config.viewportHeight + 'px';
-            this.container.style.position = 'relative';
-            this.container.style.overflow = 'auto';
-            this.readOnly = config.readOnly || false;
-            this._config = config;
-            this._tmp.pointer = { x: 0, y: 0 };
             this.container.appendChild(this._canvas);
-            this._callbacks = {};
-            this.items = [];
-            this.defaultRelation = 'Relation.Association';
             if (document.defaultView && document.defaultView.getComputedStyle) {
                 this._border = {
                     paddingLeft: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['paddingLeft'], 10) || 0,
@@ -305,19 +340,12 @@ var Loira;
                     borderTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderTopWidth'], 10) || 0
                 };
             }
-            var _this = this;
-            Loira.drawable.registerMap(Loira.Config.assetsPath, Loira.Config.regions, function () {
-                _this.renderAll();
-            });
             this._bind();
-            this._setScrollContainer();
-            this._fps = new FpsCounter(config.fps);
-            this._zoom = new ZoomData(this);
-            this.controller = config.controller || null;
-            if (this.controller) {
-                this.controller.bind(this);
-            }
-        }
+            var _this = this;
+            setTimeout(function () {
+                _this.renderAll(true);
+            }, 200);
+        };
         /**
          * Create a canvas with specific dpi for the screen
          * https://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas/15666143#15666143
@@ -352,6 +380,7 @@ var Loira;
          */
         Canvas.prototype.renderAll = function (forceRender) {
             if (forceRender === void 0) { forceRender = false; }
+            Loira.util.logger(Loira.LogLevel.INFO, 'Draw');
             if (this._fps.passed() || forceRender) {
                 var ctx = this._canvas.getContext('2d');
                 ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
@@ -361,6 +390,7 @@ var Loira;
                     ctx.restore();
                 }
                 if (this._selected && this._selected.selectable) {
+                    Loira.util.logger(Loira.LogLevel.INFO, 'Selected');
                     ctx.save();
                     this._selected.drawSelected(ctx);
                     ctx.restore();
@@ -509,15 +539,18 @@ var Loira;
          * @memberof Loira.Canvas#
          */
         Canvas.prototype.destroy = function () {
-            this._canvas.onmousemove = null;
-            this._canvas.onkeydown = null;
-            this._canvas.onmousedown = null;
-            this._canvas.onmouseup = null;
-            this._canvas.ondblclick = null;
-            this._canvas.onselectstart = null;
+            if (this._canvas) {
+                this._canvas.onmousemove = null;
+                this._canvas.onkeydown = null;
+                this._canvas.onmousedown = null;
+                this._canvas.onmouseup = null;
+                this._canvas.ondblclick = null;
+                this._canvas.onselectstart = null;
+            }
             if (this._canvasContainer) {
                 this.container.removeEventListener('scroll', this._canvasContainer.listener);
             }
+            document.createElement('ul').remove();
             this._canvasContainer = null;
             this._canvas = null;
             while (this.container.firstChild) {
@@ -623,6 +656,7 @@ var Loira;
             var onDown = function (evt, isDoubleClick) {
                 var real = _this._getMouse(evt);
                 _this._tmp.pointer = real;
+                console.log(real);
                 if (isDoubleClick) {
                     /**
                      * Evento que encapsula doble click sobre el canvas
@@ -689,6 +723,7 @@ var Loira;
                                 _this.emit('object:dblclick', new ObjectEvent(item));
                             }
                             else {
+                                Loira.util.logger(Loira.LogLevel.INFO, 'down');
                                 /**
                                  * Evento que encapsula un click sobre un objeto
                                  *
@@ -731,6 +766,7 @@ var Loira;
                 _this.renderAll();
             };
             _this._canvas.onmousedown = function (evt) {
+                Loira.util.logger(Loira.LogLevel.INFO, 'Mouse');
                 contextMenu.style.display = 'none';
                 onDown(evt, false);
             };
@@ -879,6 +915,18 @@ var Loira;
             _this._canvas.onselectstart = function () {
                 return false;
             };
+        };
+        Canvas.prototype.bindResizeWindow = function () {
+            var resizeID = -1;
+            var _this = this;
+            var resizeHandler = function () {
+                clearTimeout(resizeID);
+                resizeID = setTimeout(function () {
+                    //_this.refreshScreen();
+                }, 500);
+            };
+            window.removeEventListener('resize', resizeHandler);
+            window.addEventListener('resize', resizeHandler);
         };
         /**
          * Emite un evento generado
@@ -1243,6 +1291,15 @@ var Loira;
             }
         }
         util.removeWhole = removeWhole;
+        function logger(logLevel, message, data) {
+            // let padStr = function(i){
+            //     return (i < 10)? '0' + i : '' + i;
+            // };
+            if (Loira.Config.debug && logLevel <= Loira.Config.logLevel) {
+                console.log('[Canvas ' + new Date().getTime() + '] ' + message);
+            }
+        }
+        util.logger = logger;
     })(util = Loira.util || (Loira.util = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=utils.js.map
@@ -1787,6 +1844,13 @@ var Loira;
         'spear2': { x: 34, y: 0, width: 25, height: 26 },
         'arrow': { x: 27, y: 26, width: 12, height: 16 }
     };
+    var LogLevel;
+    (function (LogLevel) {
+        LogLevel[LogLevel["INFO"] = 99] = "INFO";
+        LogLevel[LogLevel["SYSTEM"] = 2] = "SYSTEM";
+        LogLevel[LogLevel["WARNING"] = 1] = "WARNING";
+        LogLevel[LogLevel["DANGER"] = 0] = "DANGER";
+    })(LogLevel = Loira.LogLevel || (Loira.LogLevel = {}));
     var Config;
     (function (Config) {
         Config.fontSize = _fontSize;
@@ -1795,6 +1859,8 @@ var Loira;
         Config.background = _background;
         Config.assetsPath = _assetsPath;
         Config.regions = _regions;
+        Config.debug = false;
+        Config.logLevel = LogLevel.SYSTEM;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=config.js.map
@@ -2884,18 +2950,25 @@ var OrgChart;
             y = this.y + Loira.Config.fontSize;
             this.height = height;
             var radius = 5;
+            var shadowColor;
+            var shadowBlur;
             ctx.fillStyle = this.isDuplicate ? '#000000' : this.color;
             ctx.lineWidth = 4;
-            ctx.shadowBlur = 10;
             if (!this.isSelected) {
-                ctx.shadowColor = '#000000';
+                shadowColor = '#000000';
+                shadowBlur = 10;
                 ctx.strokeStyle = '#000000';
             }
             else {
-                ctx.shadowColor = '#00c0ff';
+                shadowColor = '#00c0ff';
+                shadowBlur = 20;
                 ctx.strokeStyle = '#00c0ff';
-                ctx.shadowBlur = 20;
                 this.isSelected = false;
+            }
+            // Blocked to Firefox because performance leaks
+            if (this._canvas.userAgent != Loira.UserAgent.FIREFOX) {
+                ctx.shadowColor = shadowColor;
+                ctx.shadowBlur = shadowBlur;
             }
             Loira.shape.drawRoundRect(ctx, this.x, this.y, this.width, this.height, radius);
             ctx.fillStyle = "#FFFFFF";
