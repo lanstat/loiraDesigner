@@ -91,6 +91,9 @@ module OrgChart{
         }
     }
 
+    /**
+     * Controller that manage the events for the organization chart
+     */
     export class Controller extends BaseController{
         private roots: Group[] = [];
         public elements: Group[] = [];
@@ -190,6 +193,15 @@ module OrgChart{
                     item.parent = child.parent;
                     index = $this.getGroup(item.role, child.children).index;
                     child.children.splice(index, 1);
+
+                    if (item.parent){
+                        item.parent.children.push(item);
+                        let option = new RelOption();
+                        option.start = item.parent.role;
+                        option.end = item.role;
+                        let relation = new OrgChart.Relation(option);
+                        canvas.add([relation], false);
+                    }
                     canvas.removeRelation(child.role, item.role);
                 }
 
@@ -267,6 +279,7 @@ module OrgChart{
                 }
 
                 group = new Group(new Role(option));
+                group.role.on(null);
 
                 if (record.parent){
                     let parent = this.getGroupById(record.parent?record.parent.toString():'').item;
@@ -327,7 +340,7 @@ module OrgChart{
          * Get a group by a role
          * @param role Role to search
          * @param groups List of groups to search
-         * @returns {any}
+         * @returns {{item: Group, index: number}}
          */
         getGroup(role: Role, groups?: Group[]): {item: Group, index: number}{
             if (!groups){
@@ -390,7 +403,7 @@ module OrgChart{
             this.parent = options.parent;
             this.title = options.title;
             this.resizable = false;
-            //this.draggable = false;
+            this.draggable = false;
             this.id = options.id;
             this.personName = options.personName? options.personName : '';
             this.isDuplicate = options.isDuplicate? options.isDuplicate : false;

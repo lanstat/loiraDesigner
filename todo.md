@@ -17,4 +17,3 @@
 - [ ] Agregar soporte para zoom
 - [ ] Agregar soporte para leyenda
 - [ ] Agregar soporte para minimapa
-- [ ]

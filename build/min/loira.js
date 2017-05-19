@@ -426,6 +426,9 @@ var Loira;
                 item.attach(_this);
                 if (item.baseType === 'relation') {
                     relation = item;
+                    if (!_this.emit('relation:pre-add', new RelationEvent(relation))) {
+                        return;
+                    }
                     var index = _items.indexOf(relation.start);
                     index = index < _items.indexOf(relation.end) ? index : _items.indexOf(relation.end);
                     _items.splice(index, 0, item);
@@ -656,7 +659,6 @@ var Loira;
             var onDown = function (evt, isDoubleClick) {
                 var real = _this._getMouse(evt);
                 _this._tmp.pointer = real;
-                console.log(real);
                 if (isDoubleClick) {
                     /**
                      * Evento que encapsula doble click sobre el canvas
@@ -941,9 +943,13 @@ var Loira;
             if (fireEvent && typeof this._callbacks[evt] !== 'undefined') {
                 for (var _i = 0, _a = this._callbacks[evt]; _i < _a.length; _i++) {
                     var item = _a[_i];
-                    item.call(this, options);
+                    var respo = item.call(this, options);
+                    if (respo === false) {
+                        return false;
+                    }
                 }
             }
+            return true;
         };
         /**
          * Obtiene la posicion del mouse relativa al canvas
@@ -971,6 +977,19 @@ var Loira;
                 response.y += this._canvasContainer.y;
             }
             return response;
+        };
+        Canvas.prototype.removeRelation = function (start, end) {
+            var relations = this.getRelationsFromObject(start, false, true);
+            var toDelete = [];
+            for (var _i = 0, relations_1 = relations; _i < relations_1.length; _i++) {
+                var relation = relations_1[_i];
+                if (relation.end == end) {
+                    toDelete.push(relation);
+                }
+            }
+            if (toDelete.length > 0) {
+                this.remove(toDelete, false);
+            }
         };
         /**
          * Define the background for the canvas
@@ -1296,7 +1315,7 @@ var Loira;
             //     return (i < 10)? '0' + i : '' + i;
             // };
             if (Loira.Config.debug && logLevel <= Loira.Config.logLevel) {
-                console.log('[Canvas ' + new Date().getTime() + '] ' + message);
+                console.log('[Loira ' + new Date().getTime() + '] ' + message);
             }
         }
         util.logger = logger;
@@ -2717,6 +2736,25 @@ var OrgChart;
                     $this.reorderElements();
                 }
             });
+            canvas.on('relation:pre-add', function (evt) {
+                var relations = canvas.getRelationsFromObject(evt.selected.start, false, true);
+                for (var _i = 0, relations_1 = relations; _i < relations_1.length; _i++) {
+                    var relation = relations_1[_i];
+                    if (relation.end == evt.selected.end) {
+                        return false;
+                    }
+                }
+                var child = $this.getGroup(evt.selected.end, $this.elements).item;
+                if (child) {
+                    var listChild = child.getAllChildren();
+                    listChild.push(child);
+                    for (var i = 0; i < listChild.length; i++) {
+                        if (listChild[i].role.id === evt.selected.start.id && listChild[i].role != evt.selected.start) {
+                            return false;
+                        }
+                    }
+                }
+            });
             canvas.on('object:selected', function (evt) {
                 var role = evt.selected;
                 if (role.isDuplicate) {
@@ -2731,16 +2769,11 @@ var OrgChart;
                 var index = $this.getGroup(evt.selected.end, $this.roots).index;
                 var child = $this.getGroup(evt.selected.end, $this.elements).item;
                 var item = $this.getGroup(evt.selected.start, $this.elements).item;
-                var listChild = child.getAllChildren();
-                listChild.push(child);
-                for (var i = 0; i < listChild.length; i++) {
-                    if (listChild[i].role.id === item.role.id) {
-                        canvas.remove([evt.selected], false);
-                        return;
-                    }
-                }
                 if (index >= 0) {
                     $this.roots.splice(index, 1);
+                    if (item.parent == child) {
+                        $this.roots.push(item);
+                    }
                 }
                 else {
                     var children = child.parent.children;
@@ -2748,8 +2781,8 @@ var OrgChart;
                     children.splice(index, 1);
                     var relations = canvas.getRelationsFromObject(evt.selected.end, true, false);
                     var toDelete = [];
-                    for (var _i = 0, relations_1 = relations; _i < relations_1.length; _i++) {
-                        var relation = relations_1[_i];
+                    for (var _i = 0, relations_2 = relations; _i < relations_2.length; _i++) {
+                        var relation = relations_2[_i];
                         if (relation.start != item.role) {
                             toDelete.push(relation);
                         }
@@ -2757,6 +2790,20 @@ var OrgChart;
                     if (toDelete.length > 0) {
                         canvas.remove(toDelete, false);
                     }
+                }
+                if (item.parent == child) {
+                    item.parent = child.parent;
+                    index = $this.getGroup(item.role, child.children).index;
+                    child.children.splice(index, 1);
+                    if (item.parent) {
+                        item.parent.children.push(item);
+                        var option = new RelOption();
+                        option.start = item.parent.role;
+                        option.end = item.role;
+                        var relation = new OrgChart.Relation(option);
+                        canvas.add([relation], false);
+                    }
+                    canvas.removeRelation(child.role, item.role);
                 }
                 child.parent = item;
                 item.children.push(child);
@@ -2822,6 +2869,7 @@ var OrgChart;
                     option.isDuplicate = true;
                 }
                 group = new Group(new Role(option));
+                group.role.on(null);
                 if (record.parent) {
                     var parent_1 = this.getGroupById(record.parent ? record.parent.toString() : '').item;
                     parent_1.children.push(group);
@@ -3010,6 +3058,9 @@ var OrgChart;
                 height += (Loira.Config.fontSize + 3 - (this.personName ? 3 : 0)) * _super.prototype.splitText.call(this, ctx, this.title).length + 5;
             }
             this.height = height;
+            if (canvas.readOnly) {
+                this.on(null);
+            }
             if (this.isDuplicate) {
                 this.setDuplicate();
             }
