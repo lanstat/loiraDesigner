@@ -397,7 +397,7 @@ module OrgChart{
         constructor(options: RoleOption){
             super(options);
 
-            this.width = 150;
+            this.width = Loira.Config.orgChart.roleWidth;
             this.height = 20;
 
             this.parent = options.parent;

@@ -88,6 +88,9 @@ var Loira;
 (function (Loira) {
     var drawable;
     (function (drawable) {
+        /**
+         * Regions registered
+         */
         var regions;
         var image;
         function registerMap(path, regions, callback) {
@@ -271,6 +274,7 @@ var Loira;
              * @property {HTMLCanvasElement} _background - Imagen de fondo
              */
             this._background = null;
+            //private _scrollBar: Common.ScrollBar;
             /**
              * @property {Object} _canvasContainer - Contenedor del canvas
              */
@@ -342,6 +346,8 @@ var Loira;
             }
             this._bind();
             var _this = this;
+            //this._scrollBar = new Common.ScrollBar();
+            //this._scrollBar.attach(_this);
             setTimeout(function () {
                 _this.renderAll(true);
             }, 200);
@@ -396,6 +402,7 @@ var Loira;
                     ctx.restore();
                     this._selected.renderButtons(ctx);
                 }
+                //this._scrollBar.render(ctx);
             }
         };
         /**
@@ -1534,6 +1541,7 @@ var __extends = (this && this.__extends) || (function () {
 var Common;
 (function (Common) {
     var Point = Loira.util.Point;
+    var BaseOption = Loira.util.BaseOption;
     var TypeLine;
     (function (TypeLine) {
         TypeLine[TypeLine["STRAIGHT"] = 1] = "STRAIGHT";
@@ -1845,6 +1853,41 @@ var Common;
         return Actor;
     }(Common.Symbol));
     Common.Actor = Actor;
+    var ScrollBar = (function (_super) {
+        __extends(ScrollBar, _super);
+        function ScrollBar() {
+            var _this = _super.call(this, new BaseOption()) || this;
+            _this.type = 'scrollBar';
+            return _this;
+        }
+        ScrollBar.prototype.render = function (ctx) {
+            var width = Loira.Config.scrollBar.width;
+            ctx.fillStyle = Loira.Config.scrollBar.color;
+            ctx.fillRect(this.width - width, 0, width, 30);
+            ctx.fillRect(0, this.height - width, 30, width);
+            ctx.fillStyle = "#000000";
+        };
+        ScrollBar.prototype.recalculateBorders = function () {
+        };
+        /**
+         * Verifica si el punto dado se encuentra dentro de los limites del objeto
+         *
+         * @memberof Loira.Object#
+         * @param x Posicion x del punto
+         * @param y Posicion y del punto
+         * @returns {boolean}
+         */
+        ScrollBar.prototype.checkCollision = function (x, y) {
+            return (x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height);
+        };
+        ScrollBar.prototype.attach = function (canvas) {
+            _super.prototype.attach.call(this, canvas);
+            this.width = canvas._config.viewportWidth;
+            this.height = canvas._config.viewportHeight;
+        };
+        return ScrollBar;
+    }(Loira.Element));
+    Common.ScrollBar = ScrollBar;
 })(Common || (Common = {}));
 //# sourceMappingURL=common.js.map
 var Loira;
@@ -1863,6 +1906,13 @@ var Loira;
         'spear2': { x: 34, y: 0, width: 25, height: 26 },
         'arrow': { x: 27, y: 26, width: 12, height: 16 }
     };
+    var _scrollBar = {
+        width: 15,
+        color: '#00FF00'
+    };
+    var _orgchart = {
+        roleWidth: 150
+    };
     var LogLevel;
     (function (LogLevel) {
         LogLevel[LogLevel["INFO"] = 99] = "INFO";
@@ -1880,6 +1930,8 @@ var Loira;
         Config.regions = _regions;
         Config.debug = false;
         Config.logLevel = LogLevel.SYSTEM;
+        Config.scrollBar = _scrollBar;
+        Config.orgChart = _orgchart;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=config.js.map
@@ -2710,6 +2762,9 @@ var OrgChart;
         return Group;
     }());
     OrgChart.Group = Group;
+    /**
+     * Controller that manage the events for the organization chart
+     */
     var Controller = (function (_super) {
         __extends(Controller, _super);
         function Controller(colors, autoRefresh) {
@@ -2920,7 +2975,7 @@ var OrgChart;
          * Get a group by a role
          * @param role Role to search
          * @param groups List of groups to search
-         * @returns {any}
+         * @returns {{item: Group, index: number}}
          */
         Controller.prototype.getGroup = function (role, groups) {
             if (!groups) {
@@ -2965,7 +3020,7 @@ var OrgChart;
         __extends(Role, _super);
         function Role(options) {
             var _this = _super.call(this, options) || this;
-            _this.width = 150;
+            _this.width = Loira.Config.orgChart.roleWidth;
             _this.height = 20;
             _this.parent = options.parent;
             _this.title = options.title;

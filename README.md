@@ -36,9 +36,9 @@ canvas.on('relation:selected', function(event){
    console.log(event.selected);
 });
 
-canvas.add(case1, case2, actor);
+canvas.add([case1, case2, actor]);
 
-canvas.add(new Relation.Dependency({start:case1, end:case2}));
+canvas.add([new Relation.Dependency({start:case1, end:case2})]);
 
 document.getElementById('addObject').addEventListener('click', function(){
     var case1 = new UseCase.UseCase({x:140,y:140, text:'Mostrar evento'});

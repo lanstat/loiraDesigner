@@ -21,6 +21,15 @@ module Loira{
         'arrow': {x: 27, y: 26, width: 12, height: 16}
     };
 
+    let _scrollBar: any = {
+        width: 15,
+        color: '#00FF00'
+    };
+
+    let _orgchart: any = {
+        roleWidth: 150
+    };
+
     export enum LogLevel {
         INFO = 99,
         SYSTEM = 2,
@@ -37,5 +46,7 @@ module Loira{
         export let regions = _regions;
         export let debug = false;
         export let logLevel = LogLevel.SYSTEM;
+        export let scrollBar = _scrollBar;
+        export let orgChart = _orgchart;
     }
 }

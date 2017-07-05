@@ -3,6 +3,7 @@ module Common{
     import Point = Loira.util.Point;
     import Line = Loira.util.Line;
     import Region = Loira.util.Region;
+    import BaseOption = Loira.util.BaseOption;
 
     export enum TypeLine{
         STRAIGHT = 1,
@@ -404,6 +405,50 @@ module Common{
         }
 
         recalculateBorders() {
+        }
+    }
+
+    export class ScrollBar extends Loira.Element{
+        private _horPos: number;
+        private _horSize: number;
+        private _verPos: number;
+        private _verSize: number;
+
+        constructor(){
+            super(new BaseOption());
+            this.type = 'scrollBar';
+        }
+
+        public render(ctx: CanvasRenderingContext2D): void {
+            let width: number = Loira.Config.scrollBar.width;
+
+            ctx.fillStyle = Loira.Config.scrollBar.color;
+            ctx.fillRect(this.width - width, 0, width, 30);
+            ctx.fillRect(0, this.height - width, 30, width);
+
+            ctx.fillStyle = "#000000";
+        }
+
+        recalculateBorders() {
+        }
+
+        /**
+         * Verifica si el punto dado se encuentra dentro de los limites del objeto
+         *
+         * @memberof Loira.Object#
+         * @param x Posicion x del punto
+         * @param y Posicion y del punto
+         * @returns {boolean}
+         */
+        checkCollision(x: number, y: number): boolean {
+
+            return (x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height);
+        }
+
+        attach(canvas: Loira.Canvas): void {
+            super.attach(canvas);
+            this.width = canvas._config.viewportWidth;
+            this.height = canvas._config.viewportHeight;
         }
     }
 }

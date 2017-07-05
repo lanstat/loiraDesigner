@@ -121,6 +121,8 @@ module Loira{
          * @property {HTMLCanvasElement} _background - Imagen de fondo
          */
         private _background: HTMLCanvasElement = null;
+
+        //private _scrollBar: Common.ScrollBar;
         /**
          * @property {Object} _canvasContainer - Contenedor del canvas
          */
@@ -235,6 +237,9 @@ module Loira{
 
             let _this = this;
 
+            //this._scrollBar = new Common.ScrollBar();
+            //this._scrollBar.attach(_this);
+
             setTimeout(function(){
                 _this.renderAll(true);
             }, 200);
@@ -297,6 +302,8 @@ module Loira{
                     ctx.restore();
                     this._selected.renderButtons(ctx);
                 }
+
+                //this._scrollBar.render(ctx);
             }
         }
 

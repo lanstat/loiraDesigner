@@ -4,6 +4,9 @@
 module Loira.drawable{
     import Region = Loira.util.Region;
 
+    /**
+     * Regions registered
+     */
     let regions:{[id: string]: Region};
     let image:HTMLImageElement;
 
