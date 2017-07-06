@@ -122,7 +122,7 @@ module Loira{
          */
         private _background: HTMLCanvasElement = null;
 
-        //private _scrollBar: Common.ScrollBar;
+        private _scrollBar: Common.ScrollBar;
         /**
          * @property {Object} _canvasContainer - Contenedor del canvas
          */
@@ -192,7 +192,7 @@ module Loira{
                 _this.renderAll();
             });
 
-            this._setScrollContainer();
+            //this._setScrollContainer();
 
             this._fps = new FpsCounter(config.fps);
             this._zoom = new ZoomData(this);
@@ -214,7 +214,7 @@ module Loira{
             this.container.style.position = 'relative';
             this.container.style.overflow = 'auto';
 
-            this._canvas = this.createHiDPICanvas(this._config.width, this._config.height);
+            this._canvas = this.createHiDPICanvas(this._config.viewportWidth, this._config.viewportHeight);
             this._canvas.style.position = 'absolute';
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
@@ -237,8 +237,8 @@ module Loira{
 
             let _this = this;
 
-            //this._scrollBar = new Common.ScrollBar();
-            //this._scrollBar.attach(_this);
+            this._scrollBar = new Common.ScrollBar();
+            this._scrollBar.attach(_this);
 
             setTimeout(function(){
                 _this.renderAll(true);
@@ -303,7 +303,7 @@ module Loira{
                     this._selected.renderButtons(ctx);
                 }
 
-                //this._scrollBar.render(ctx);
+                this._scrollBar.render(ctx);
             }
         }
 
@@ -578,6 +578,9 @@ module Loira{
                     _this._zoom.update(evt.deltaY);
                     return false;
                 }
+
+                _this._scrollBar.addMovement('V', (evt.deltaY/Math.abs(evt.deltaY)));
+                _this.renderAll();
             };
 
             let onDown = function (evt, isDoubleClick) {

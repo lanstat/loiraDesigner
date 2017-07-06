@@ -410,8 +410,8 @@ module Common{
 
     export class ScrollBar extends Loira.Element{
         private _horPos: number;
-        private _horSize: number;
         private _verPos: number;
+        private _horSize: number;
         private _verSize: number;
 
         constructor(){
@@ -423,8 +423,8 @@ module Common{
             let width: number = Loira.Config.scrollBar.width;
 
             ctx.fillStyle = Loira.Config.scrollBar.color;
-            ctx.fillRect(this.width - width, 0, width, 30);
-            ctx.fillRect(0, this.height - width, 30, width);
+            ctx.fillRect(this.width - width, this._verPos, width, this._verSize);
+            ctx.fillRect(this._horPos, this.height - width, this._horSize, width);
 
             ctx.fillStyle = "#000000";
         }
@@ -441,14 +441,41 @@ module Common{
          * @returns {boolean}
          */
         checkCollision(x: number, y: number): boolean {
-
-            return (x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height);
+            return false;
         }
 
         attach(canvas: Loira.Canvas): void {
             super.attach(canvas);
             this.width = canvas._config.viewportWidth;
             this.height = canvas._config.viewportHeight;
+
+            this._horPos = 0;
+            this._verPos = 0;
+            this._horSize = Math.floor(this.width*(this.width / canvas._config.width));
+            this._verSize = Math.floor(this.height*(this.height / canvas._config.height));
+        }
+
+        addMovement(dir: string, delta: number): void{
+            let tmp: number;
+            if (dir === 'H'){
+                tmp = this._horPos + delta * 30;
+                if (tmp < 0) {
+                    this._horPos = 0;
+                } else if (tmp > this._canvas._config.viewportWidth){
+                    this._horPos = this._canvas._config.viewportWidth - this._horSize;
+                } else {
+                    this._horPos = tmp;
+                }
+            } else if(dir === 'V') {
+                tmp = this._verPos + delta * 30;
+                if (tmp < 0) {
+                    this._verPos = 0;
+                } else if (tmp + this._verSize > this._canvas._config.viewportHeight){
+                    this._verPos = this._canvas._config.viewportHeight - this._verSize;
+                } else {
+                    this._verPos = tmp;
+                }
+            }
         }
     }
 }

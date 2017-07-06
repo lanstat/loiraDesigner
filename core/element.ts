@@ -228,6 +228,10 @@ module Loira{
             this.animation.setFps(canvas._config.fps);
         }
 
+        isVisible(x: number, y: number){
+
+        }
+
         animateTo(point: Point, seconds: number = 1): void {
             let time: number = this._canvas._config.fps * seconds;
         }
