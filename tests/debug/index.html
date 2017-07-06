@@ -17,15 +17,15 @@
 
 				var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000});
 
-				var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});
-				var case2 = new UseCase.UseCase({x:500,y:200, text:'Iniciar sesion'});
+				/*var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});
+				var case2 = new UseCase.UseCase({x:500,y:200, text:'Iniciar sesion'});*/
                 var actor = new Common.Actor({x:20, y:10, text:'Administrador'});
                 
                 canvas.on('relation:selected', function(event){
                    console.log(event.selected) 
                 });
 
-				canvas.add([case1, case2, actor]);
+				canvas.add([/*case1, case2,*/ actor]);
 
                 canvas.add(new Relation.Dependency({start:case1, end:case2}));
 

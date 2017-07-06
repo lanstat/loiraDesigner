@@ -9,12 +9,14 @@ module Loira{
     import MouseEvent = Loira.event.MouseEvent;
     import Point = Loira.util.Point;
 
-    export class CanvasContainer {
+    export class VirtualCanvas {
         public x: number = 0;
         public y: number = 0;
-        public w: number = 0;
-        public h: number = 0;
-        public listener: () => boolean;
+        public width: number = 0;
+        public height: number = 0;
+        public viewportWidth: number = 0;
+        public viewportHeight: number = 0;
+        public area: number = 0;
     }
 
     export class CanvasConfig {
@@ -124,9 +126,9 @@ module Loira{
 
         private _scrollBar: Common.ScrollBar;
         /**
-         * @property {Object} _canvasContainer - Contenedor del canvas
+         * @property {VirtualCanvas} virtualCanvas - Virtual canvas that contains all information of the size
          */
-        public _canvasContainer: CanvasContainer = null;
+        public virtualCanvas: VirtualCanvas = null;
         /**
          * @property {String}  defaultRelation - Relacion que se usara por defecto cuando se agregue una nueva union
          */
@@ -224,6 +226,16 @@ module Loira{
 
             this.container.appendChild(this._canvas);
 
+            this.virtualCanvas = {
+                x: 0,
+                y: 0,
+                viewportWidth: this._config.viewportWidth,
+                viewportHeight: this._config.viewportHeight,
+                width: this._config.width,
+                height: this._config.height,
+                area: this._config.viewportHeight * this._config.viewportWidth
+            };
+
             if (document.defaultView && document.defaultView.getComputedStyle) {
                 this._border = {
                     paddingLeft: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['paddingLeft'], 10) || 0,
@@ -237,8 +249,7 @@ module Loira{
 
             let _this = this;
 
-            this._scrollBar = new Common.ScrollBar();
-            this._scrollBar.attach(_this);
+            this._scrollBar = new Common.ScrollBar(this.virtualCanvas);
 
             setTimeout(function(){
                 _this.renderAll(true);
@@ -363,9 +374,10 @@ module Loira{
                     _this.emit('container:added', new ObjectEvent(item), fireEvent);
                 } else {
                     if (item.centerObject) {
-                        if (_this._canvasContainer) {
-                            item.x = (_this._canvasContainer.w / 2) + _this._canvasContainer.x - (item.width / 2);
-                            item.y = (_this._canvasContainer.h / 2) + _this._canvasContainer.y - (item.height / 2);
+                        // TODO verificar cuando se complete el canvas
+                        if (false) {//if (_this._canvasContainer) {
+                            /*item.x = (_this._canvasContainer.w / 2) + _this._canvasContainer.x - (item.width / 2);
+                            item.y = (_this._canvasContainer.h / 2) + _this._canvasContainer.y - (item.height / 2);*/
                         } else {
                             item.x = _this._canvas.width / 2;
                             item.y = _this._canvas.height / 2;
@@ -469,12 +481,7 @@ module Loira{
                 this._canvas.onselectstart = null;
             }
 
-            if (this._canvasContainer) {
-                this.container.removeEventListener('scroll', this._canvasContainer.listener);
-            }
             document.createElement('ul').remove();
-
-            this._canvasContainer = null;
 
             this._canvas = null;
 
@@ -543,6 +550,7 @@ module Loira{
             let onKeyDown = function(evt, isGlobal){
                 if (evt.keyCode == 18){return;}
                 _this._tmp.lastKey = evt.keyCode;
+                console.log(evt.keyCode);
 
                 if (!isGlobal){
                     if (_this._tmp.lastKey === 46) {
@@ -577,9 +585,10 @@ module Loira{
                 if (_this._tmp.lastKey == 17){
                     _this._zoom.update(evt.deltaY);
                     return false;
+                }else {
+                    _this._scrollBar.addMovement(_this._tmp.lastKey === 16? 'H': 'V', (evt.deltaY/Math.abs(evt.deltaY)));
                 }
 
-                _this._scrollBar.addMovement('V', (evt.deltaY/Math.abs(evt.deltaY)));
                 _this.renderAll();
             };
 
@@ -791,7 +800,8 @@ module Loira{
                             }
                         }
                     } else {
-                        if (_this._config.dragCanvas){
+                        // TODO Verificar cuando se complete el canvas
+                        /*if (_this._config.dragCanvas){
                             if (_this._canvas && _this._canvasContainer) {
                                 x = x === 0? x : x/Math.abs(x);
                                 y =  y === 0? y : y/Math.abs(y);
@@ -802,7 +812,7 @@ module Loira{
                                 _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
                                 _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
                             }
-                        }
+                        }*/
                     }
                     _this._tmp.pointer = real;
                 }
@@ -915,10 +925,13 @@ module Loira{
 
             let response: Point = {x: (evt.pageX - offsetX), y: (evt.pageY - offsetY)};
 
-            if (this._canvasContainer) {
+            // TODO verificar cuando se complete virtual canvas
+            /*if (this._canvasContainer) {
                 response.x += this._canvasContainer.x;
                 response.y += this._canvasContainer.y;
-            }
+            }*/
+            response.x += this.virtualCanvas.x;
+            response.y += this.virtualCanvas.y;
 
             return response;
         }
@@ -945,21 +958,22 @@ module Loira{
          * @param resizeToImage Define if the canvas should resize to image size
          */
         setBackground(image: HTMLImageElement, resizeToImage: boolean) {
-            this._background = this.createHiDPICanvas(image.width, image.height);
+            this._background = this.createHiDPICanvas(this._config.viewportWidth, this._config.viewportHeight);
             this._background.style.position = 'absolute';
             this._background.style.left = '0';
             this._background.style.top = '0';
             this._background.style.zIndex = '0';
 
             this._background.getContext('2d').drawImage(image, 0, 0);
+            this._canvas.style.backgroundColor = 'transparent';
 
-            if (resizeToImage) {
+            /*if (resizeToImage) {
                 this._canvas.width = this._background.width;
                 this._canvas.height = this._background.height;
                 this._canvas.style.width = this._background.width + 'px';
                 this._canvas.style.height = this._background.height + 'px';
                 this._canvas.style.backgroundColor = 'transparent';
-            }
+            }*/
 
             this.container.insertBefore(this._background, this._canvas);
         }
@@ -983,7 +997,7 @@ module Loira{
         /**
          * Define un elemento que contendra al canvas y servira de scroll
          */
-        private _setScrollContainer() {
+        /*private _setScrollContainer() {
             let _this = this;
 
             if (_this._canvasContainer) {
@@ -1005,7 +1019,7 @@ module Loira{
             _this._canvasContainer.w = _this.container.clientWidth;
             _this._canvasContainer.h = _this.container.clientHeight;
             _this.container.addEventListener('scroll', _this._canvasContainer.listener);
-        }
+        }*/
 
         /**
          * Obtain the linked relations to a object
@@ -1042,7 +1056,9 @@ module Loira{
          * @param y Y position
          */
         centerToPoint(x: number, y: number): void{
-            if (this._canvas && this._canvasContainer) {
+            // TODO Verificar cuando se complete el canvas virtual
+
+            /*if (this._canvas && this._canvasContainer) {
                 x = x - this.container.offsetWidth / 2;
                 y = y - this.container.offsetHeight / 2;
                 x = x >= 0 ? x : 0;
@@ -1051,7 +1067,7 @@ module Loira{
                 this._canvasContainer.y = y;
                 this.container.scrollTop = y;
                 this.container.scrollLeft = x;
-            }
+            }*/
         }
 
         setSelectedElement(element: Element){

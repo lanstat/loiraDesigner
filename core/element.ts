@@ -109,6 +109,10 @@ module Loira{
         public renderButtons(ctx: CanvasRenderingContext2D): void {
             let x: number = this.x + this.width + 10;
             let y: number = this.y;
+
+            x -= this._canvas.virtualCanvas.x;
+            y -= this._canvas.virtualCanvas.y;
+
             if (this._buttons.length > 0) {
                 this._buttons.forEach(function (item) {
                     drawable.render(item.icon, ctx, x, y);
@@ -151,6 +155,10 @@ module Loira{
                 y: number = this.y - 2,
                 w: number = this.width,
                 h: number = this.height;
+
+            x -= this._canvas.virtualCanvas.x;
+            y -= this._canvas.virtualCanvas.y;
+
             ctx.beginPath();
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);

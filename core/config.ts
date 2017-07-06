@@ -22,8 +22,9 @@ module Loira{
     };
 
     let _scrollBar: any = {
-        width: 15,
-        color: '#00FF00'
+        size: 10,
+        color: 'rgba(0, 0, 0, 0.5)',
+        isRounded: true
     };
 
     let _orgchart: any = {

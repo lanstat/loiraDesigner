@@ -392,16 +392,19 @@ module Common{
                 this.width = textW;
             }
 
+            let x: number= this.x - this._canvas.virtualCanvas.x;
+            let y: number= this.y - this._canvas.virtualCanvas.y;
+
             ctx.fillStyle = Loira.Config.background;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.fillRect(x, y, this.width, this.height);
             ctx.fillStyle = "#000000";
 
-            Loira.drawable.render('actor', ctx, this.x + this.width/2 - 15, this.y);
+            Loira.drawable.render('actor', ctx, x + this.width/2 - 15, y);
 
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#000000";
 
-            ctx.fillText(this.text, this.x, this.y+80);
+            ctx.fillText(this.text, x, y+80);
         }
 
         recalculateBorders() {
@@ -413,18 +416,35 @@ module Common{
         private _verPos: number;
         private _horSize: number;
         private _verSize: number;
+        private _virtual: Loira.VirtualCanvas;
 
-        constructor(){
+        constructor(virtual: Loira.VirtualCanvas){
             super(new BaseOption());
             this.type = 'scrollBar';
+
+            this.width = virtual.viewportWidth;
+            this.height = virtual.viewportHeight;
+
+            this._horPos = virtual.x;
+            this._verPos = virtual.y;
+            this._horSize = Math.floor(this.width*(this.width / virtual.width));
+            this._verSize = Math.floor(this.height*(this.height / virtual.height));
+
+            this._virtual = virtual;
         }
 
         public render(ctx: CanvasRenderingContext2D): void {
-            let width: number = Loira.Config.scrollBar.width;
+            let config: any = Loira.Config.scrollBar;
 
             ctx.fillStyle = Loira.Config.scrollBar.color;
-            ctx.fillRect(this.width - width, this._verPos, width, this._verSize);
-            ctx.fillRect(this._horPos, this.height - width, this._horSize, width);
+
+            if (config.isRounded) {
+                Loira.shape.drawRoundRect(ctx, this.width - config.size, this._verPos, config.size, this._verSize, 5);
+                Loira.shape.drawRoundRect(ctx, this._horPos, this.height - config.size, this._horSize, config.size, 5);
+            } else {
+                ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
+                ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
+            }
 
             ctx.fillStyle = "#000000";
         }
@@ -444,38 +464,32 @@ module Common{
             return false;
         }
 
-        attach(canvas: Loira.Canvas): void {
-            super.attach(canvas);
-            this.width = canvas._config.viewportWidth;
-            this.height = canvas._config.viewportHeight;
-
-            this._horPos = 0;
-            this._verPos = 0;
-            this._horSize = Math.floor(this.width*(this.width / canvas._config.width));
-            this._verSize = Math.floor(this.height*(this.height / canvas._config.height));
-        }
-
         addMovement(dir: string, delta: number): void{
             let tmp: number;
+            let virtual: Loira.VirtualCanvas = this._virtual;
+
             if (dir === 'H'){
                 tmp = this._horPos + delta * 30;
                 if (tmp < 0) {
                     this._horPos = 0;
-                } else if (tmp > this._canvas._config.viewportWidth){
-                    this._horPos = this._canvas._config.viewportWidth - this._horSize;
+                } else if (tmp + this._horSize > virtual.viewportWidth){
+                    this._horPos = virtual.viewportWidth - this._horSize;
                 } else {
                     this._horPos = tmp;
                 }
+                virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
             } else if(dir === 'V') {
                 tmp = this._verPos + delta * 30;
                 if (tmp < 0) {
                     this._verPos = 0;
-                } else if (tmp + this._verSize > this._canvas._config.viewportHeight){
-                    this._verPos = this._canvas._config.viewportHeight - this._verSize;
+                } else if (tmp + this._verSize > virtual.viewportHeight){
+                    this._verPos = virtual.viewportHeight - this._verSize;
                 } else {
                     this._verPos = tmp;
                 }
+                virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
             }
+            console.log(virtual);
         }
     }
 }
