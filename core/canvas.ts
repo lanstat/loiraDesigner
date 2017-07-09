@@ -122,7 +122,7 @@ module Loira{
         /**
          * @property {HTMLCanvasElement} _background - Imagen de fondo
          */
-        private _background: HTMLCanvasElement = null;
+        public _background: HTMLCanvasElement = null;
 
         private _scrollBar: Common.ScrollBar;
         /**
@@ -214,7 +214,7 @@ module Loira{
             this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
             this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
             this.container.style.position = 'relative';
-            this.container.style.overflow = 'auto';
+            this.container.style.overflow = 'hidden';
 
             this._canvas = this.createHiDPICanvas(this._config.viewportWidth, this._config.viewportHeight);
             this._canvas.style.position = 'absolute';
@@ -249,7 +249,7 @@ module Loira{
 
             let _this = this;
 
-            this._scrollBar = new Common.ScrollBar(this.virtualCanvas);
+            this._scrollBar = new Common.ScrollBar(this);
 
             setTimeout(function(){
                 _this.renderAll(true);
@@ -295,6 +295,7 @@ module Loira{
          */
         renderAll(forceRender:boolean = false) {
             util.logger(LogLevel.INFO, 'Draw');
+
             if (this._fps.passed() || forceRender){
                 let ctx: CanvasRenderingContext2D = this._canvas.getContext('2d');
 
@@ -302,7 +303,7 @@ module Loira{
 
                 for (let i:number = 0; i < this.items.length; i++) {
                     ctx.save();
-                    this.items[i].render(ctx);
+                    this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
                     ctx.restore();
                 }
 
@@ -311,7 +312,7 @@ module Loira{
                     ctx.save();
                     this._selected.drawSelected(ctx);
                     ctx.restore();
-                    this._selected.renderButtons(ctx);
+                    this._selected.renderButtons(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
                 }
 
                 this._scrollBar.render(ctx);
@@ -958,7 +959,7 @@ module Loira{
          * @param resizeToImage Define if the canvas should resize to image size
          */
         setBackground(image: HTMLImageElement, resizeToImage: boolean) {
-            this._background = this.createHiDPICanvas(this._config.viewportWidth, this._config.viewportHeight);
+            this._background = this.createHiDPICanvas(image.width, image.height);
             this._background.style.position = 'absolute';
             this._background.style.left = '0';
             this._background.style.top = '0';
@@ -967,13 +968,10 @@ module Loira{
             this._background.getContext('2d').drawImage(image, 0, 0);
             this._canvas.style.backgroundColor = 'transparent';
 
-            /*if (resizeToImage) {
-                this._canvas.width = this._background.width;
-                this._canvas.height = this._background.height;
-                this._canvas.style.width = this._background.width + 'px';
-                this._canvas.style.height = this._background.height + 'px';
-                this._canvas.style.backgroundColor = 'transparent';
-            }*/
+            if (resizeToImage) {
+                this.virtualCanvas.width = this._background.width;
+                this.virtualCanvas.height = this._background.height;
+            }
 
             this.container.insertBefore(this._background, this._canvas);
         }
@@ -993,33 +991,6 @@ module Loira{
             this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
             this._canvas.style.backgroundColor = Loira.Config.background;
         }
-
-        /**
-         * Define un elemento que contendra al canvas y servira de scroll
-         */
-        /*private _setScrollContainer() {
-            let _this = this;
-
-            if (_this._canvasContainer) {
-                _this.container.removeEventListener('scroll', _this._canvasContainer.listener);
-            }
-
-            _this._canvasContainer = {
-                x: 0,
-                y: 0,
-                w: 0,
-                h: 0,
-                listener: function () {
-                    _this._canvasContainer.y = _this.container.scrollTop;
-                    _this._canvasContainer.x = _this.container.scrollLeft;
-                    return true;
-                }
-            };
-
-            _this._canvasContainer.w = _this.container.clientWidth;
-            _this._canvasContainer.h = _this.container.clientHeight;
-            _this.container.addEventListener('scroll', _this._canvasContainer.listener);
-        }*/
 
         /**
          * Obtain the linked relations to a object

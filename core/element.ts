@@ -67,10 +67,11 @@ module Loira{
          *
          * @memberof Loira.Element#
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+         * @param { number } vX Virtual x pointer
+         * @param { number } vY Virtual y pointer
          * @protected
-         * @abstract
          */
-        render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             this.animation.proccess();
         }
 
@@ -104,14 +105,15 @@ module Loira{
          *
          * @memberof Loira.Object#
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
-         * @private
+         * @param { number } vX Virtual x pointer
+         * @param { number } vY Virtual y pointer
          */
-        public renderButtons(ctx: CanvasRenderingContext2D): void {
+        public renderButtons(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             let x: number = this.x + this.width + 10;
             let y: number = this.y;
 
-            x -= this._canvas.virtualCanvas.x;
-            y -= this._canvas.virtualCanvas.y;
+            x -= vX;
+            y -= vY;
 
             if (this._buttons.length > 0) {
                 this._buttons.forEach(function (item) {

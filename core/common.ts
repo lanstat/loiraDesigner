@@ -385,15 +385,15 @@ module Common{
             return Math.sqrt(Math.pow((result.x - (this.x + this.width/2)), 2) + Math.pow((result.y - (this.y + this.height/2)), 2));
         }
 
-        public render(ctx: CanvasRenderingContext2D): void {
+        public render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             let textW:number = ctx.measureText(this.text).width;
             if (textW > this.width){
                 this.x = this.x + this.width/2 - textW/2;
                 this.width = textW;
             }
 
-            let x: number= this.x - this._canvas.virtualCanvas.x;
-            let y: number= this.y - this._canvas.virtualCanvas.y;
+            let x: number= this.x - vX;
+            let y: number= this.y - vY;
 
             ctx.fillStyle = Loira.Config.background;
             ctx.fillRect(x, y, this.width, this.height);
@@ -418,19 +418,20 @@ module Common{
         private _verSize: number;
         private _virtual: Loira.VirtualCanvas;
 
-        constructor(virtual: Loira.VirtualCanvas){
+        constructor(canvas: Loira.Canvas){
             super(new BaseOption());
             this.type = 'scrollBar';
 
-            this.width = virtual.viewportWidth;
-            this.height = virtual.viewportHeight;
+            this.width = canvas.virtualCanvas.viewportWidth;
+            this.height = canvas.virtualCanvas.viewportHeight;
 
-            this._horPos = virtual.x;
-            this._verPos = virtual.y;
-            this._horSize = Math.floor(this.width*(this.width / virtual.width));
-            this._verSize = Math.floor(this.height*(this.height / virtual.height));
+            this._horPos = canvas.virtualCanvas.x;
+            this._verPos = canvas.virtualCanvas.y;
+            this._horSize = Math.floor(this.width*(this.width / canvas.virtualCanvas.width));
+            this._verSize = Math.floor(this.height*(this.height / canvas.virtualCanvas.height));
 
-            this._virtual = virtual;
+            this._virtual = canvas.virtualCanvas;
+            this._canvas = canvas;
         }
 
         public render(ctx: CanvasRenderingContext2D): void {
@@ -467,6 +468,7 @@ module Common{
         addMovement(dir: string, delta: number): void{
             let tmp: number;
             let virtual: Loira.VirtualCanvas = this._virtual;
+            let background = this._canvas._background;
 
             if (dir === 'H'){
                 tmp = this._horPos + delta * 30;
@@ -478,6 +480,9 @@ module Common{
                     this._horPos = tmp;
                 }
                 virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
+                if(background){
+                    background.style.marginLeft = '-'+virtual.x+'px';
+                }
             } else if(dir === 'V') {
                 tmp = this._verPos + delta * 30;
                 if (tmp < 0) {
@@ -488,6 +493,9 @@ module Common{
                     this._verPos = tmp;
                 }
                 virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
+                if(background){
+                    background.style.marginTop = '-'+virtual.y+'px';
+                }
             }
             console.log(virtual);
         }

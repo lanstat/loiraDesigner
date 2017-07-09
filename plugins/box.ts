@@ -23,11 +23,13 @@ module Box{
             this.baseType = 'box';
         }
 
-        render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            let x: number = this.x - vX,
+                y: number = this.y - vY;
 
-            ctx.fillText(this.text, this.x, this.y -10)
+            ctx.fillRect(x, y, this.width, this.height);
+            ctx.fillText(this.text, x, y -10)
         }
 
         recalculateBorders() {
