@@ -238,8 +238,35 @@ module Loira{
             this.animation.setFps(canvas._config.fps);
         }
 
-        isVisible(x: number, y: number){
+        isVisible(virtual: VirtualCanvas): boolean{
+            let p1: Point = null,
+                p2: Point = null,
+                a1: Point = null,
+                a2: Point = null;
 
+            if (virtual.area > this.width * this.height){
+                p1 = {x: this.x, y: this.y};
+                p2 = {x: this.x + this.width, y: this.y + this.height};
+                a1 = {x: virtual.x, y: virtual.y};
+                a2 = {x: virtual.x + virtual.viewportWidth, y: virtual.y + virtual.viewportHeight};
+            } else {
+                a1 = {x: this.x, y: this.y};
+                a2 = {x: this.x + this.width, y: this.y + this.height};
+                p1 = {x: virtual.x, y: virtual.y};
+                p2 = {x: virtual.x + virtual.viewportWidth, y: virtual.y + virtual.viewportHeight};
+            }
+
+            if (p1.x > a1.x && p1.x < a2.x && p1.y > a1.y && p1.y <a2.y){
+                return true;
+            } else if (p1.x > a1.x && p1.x < a2.x && p2.y > a1.y && p2.y <a2.y){
+                return true;
+            } else if (p2.x > a1.x && p2.x < a2.x && p1.y > a1.y && p1.y <a2.y){
+                return true;
+            } else if (p2.x > a1.x && p2.x < a2.x && p2.y > a1.y && p2.y <a2.y){
+                return true;
+            }
+
+            return false;
         }
 
         animateTo(point: Point, seconds: number = 1): void {

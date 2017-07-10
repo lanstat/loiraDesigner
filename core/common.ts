@@ -4,6 +4,7 @@ module Common{
     import Line = Loira.util.Line;
     import Region = Loira.util.Region;
     import BaseOption = Loira.util.BaseOption;
+    import VirtualCanvas = Loira.VirtualCanvas;
 
     export enum TypeLine{
         STRAIGHT = 1,
@@ -258,6 +259,10 @@ module Common{
             this.points[point].x += x;
             this.points[point].y += y;
         }
+
+        isVisible(virtual: VirtualCanvas): boolean{
+            return true;
+        }
     }
 
     export abstract class Symbol extends Loira.Element{
@@ -497,7 +502,24 @@ module Common{
                     background.style.marginTop = '-'+virtual.y+'px';
                 }
             }
-            console.log(virtual);
+        }
+
+        setPosition(x: number, y: number): void{
+            let virtual: Loira.VirtualCanvas = this._virtual;
+            let background = this._canvas._background;
+
+            x = x<0? 0: x;
+            y = y<0? 0: y;
+
+            virtual.x = x;
+            virtual.y = y;
+            this._horPos = Math.floor((virtual.x * virtual.viewportWidth)/ virtual.width);
+            this._verPos  = Math.floor((virtual.y * virtual.viewportHeight)/ virtual.height);
+
+            if(background){
+                background.style.marginTop = '-'+virtual.y+'px';
+                background.style.marginLeft = '-'+virtual.x+'px';
+            }
         }
     }
 }

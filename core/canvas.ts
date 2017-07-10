@@ -302,9 +302,13 @@ module Loira{
                 ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
                 for (let i:number = 0; i < this.items.length; i++) {
-                    ctx.save();
-                    this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
-                    ctx.restore();
+                    if (this.items[i].isVisible(this.virtualCanvas)){
+                        ctx.save();
+                        this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
+                        ctx.restore();
+                    } else {
+                        console.log('asdasdasdasdasdasd');
+                    }
                 }
 
                 if (this._selected && this._selected.selectable) {
@@ -375,14 +379,8 @@ module Loira{
                     _this.emit('container:added', new ObjectEvent(item), fireEvent);
                 } else {
                     if (item.centerObject) {
-                        // TODO verificar cuando se complete el canvas
-                        if (false) {//if (_this._canvasContainer) {
-                            /*item.x = (_this._canvasContainer.w / 2) + _this._canvasContainer.x - (item.width / 2);
-                            item.y = (_this._canvasContainer.h / 2) + _this._canvasContainer.y - (item.height / 2);*/
-                        } else {
-                            item.x = _this._canvas.width / 2;
-                            item.y = _this._canvas.height / 2;
-                        }
+                        item.x = (_this.virtualCanvas.viewportWidth / 2) + _this.virtualCanvas.x - (item.width / 2);
+                        item.y = (_this.virtualCanvas.viewportHeight / 2) + _this.virtualCanvas.y - (item.height / 2);
                     }
 
                     _items.push(item);
@@ -551,7 +549,6 @@ module Loira{
             let onKeyDown = function(evt, isGlobal){
                 if (evt.keyCode == 18){return;}
                 _this._tmp.lastKey = evt.keyCode;
-                console.log(evt.keyCode);
 
                 if (!isGlobal){
                     if (_this._tmp.lastKey === 46) {
@@ -926,11 +923,6 @@ module Loira{
 
             let response: Point = {x: (evt.pageX - offsetX), y: (evt.pageY - offsetY)};
 
-            // TODO verificar cuando se complete virtual canvas
-            /*if (this._canvasContainer) {
-                response.x += this._canvasContainer.x;
-                response.y += this._canvasContainer.y;
-            }*/
             response.x += this.virtualCanvas.x;
             response.y += this.virtualCanvas.y;
 
@@ -1027,18 +1019,12 @@ module Loira{
          * @param y Y position
          */
         centerToPoint(x: number, y: number): void{
-            // TODO Verificar cuando se complete el canvas virtual
+            x = x - (this.virtualCanvas.viewportWidth / 2);
+            y = y - (this.virtualCanvas.viewportHeight / 2);
 
-            /*if (this._canvas && this._canvasContainer) {
-                x = x - this.container.offsetWidth / 2;
-                y = y - this.container.offsetHeight / 2;
-                x = x >= 0 ? x : 0;
-                y = y >= 0 ? y : 0;
-                this._canvasContainer.x = x;
-                this._canvasContainer.y = y;
-                this.container.scrollTop = y;
-                this.container.scrollLeft = x;
-            }*/
+            this._scrollBar.setPosition(x, y);
+
+            this.renderAll(true);
         }
 
         setSelectedElement(element: Element){
@@ -1099,15 +1085,18 @@ module Loira{
                 }
             }
 
+            let x: number = this.virtualCanvas.x,
+                y: number = this.virtualCanvas.y;
+
             for (let i:number = 0; i < this.items.length; i++) {
                 ctx.save();
 
                 if (this.items[i].baseType !== 'relation') {
-                    this.items[i].render(ctx);
+                    this.items[i].render(ctx, x, y);
                     this.items[i].x += offSetX;
                     this.items[i].y += offSetY;
                 } else {
-                    this.items[i].render(ctx);
+                    this.items[i].render(ctx, x, y);
                 }
                 ctx.restore();
             }
