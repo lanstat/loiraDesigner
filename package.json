@@ -33,7 +33,6 @@
     "gulp-load-plugins": "^1.4.0",
     "gulp-load-utils": "0.0.4",
     "gulp-task-listing": "^1.0.1",
-    "gulp-typescript": "^3.1.6",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.1",
     "jquery": "^3.1.1",
@@ -41,9 +40,6 @@
     "karma-coverage": "^1.1.1",
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-qunit": "^1.2.1",
-    "merge2": "^1.0.3",
-    "qunitjs": "~2.0.1",
-    "tslint": "^5.1.0",
-    "typescript": "^2.3.1"
+    "qunitjs": "~2.0.1"
   }
 }
