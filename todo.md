@@ -11,8 +11,8 @@
 - [x] Generalizar el diseño para tener un modulo solo de uml
 - [x] Cambiar el uso de viewport y que el plugin genere el canvas
 - [ ] Agregar diretiva para angular y plugin para jquery
-- [ ] Manejar un canvas que solo dibuje un subconjunto del canvas real
-- [ ] Funcion de generacion de imagen jpg o png
+- [x] Manejar un canvas que solo dibuje un subconjunto del canvas real
+- [x] Funcion de generacion de imagen jpg o png
 - [ ] Agregar soporte de multiples diagramas en un solo canvas
 - [ ] Agregar soporte para zoom
 - [ ] Agregar soporte para leyenda

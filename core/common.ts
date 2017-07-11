@@ -453,18 +453,17 @@ module Common{
         public render(ctx: CanvasRenderingContext2D): void {
             let config: any = Loira.Config.scrollBar;
 
-            ctx.fillStyle = Loira.Config.scrollBar.background;
-
-            ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
-            ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
-
-            ctx.fillStyle = Loira.Config.scrollBar.color;
-
-            if (config.isRounded) {
-                Loira.shape.drawRoundRect(ctx, this.width - config.size, this._verPos, config.size, this._verSize, 5);
-                Loira.shape.drawRoundRect(ctx, this._horPos, this.height - config.size, this._horSize, config.size, 5);
-            } else {
+            if (this._virtual.width > this._virtual.viewportWidth){
+                ctx.fillStyle = Loira.Config.scrollBar.background;
+                ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
+                ctx.fillStyle = Loira.Config.scrollBar.color;
                 ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
+            }
+
+            if (this._virtual.height > this._virtual.viewportHeight){
+                ctx.fillStyle = Loira.Config.scrollBar.background;
+                ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
+                ctx.fillStyle = Loira.Config.scrollBar.color;
                 ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
             }
 

@@ -162,16 +162,19 @@ var Loira;
     var RelationEvent = Loira.event.RelationEvent;
     var ObjectEvent = Loira.event.ObjectEvent;
     var MouseEvent = Loira.event.MouseEvent;
-    var CanvasContainer = (function () {
-        function CanvasContainer() {
+    var VirtualCanvas = (function () {
+        function VirtualCanvas() {
             this.x = 0;
             this.y = 0;
-            this.w = 0;
-            this.h = 0;
+            this.width = 0;
+            this.height = 0;
+            this.viewportWidth = 0;
+            this.viewportHeight = 0;
+            this.area = 0;
         }
-        return CanvasContainer;
+        return VirtualCanvas;
     }());
-    Loira.CanvasContainer = CanvasContainer;
+    Loira.VirtualCanvas = VirtualCanvas;
     var CanvasConfig = (function () {
         function CanvasConfig() {
             this.width = 0;
@@ -274,11 +277,10 @@ var Loira;
              * @property {HTMLCanvasElement} _background - Imagen de fondo
              */
             this._background = null;
-            //private _scrollBar: Common.ScrollBar;
             /**
-             * @property {Object} _canvasContainer - Contenedor del canvas
+             * @property {VirtualCanvas} virtualCanvas - Virtual canvas that contains all information of the size
              */
-            this._canvasContainer = null;
+            this.virtualCanvas = null;
             /**
              * @property {String}  defaultRelation - Relacion que se usara por defecto cuando se agregue una nueva union
              */
@@ -312,7 +314,6 @@ var Loira;
             Loira.drawable.registerMap(Loira.Config.assetsPath, Loira.Config.regions, function () {
                 _this.renderAll();
             });
-            this._setScrollContainer();
             this._fps = new FpsCounter(config.fps);
             this._zoom = new ZoomData(this);
             this.controller = config.controller || null;
@@ -327,8 +328,8 @@ var Loira;
             this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
             this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
             this.container.style.position = 'relative';
-            this.container.style.overflow = 'auto';
-            this._canvas = this.createHiDPICanvas(this._config.width, this._config.height);
+            this.container.style.overflow = 'hidden';
+            this._canvas = this.createHiDPICanvas(this._config.viewportWidth, this._config.viewportHeight);
             this._canvas.style.position = 'absolute';
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
@@ -336,6 +337,15 @@ var Loira;
             this._canvas.style.backgroundColor = Loira.Config.background;
             this._canvas.tabIndex = 99;
             this.container.appendChild(this._canvas);
+            this.virtualCanvas = {
+                x: 0,
+                y: 0,
+                viewportWidth: this._config.viewportWidth,
+                viewportHeight: this._config.viewportHeight,
+                width: this._config.width,
+                height: this._config.height,
+                area: this._config.viewportHeight * this._config.viewportWidth
+            };
             if (document.defaultView && document.defaultView.getComputedStyle) {
                 this._border = {
                     paddingLeft: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['paddingLeft'], 10) || 0,
@@ -346,8 +356,7 @@ var Loira;
             }
             this._bind();
             var _this = this;
-            //this._scrollBar = new Common.ScrollBar();
-            //this._scrollBar.attach(_this);
+            this._scrollBar = new Common.ScrollBar(this);
             setTimeout(function () {
                 _this.renderAll(true);
             }, 200);
@@ -391,18 +400,20 @@ var Loira;
                 var ctx = this._canvas.getContext('2d');
                 ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
                 for (var i = 0; i < this.items.length; i++) {
-                    ctx.save();
-                    this.items[i].render(ctx);
-                    ctx.restore();
+                    if (this.items[i].isVisible(this.virtualCanvas)) {
+                        ctx.save();
+                        this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
+                        ctx.restore();
+                    }
                 }
                 if (this._selected && this._selected.selectable) {
                     Loira.util.logger(Loira.LogLevel.INFO, 'Selected');
                     ctx.save();
                     this._selected.drawSelected(ctx);
                     ctx.restore();
-                    this._selected.renderButtons(ctx);
+                    this._selected.renderButtons(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
                 }
-                //this._scrollBar.render(ctx);
+                this._scrollBar.render(ctx);
             }
         };
         /**
@@ -463,14 +474,8 @@ var Loira;
                 }
                 else {
                     if (item.centerObject) {
-                        if (_this._canvasContainer) {
-                            item.x = (_this._canvasContainer.w / 2) + _this._canvasContainer.x - (item.width / 2);
-                            item.y = (_this._canvasContainer.h / 2) + _this._canvasContainer.y - (item.height / 2);
-                        }
-                        else {
-                            item.x = _this._canvas.width / 2;
-                            item.y = _this._canvas.height / 2;
-                        }
+                        item.x = (_this.virtualCanvas.viewportWidth / 2) + _this.virtualCanvas.x - (item.width / 2);
+                        item.y = (_this.virtualCanvas.viewportHeight / 2) + _this.virtualCanvas.y - (item.height / 2);
                     }
                     _items.push(item);
                     /**
@@ -557,11 +562,7 @@ var Loira;
                 this._canvas.ondblclick = null;
                 this._canvas.onselectstart = null;
             }
-            if (this._canvasContainer) {
-                this.container.removeEventListener('scroll', this._canvasContainer.listener);
-            }
             document.createElement('ul').remove();
-            this._canvasContainer = null;
             this._canvas = null;
             while (this.container.firstChild) {
                 this.container.removeChild(this.container.firstChild);
@@ -662,6 +663,10 @@ var Loira;
                     _this._zoom.update(evt.deltaY);
                     return false;
                 }
+                else {
+                    _this._scrollBar.addMovement(_this._tmp.lastKey === 16 ? 'H' : 'V', (evt.deltaY / Math.abs(evt.deltaY)));
+                }
+                _this.renderAll();
             };
             var onDown = function (evt, isDoubleClick) {
                 var real = _this._getMouse(evt);
@@ -869,16 +874,19 @@ var Loira;
                         }
                     }
                     else {
-                        if (_this._config.dragCanvas) {
+                        // TODO Verificar cuando se complete el canvas
+                        /*if (_this._config.dragCanvas){
                             if (_this._canvas && _this._canvasContainer) {
-                                x = x === 0 ? x : x / Math.abs(x);
-                                y = y === 0 ? y : y / Math.abs(y);
-                                _this.container.scrollLeft -= _this._zoom.scrollX * x;
-                                _this.container.scrollTop -= _this._zoom.scrollY * y;
+                                x = x === 0? x : x/Math.abs(x);
+                                y =  y === 0? y : y/Math.abs(y);
+
+                                _this.container.scrollLeft -= _this._zoom.scrollX*x;
+                                _this.container.scrollTop -= _this._zoom.scrollY*y;
+
                                 _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
                                 _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
                             }
-                        }
+                        }*/
                     }
                     _this._tmp.pointer = real;
                 }
@@ -931,7 +939,7 @@ var Loira;
             var resizeHandler = function () {
                 clearTimeout(resizeID);
                 resizeID = setTimeout(function () {
-                    //_this.refreshScreen();
+                    _this.refreshScreen();
                 }, 500);
             };
             window.removeEventListener('resize', resizeHandler);
@@ -979,10 +987,8 @@ var Loira;
             offsetX += border.borderLeft;
             offsetY += border.borderTop;
             var response = { x: (evt.pageX - offsetX), y: (evt.pageY - offsetY) };
-            if (this._canvasContainer) {
-                response.x += this._canvasContainer.x;
-                response.y += this._canvasContainer.y;
-            }
+            response.x += this.virtualCanvas.x;
+            response.y += this.virtualCanvas.y;
             return response;
         };
         Canvas.prototype.removeRelation = function (start, end) {
@@ -1011,12 +1017,11 @@ var Loira;
             this._background.style.top = '0';
             this._background.style.zIndex = '0';
             this._background.getContext('2d').drawImage(image, 0, 0);
+            this._canvas.style.backgroundColor = 'transparent';
             if (resizeToImage) {
-                this._canvas.width = this._background.width;
-                this._canvas.height = this._background.height;
-                this._canvas.style.width = this._background.width + 'px';
-                this._canvas.style.height = this._background.height + 'px';
-                this._canvas.style.backgroundColor = 'transparent';
+                this.virtualCanvas.width = image.width;
+                this.virtualCanvas.height = image.height;
+                this._scrollBar = new Common.ScrollBar(this);
             }
             this.container.insertBefore(this._background, this._canvas);
         };
@@ -1033,29 +1038,6 @@ var Loira;
             this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
             this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
             this._canvas.style.backgroundColor = Loira.Config.background;
-        };
-        /**
-         * Define un elemento que contendra al canvas y servira de scroll
-         */
-        Canvas.prototype._setScrollContainer = function () {
-            var _this = this;
-            if (_this._canvasContainer) {
-                _this.container.removeEventListener('scroll', _this._canvasContainer.listener);
-            }
-            _this._canvasContainer = {
-                x: 0,
-                y: 0,
-                w: 0,
-                h: 0,
-                listener: function () {
-                    _this._canvasContainer.y = _this.container.scrollTop;
-                    _this._canvasContainer.x = _this.container.scrollLeft;
-                    return true;
-                }
-            };
-            _this._canvasContainer.w = _this.container.clientWidth;
-            _this._canvasContainer.h = _this.container.clientHeight;
-            _this.container.addEventListener('scroll', _this._canvasContainer.listener);
         };
         /**
          * Obtain the linked relations to a object
@@ -1093,16 +1075,10 @@ var Loira;
          * @param y Y position
          */
         Canvas.prototype.centerToPoint = function (x, y) {
-            if (this._canvas && this._canvasContainer) {
-                x = x - this.container.offsetWidth / 2;
-                y = y - this.container.offsetHeight / 2;
-                x = x >= 0 ? x : 0;
-                y = y >= 0 ? y : 0;
-                this._canvasContainer.x = x;
-                this._canvasContainer.y = y;
-                this.container.scrollTop = y;
-                this.container.scrollLeft = x;
-            }
+            x = x - (this.virtualCanvas.viewportWidth / 2);
+            y = y - (this.virtualCanvas.viewportHeight / 2);
+            this._scrollBar.setPosition(x, y);
+            this.renderAll(true);
         };
         Canvas.prototype.setSelectedElement = function (element) {
             this._selected = element;
@@ -1152,15 +1128,16 @@ var Loira;
                     this.items[i].y -= offSetY;
                 }
             }
+            var x = this.virtualCanvas.x, y = this.virtualCanvas.y;
             for (var i = 0; i < this.items.length; i++) {
                 ctx.save();
                 if (this.items[i].baseType !== 'relation') {
-                    this.items[i].render(ctx);
+                    this.items[i].render(ctx, x, y);
                     this.items[i].x += offSetX;
                     this.items[i].y += offSetY;
                 }
                 else {
-                    this.items[i].render(ctx);
+                    this.items[i].render(ctx, x, y);
                 }
                 ctx.restore();
             }
@@ -1256,6 +1233,16 @@ var Loira;
             return Point;
         }());
         util.Point = Point;
+        var Rect = (function () {
+            function Rect(x, y, width, height) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            }
+            return Rect;
+        }());
+        util.Rect = Rect;
         /**
          * Crea una cadena con caracteres aleatorios
          *
@@ -1373,10 +1360,11 @@ var Loira;
          *
          * @memberof Loira.Element#
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+         * @param { number } vX Virtual x pointer
+         * @param { number } vY Virtual y pointer
          * @protected
-         * @abstract
          */
-        Element.prototype.render = function (ctx) {
+        Element.prototype.render = function (ctx, vX, vY) {
             this.animation.proccess();
         };
         /**
@@ -1410,11 +1398,14 @@ var Loira;
          *
          * @memberof Loira.Object#
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
-         * @private
+         * @param { number } vX Virtual x pointer
+         * @param { number } vY Virtual y pointer
          */
-        Element.prototype.renderButtons = function (ctx) {
+        Element.prototype.renderButtons = function (ctx, vX, vY) {
             var x = this.x + this.width + 10;
             var y = this.y;
+            x -= vX;
+            y -= vY;
             if (this._buttons.length > 0) {
                 this._buttons.forEach(function (item) {
                     Loira.drawable.render(item.icon, ctx, x, y);
@@ -1455,6 +1446,8 @@ var Loira;
          */
         Element.prototype.drawSelected = function (ctx) {
             var x = this.x - 2, y = this.y - 2, w = this.width, h = this.height;
+            x -= this._canvas.virtualCanvas.x;
+            y -= this._canvas.virtualCanvas.y;
             ctx.beginPath();
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
@@ -1516,6 +1509,34 @@ var Loira;
             this._canvas = canvas;
             this.animation.setFps(canvas._config.fps);
         };
+        Element.prototype.isVisible = function (virtual) {
+            var p1 = null, p2 = null, a1 = null, a2 = null;
+            if (virtual.area > this.width * this.height) {
+                p1 = { x: this.x, y: this.y };
+                p2 = { x: this.x + this.width, y: this.y + this.height };
+                a1 = { x: virtual.x, y: virtual.y };
+                a2 = { x: virtual.x + virtual.viewportWidth, y: virtual.y + virtual.viewportHeight };
+            }
+            else {
+                a1 = { x: this.x, y: this.y };
+                a2 = { x: this.x + this.width, y: this.y + this.height };
+                p1 = { x: virtual.x, y: virtual.y };
+                p2 = { x: virtual.x + virtual.viewportWidth, y: virtual.y + virtual.viewportHeight };
+            }
+            if (p1.x > a1.x && p1.x < a2.x && p1.y > a1.y && p1.y < a2.y) {
+                return true;
+            }
+            else if (p1.x > a1.x && p1.x < a2.x && p2.y > a1.y && p2.y < a2.y) {
+                return true;
+            }
+            else if (p2.x > a1.x && p2.x < a2.x && p1.y > a1.y && p1.y < a2.y) {
+                return true;
+            }
+            else if (p2.x > a1.x && p2.x < a2.x && p2.y > a1.y && p2.y < a2.y) {
+                return true;
+            }
+            return false;
+        };
         Element.prototype.animateTo = function (point, seconds) {
             if (seconds === void 0) { seconds = 1; }
             var time = this._canvas._config.fps * seconds;
@@ -1542,6 +1563,7 @@ var Common;
 (function (Common) {
     var Point = Loira.util.Point;
     var BaseOption = Loira.util.BaseOption;
+    var Rect = Loira.util.Rect;
     var TypeLine;
     (function (TypeLine) {
         TypeLine[TypeLine["STRAIGHT"] = 1] = "STRAIGHT";
@@ -1566,10 +1588,14 @@ var Common;
          *
          * @memberof Common.Relation#
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+         * @param { number } vX Virtual x pointer
+         * @param { number } vY Virtual y pointer
          * @protected
          */
-        Relation.prototype.render = function (ctx) {
-            var start = this.start, end = this.end, tmp, init, last, xm, ym;
+        Relation.prototype.render = function (ctx, vX, vY) {
+            var start, end, tmp, init, last, xm, ym;
+            start = new Rect(this.start.x - vX, this.start.y - vY, this.start.width, this.start.height);
+            end = new Rect(this.end.x - vX, this.end.y - vY, this.end.width, this.end.height);
             this.points[0] = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
             this.points[this.points.length - 1] = { x: end.x + end.width / 2, y: end.y + end.height / 2 };
             init = this.points[0];
@@ -1581,6 +1607,10 @@ var Common;
                 ctx.setLineDash([5, 5]);
             }
             for (var i = 1; i < this.points.length; i++) {
+                if (i < this.points.length - 1) {
+                    this.points[i].x -= vX;
+                    this.points[i].y -= vY;
+                }
                 ctx.lineTo(this.points[i].x, this.points[i].y);
             }
             ctx.stroke();
@@ -1597,7 +1627,7 @@ var Common;
                 ctx.translate(last.x, last.y);
                 ctx.rotate(tmp);
                 var region = Loira.drawable.get(this.icon);
-                var border = end.obtainBorderPos(xm, ym, { x1: init.x, y1: init.y, x2: last.x, y2: last.y }, ctx);
+                var border = this.end.obtainBorderPos(xm, ym, { x1: init.x, y1: init.y, x2: last.x, y2: last.y }, ctx);
                 Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height / 2));
                 ctx.rotate(-tmp);
                 ctx.translate(-last.x, -last.y);
@@ -1733,6 +1763,9 @@ var Common;
             this.points[point].x += x;
             this.points[point].y += y;
         };
+        Relation.prototype.isVisible = function (virtual) {
+            return true;
+        };
         return Relation;
     }(Loira.Element));
     Common.Relation = Relation;
@@ -1792,7 +1825,7 @@ var Common;
             return lines;
         };
         Symbol.prototype.drawText = function (ctx, line) {
-            var y, xm = this.x + this.width / 2, ym = this.y + this.height / 2, lines;
+            var y, xm = (this.x - this._canvas.virtualCanvas.x) + this.width / 2, ym = (this.y - this._canvas.virtualCanvas.y) + this.height / 2, lines;
             lines = this.splitText(ctx, line);
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
             for (var i = 0; i < lines.length; i++) {
@@ -1834,19 +1867,21 @@ var Common;
             }
             return Math.sqrt(Math.pow((result.x - (this.x + this.width / 2)), 2) + Math.pow((result.y - (this.y + this.height / 2)), 2));
         };
-        Actor.prototype.render = function (ctx) {
+        Actor.prototype.render = function (ctx, vX, vY) {
             var textW = ctx.measureText(this.text).width;
             if (textW > this.width) {
                 this.x = this.x + this.width / 2 - textW / 2;
                 this.width = textW;
             }
+            var x = this.x - vX;
+            var y = this.y - vY;
             ctx.fillStyle = Loira.Config.background;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.fillRect(x, y, this.width, this.height);
             ctx.fillStyle = "#000000";
-            Loira.drawable.render('actor', ctx, this.x + this.width / 2 - 15, this.y);
+            Loira.drawable.render('actor', ctx, x + this.width / 2 - 15, y);
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.fillStyle = "#000000";
-            ctx.fillText(this.text, this.x, this.y + 80);
+            ctx.fillText(this.text, x, y + 80);
         };
         Actor.prototype.recalculateBorders = function () {
         };
@@ -1855,16 +1890,33 @@ var Common;
     Common.Actor = Actor;
     var ScrollBar = (function (_super) {
         __extends(ScrollBar, _super);
-        function ScrollBar() {
+        function ScrollBar(canvas) {
             var _this = _super.call(this, new BaseOption()) || this;
             _this.type = 'scrollBar';
+            _this.width = canvas.virtualCanvas.viewportWidth;
+            _this.height = canvas.virtualCanvas.viewportHeight;
+            _this._horPos = canvas.virtualCanvas.x;
+            _this._verPos = canvas.virtualCanvas.y;
+            _this._horSize = Math.floor(_this.width * (_this.width / canvas.virtualCanvas.width));
+            _this._verSize = Math.floor(_this.height * (_this.height / canvas.virtualCanvas.height));
+            _this._virtual = canvas.virtualCanvas;
+            _this._canvas = canvas;
             return _this;
         }
         ScrollBar.prototype.render = function (ctx) {
-            var width = Loira.Config.scrollBar.width;
-            ctx.fillStyle = Loira.Config.scrollBar.color;
-            ctx.fillRect(this.width - width, 0, width, 30);
-            ctx.fillRect(0, this.height - width, 30, width);
+            var config = Loira.Config.scrollBar;
+            if (this._virtual.width > this._virtual.viewportWidth) {
+                ctx.fillStyle = Loira.Config.scrollBar.background;
+                ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
+                ctx.fillStyle = Loira.Config.scrollBar.color;
+                ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
+            }
+            if (this._virtual.height > this._virtual.viewportHeight) {
+                ctx.fillStyle = Loira.Config.scrollBar.background;
+                ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
+                ctx.fillStyle = Loira.Config.scrollBar.color;
+                ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
+            }
             ctx.fillStyle = "#000000";
         };
         ScrollBar.prototype.recalculateBorders = function () {
@@ -1878,12 +1930,58 @@ var Common;
          * @returns {boolean}
          */
         ScrollBar.prototype.checkCollision = function (x, y) {
-            return (x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height);
+            return false;
         };
-        ScrollBar.prototype.attach = function (canvas) {
-            _super.prototype.attach.call(this, canvas);
-            this.width = canvas._config.viewportWidth;
-            this.height = canvas._config.viewportHeight;
+        ScrollBar.prototype.addMovement = function (dir, delta) {
+            var tmp;
+            var virtual = this._virtual;
+            var background = this._canvas._background;
+            if (dir === 'H') {
+                tmp = this._horPos + delta * 30;
+                if (tmp < 0) {
+                    this._horPos = 0;
+                }
+                else if (tmp + this._horSize > virtual.viewportWidth) {
+                    this._horPos = virtual.viewportWidth - this._horSize;
+                }
+                else {
+                    this._horPos = tmp;
+                }
+                virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
+                if (background) {
+                    background.style.marginLeft = '-' + virtual.x + 'px';
+                }
+            }
+            else if (dir === 'V') {
+                tmp = this._verPos + delta * 30;
+                if (tmp < 0) {
+                    this._verPos = 0;
+                }
+                else if (tmp + this._verSize > virtual.viewportHeight) {
+                    this._verPos = virtual.viewportHeight - this._verSize;
+                }
+                else {
+                    this._verPos = tmp;
+                }
+                virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
+                if (background) {
+                    background.style.marginTop = '-' + virtual.y + 'px';
+                }
+            }
+        };
+        ScrollBar.prototype.setPosition = function (x, y) {
+            var virtual = this._virtual;
+            var background = this._canvas._background;
+            x = x < 0 ? 0 : x;
+            y = y < 0 ? 0 : y;
+            virtual.x = x;
+            virtual.y = y;
+            this._horPos = Math.floor((virtual.x * virtual.viewportWidth) / virtual.width);
+            this._verPos = Math.floor((virtual.y * virtual.viewportHeight) / virtual.height);
+            if (background) {
+                background.style.marginTop = '-' + virtual.y + 'px';
+                background.style.marginLeft = '-' + virtual.x + 'px';
+            }
         };
         return ScrollBar;
     }(Loira.Element));
@@ -1907,8 +2005,9 @@ var Loira;
         'arrow': { x: 27, y: 26, width: 12, height: 16 }
     };
     var _scrollBar = {
-        width: 15,
-        color: '#00FF00'
+        size: 10,
+        color: 'rgba(255, 255, 255, 0.85)',
+        background: 'rgba(0, 0, 0, 0.15)'
     };
     var _orgchart = {
         roleWidth: 150
@@ -2236,17 +2335,18 @@ var UseCase;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        UseCase.prototype.render = function (ctx) {
+        UseCase.prototype.render = function (ctx, vX, vY) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             if (this.text) {
-                var kappa = .5522848, ox = (this.width / 2) * kappa, oy = (this.height / 2) * kappa, xe = this.x + this.width, ye = this.y + this.height, xm = this.x + this.width / 2, ym = this.y + this.height / 2;
+                var x = this.x - vX, y = this.y - vY;
+                var kappa = .5522848, ox = (this.width / 2) * kappa, oy = (this.height / 2) * kappa, xe = x + this.width, ye = y + this.height, xm = x + this.width / 2, ym = y + this.height / 2;
                 ctx.beginPath();
                 ctx.lineWidth = 2;
-                ctx.moveTo(this.x, ym);
-                ctx.bezierCurveTo(this.x, ym - oy, xm - ox, this.y, xm, this.y);
-                ctx.bezierCurveTo(xm + ox, this.y, xe, ym - oy, xe, ym);
+                ctx.moveTo(x, ym);
+                ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+                ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
                 ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-                ctx.bezierCurveTo(xm - ox, ye, this.x, ym + oy, this.x, ym);
+                ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
                 ctx.stroke();
                 ctx.fillStyle = "#fcf5d9";
                 ctx.fill();
@@ -2340,10 +2440,11 @@ var Box;
             _this.baseType = 'box';
             return _this;
         }
-        Box.prototype.render = function (ctx) {
+        Box.prototype.render = function (ctx, vX, vY) {
             ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.fillText(this.text, this.x, this.y - 10);
+            var x = this.x - vX, y = this.y - vY;
+            ctx.fillRect(x, y, this.width, this.height);
+            ctx.fillText(this.text, x, y - 10);
         };
         Box.prototype.recalculateBorders = function () {
         };
@@ -2695,6 +2796,7 @@ var OrgChart;
 (function (OrgChart) {
     var BaseController = Loira.BaseController;
     var RelOption = Loira.util.RelOption;
+    var Rect = Loira.util.Rect;
     var levelColor = ['#124FFD', '#FF4FFD', '#12003D'];
     var levelHeight;
     var RoleOption = (function (_super) {
@@ -3032,9 +3134,10 @@ var OrgChart;
             _this.type = 'role';
             return _this;
         }
-        Role.prototype.render = function (ctx) {
-            _super.prototype.render.call(this, ctx);
-            var y, xm = this.x + this.width / 2, height = 0;
+        Role.prototype.render = function (ctx, vX, vY) {
+            _super.prototype.render.call(this, ctx, vX, vY);
+            var pX = this.x - vX, pY = this.y - vY;
+            var y, xm = pX + this.width / 2, height = 0;
             var personData, titleData;
             if (this.personName) {
                 personData = {
@@ -3050,7 +3153,7 @@ var OrgChart;
                 };
                 height += (titleData.fontSize + 3) * titleData.lines.length + 5;
             }
-            y = this.y + Loira.Config.fontSize;
+            y = pY + Loira.Config.fontSize;
             this.height = height;
             var radius = 5;
             var shadowColor;
@@ -3073,7 +3176,7 @@ var OrgChart;
                 ctx.shadowColor = shadowColor;
                 ctx.shadowBlur = shadowBlur;
             }
-            Loira.shape.drawRoundRect(ctx, this.x, this.y, this.width, this.height, radius);
+            Loira.shape.drawRoundRect(ctx, pX, pY, this.width, this.height, radius);
             ctx.fillStyle = "#FFFFFF";
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             if (personData) {
@@ -3100,7 +3203,7 @@ var OrgChart;
         };
         Role.prototype.drawSelected = function (ctx) {
             this.isSelected = true;
-            this.render(ctx);
+            this.render(ctx, this._canvas.virtualCanvas.x, this._canvas.virtualCanvas.y);
         };
         Role.prototype.attach = function (canvas) {
             _super.prototype.attach.call(this, canvas);
@@ -3166,8 +3269,8 @@ var OrgChart;
             _this.type = 'orgchart:relation';
             return _this;
         }
-        Relation.prototype.render = function (ctx) {
-            var start = this.start, end = this.end, middleLine, init;
+        Relation.prototype.render = function (ctx, vX, vY) {
+            var start = new Rect(this.start.x - vX, this.start.y - vY, this.start.width, this.start.height), end = new Rect(this.end.x - vX, this.end.y - vY, this.end.width, this.end.height), middleLine, init;
             middleLine = end.y - 10;
             init = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
             this.points[0] = init;

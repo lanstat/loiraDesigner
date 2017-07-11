@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="../build/min/loira.min.js"></script>
+    <link href="../build/styles/context-menu.css" rel="stylesheet">
+    <style>
+    </style>
+</head>
+<body>
+<div style="width: 100%">
+    <div style="width: 500px; height: 500px; float: left">
+        <div id="_canvas"></div>
+    </div>
+</div>
+<script>
+    window.onload = function(){
+        Loira.Config.assetsPath = '../build/assets/glyphs.png';
+
+        var canvas = new Loira.Canvas('_canvas');
+        var case1 = new UseCase.UseCase({x:190,y:200, text:'Right click'});
+
+        case1.menu = [
+            {item:'Hola', callback: function(evt, item){
+                console.log(item);
+            }},
+            {item:'Mundo', callback: function(){
+                console.log('hello world');
+            }}
+        ];
+
+        canvas.add([case1]);
+    }
+</script>
+</body>
+</html>

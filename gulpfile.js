@@ -71,6 +71,13 @@ gulp.task('copyAssets', function(){
         .pipe(gulp.dest(paths.build+'/assets'));
 });
 
+gulp.task('copyStyles', function(){
+    console.log('Copiando estilos');
+    return gulp
+        .src('styles/**')
+        .pipe(gulp.dest(paths.build+'/styles'));
+});
+
 gulp.task('copyJs', function(){
     console.log('Copiando js');
     return gulp
@@ -78,7 +85,7 @@ gulp.task('copyJs', function(){
         .pipe(gulp.dest(paths.build+'/js'));
 });
 
-gulp.task('build', ['jsmin', 'js', 'copyAssets']);
+gulp.task('build', ['jsmin', 'js', 'copyAssets', 'copyStyles']);
 
 /**
  * Ejecuta las pruebas de la aplicacion

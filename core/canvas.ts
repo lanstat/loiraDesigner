@@ -194,8 +194,6 @@ module Loira{
                 _this.renderAll();
             });
 
-            //this._setScrollContainer();
-
             this._fps = new FpsCounter(config.fps);
             this._zoom = new ZoomData(this);
 
@@ -306,8 +304,6 @@ module Loira{
                         ctx.save();
                         this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
                         ctx.restore();
-                    } else {
-                        console.log('asdasdasdasdasdasd');
                     }
                 }
 
@@ -868,7 +864,7 @@ module Loira{
             let resizeHandler = function(){
                 clearTimeout(resizeID);
                 resizeID = setTimeout(function (){
-                    //_this.refreshScreen();
+                    _this.refreshScreen();
                 }, 500);
             };
 
@@ -961,8 +957,10 @@ module Loira{
             this._canvas.style.backgroundColor = 'transparent';
 
             if (resizeToImage) {
-                this.virtualCanvas.width = this._background.width;
-                this.virtualCanvas.height = this._background.height;
+                this.virtualCanvas.width = image.width;
+                this.virtualCanvas.height = image.height;
+
+                this._scrollBar = new Common.ScrollBar(this);
             }
 
             this.container.insertBefore(this._background, this._canvas);

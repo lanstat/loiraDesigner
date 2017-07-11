@@ -1,0 +1,23 @@
+<html>
+<head>
+    <script type="text/javascript" src="../build/min/loira.min.js"></script>
+    <style>
+    </style>
+</head>
+<body>
+<div style="width: 100%">
+    <div style="width: 500px; height: 500px; float: left">
+        <div id="_canvas"></div>
+    </div>
+</div>
+<script>
+    window.onload = function(){
+        Loira.Config.assetsPath = '../build/assets/glyphs.png';
+
+        var canvas = new Loira.Canvas('_canvas');
+
+        canvas.add([new UseCase.UseCase({x:190,y:200, text:'Hello World'})]);
+    }
+</script>
+</body>
+</html>
