@@ -5,6 +5,7 @@ module Common{
     import Region = Loira.util.Region;
     import BaseOption = Loira.util.BaseOption;
     import VirtualCanvas = Loira.VirtualCanvas;
+    import Rect = Loira.util.Rect;
 
     export enum TypeLine{
         STRAIGHT = 1,
@@ -38,16 +39,21 @@ module Common{
          *
          * @memberof Common.Relation#
          * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+         * @param { number } vX Virtual x pointer
+         * @param { number } vY Virtual y pointer
          * @protected
          */
-        public render(ctx: CanvasRenderingContext2D): void {
-            let start:Symbol = this.start,
-                end:Symbol = this.end,
+        public render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
+            let start:Rect,
+                end:Rect,
                 tmp: number,
                 init: Point,
                 last: Point,
                 xm: number,
                 ym: number;
+
+            start = new Rect(this.start.x - vX, this.start.y - vY, this.start.width, this.start.height);
+            end = new Rect(this.end.x - vX, this.end.y - vY, this.end.width, this.end.height);
 
             this.points[0] = {x: start.x + start.width/2, y: start.y + start.height/2};
             this.points[this.points.length - 1] = {x: end.x + end.width/2, y: end.y + end.height/2};
@@ -63,8 +69,13 @@ module Common{
             }
 
             for (let i:number = 1; i < this.points.length; i++){
+                if(i < this.points.length -1){
+                    this.points[i].x -= vX;
+                    this.points[i].y -= vY;
+                }
                 ctx.lineTo(this.points[i].x, this.points[i].y);
             }
+
             ctx.stroke();
             ctx.setLineDash([]);
 
@@ -85,7 +96,7 @@ module Common{
                 ctx.rotate(tmp);
 
                 let region:Region = Loira.drawable.get(this.icon);
-                let border:number = end.obtainBorderPos(xm, ym, {x1:init.x, y1: init.y, x2:last.x, y2:last.y}, ctx);
+                let border:number = this.end.obtainBorderPos(xm, ym, {x1:init.x, y1: init.y, x2:last.x, y2:last.y}, ctx);
 
                 Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height/2));
                 ctx.rotate(-tmp);
@@ -339,8 +350,8 @@ module Common{
 
         protected drawText(ctx: CanvasRenderingContext2D, line: string) {
             let y,
-                xm = this.x + this.width / 2,
-                ym = this.y + this.height / 2,
+                xm = (this.x - this._canvas.virtualCanvas.x) + this.width / 2,
+                ym = (this.y - this._canvas.virtualCanvas.y) + this.height / 2,
                 lines: string[];
 
             lines = this.splitText(ctx, line);
@@ -441,6 +452,11 @@ module Common{
 
         public render(ctx: CanvasRenderingContext2D): void {
             let config: any = Loira.Config.scrollBar;
+
+            ctx.fillStyle = Loira.Config.scrollBar.background;
+
+            ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
+            ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
 
             ctx.fillStyle = Loira.Config.scrollBar.color;
 

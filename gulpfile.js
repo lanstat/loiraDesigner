@@ -2,8 +2,6 @@ var gulp = require('gulp');
 var plug = require('gulp-load-plugins')();
 var karmaServer = require('karma').Server;
 var path = require('path');
-var ts = require('gulp-typescript');
-var merge = require('merge2');
 
 var paths = {
     js: [
@@ -45,20 +43,6 @@ gulp.task('jsmin', function() {
         .pipe(plug.concat('loira.min.js'))
         .pipe(plug.uglify({}))
         .pipe(gulp.dest(paths.build+'/min'));
-});
-
-gulp.task('tsmin', function(){
-    console.log('Empaquetando, minificando, y copiando los JS');
-
-    var tsResult = gulp.src(['core/*.ts', 'plugins/*.ts'])
-        .pipe(ts({
-            declaration: true
-        }));
-
-    return merge([
-        //tsResult.dts.pipe(gulp.dest('release/definitions')),
-        tsResult.js.pipe(gulp.dest('build/min'))
-    ]);
 });
 
 gulp.task('js', function() {
@@ -124,6 +108,6 @@ gulp.task('test', function(done) {
 function startTests(singleRun, done) {
     new karmaServer({
         configFile: path.join(__dirname, '/karma.conf.js'),
-        singleRun: !!singleRun
+        singleRun: singleRun
     }, done).start();
 }

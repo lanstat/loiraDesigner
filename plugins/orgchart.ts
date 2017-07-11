@@ -3,6 +3,7 @@ module OrgChart{
     import RelOption = Loira.util.RelOption;
     import Point = Loira.util.Point;
     import fontSize = Loira.Config.fontSize;
+    import Rect = Loira.util.Rect;
 
     let levelColor: string[] = ['#124FFD', '#FF4FFD', '#12003D'];
     let levelHeight: number[];
@@ -411,10 +412,13 @@ module OrgChart{
             this.type = 'role';
         }
 
-        render(ctx: CanvasRenderingContext2D): void {
-            super.render(ctx);
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
+            super.render(ctx, vX, vY);
+            let pX: number = this.x - vX,
+                pY: number = this.y - vY;
+
             let y,
-                xm = this.x + this.width / 2,
+                xm = pX + this.width / 2,
                 height: number = 0;
             let personData,
                 titleData;
@@ -437,7 +441,7 @@ module OrgChart{
                 height += (titleData.fontSize + 3) * titleData.lines.length + 5;
             }
 
-            y = this.y + Loira.Config.fontSize;
+            y = pY + Loira.Config.fontSize;
 
             this.height = height;
 
@@ -465,7 +469,7 @@ module OrgChart{
                 ctx.shadowBlur = shadowBlur;
             }
 
-            Loira.shape.drawRoundRect(ctx, this.x, this.y, this.width, this.height, radius);
+            Loira.shape.drawRoundRect(ctx, pX, pY, this.width, this.height, radius);
 
             ctx.fillStyle = "#FFFFFF";
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
@@ -498,7 +502,7 @@ module OrgChart{
 
         drawSelected(ctx: CanvasRenderingContext2D) {
             this.isSelected = true;
-            this.render(ctx);
+            this.render(ctx, this._canvas.virtualCanvas.x, this._canvas.virtualCanvas.y);
         }
 
         attach(canvas: Loira.Canvas): void {
@@ -572,9 +576,9 @@ module OrgChart{
             this.type = 'orgchart:relation';
         }
 
-        render(ctx: CanvasRenderingContext2D): void{
-            let start:Role = <Role>this.start,
-                end:Role = <Role>this.end,
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void{
+            let start:Rect = new Rect(this.start.x - vX, this.start.y - vY, this.start.width, this.start.height),
+                end:Rect = new Rect(this.end.x - vX, this.end.y - vY, this.end.width, this.end.height),
                 middleLine: number,
                 init: Point;
 

@@ -57,6 +57,11 @@ module Loira.util{
         }
     }
 
+    export class Rect{
+        constructor(public x?: number, public y?: number, public width?: number, public height?: number){
+        }
+    }
+
     /**
      * Crea una cadena con caracteres aleatorios
      *

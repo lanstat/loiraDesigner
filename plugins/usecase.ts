@@ -31,25 +31,28 @@ module UseCase{
             return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
         }
 
-        render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             if (this.text) {
+                let x: number = this.x - vX,
+                    y: number = this.y - vY;
+
                 let kappa = .5522848,
                     ox = (this.width / 2) * kappa,
                     oy = (this.height / 2) * kappa,
-                    xe = this.x + this.width,
-                    ye = this.y + this.height,
-                    xm = this.x + this.width / 2,
-                    ym = this.y + this.height / 2;
+                    xe = x + this.width,
+                    ye = y + this.height,
+                    xm = x + this.width / 2,
+                    ym = y + this.height / 2;
 
                 ctx.beginPath();
                 ctx.lineWidth = 2;
 
-                ctx.moveTo(this.x, ym);
-                ctx.bezierCurveTo(this.x, ym - oy, xm - ox, this.y, xm, this.y);
-                ctx.bezierCurveTo(xm + ox, this.y, xe, ym - oy, xe, ym);
+                ctx.moveTo(x, ym);
+                ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+                ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
                 ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-                ctx.bezierCurveTo(xm - ox, ye, this.x, ym + oy, this.x, ym);
+                ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
                 ctx.stroke();
                 ctx.fillStyle = "#fcf5d9";
                 ctx.fill();

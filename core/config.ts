@@ -23,8 +23,9 @@ module Loira{
 
     let _scrollBar: any = {
         size: 10,
-        color: 'rgba(0, 0, 0, 0.5)',
-        isRounded: true
+        color: 'rgba(255, 255, 255, 0.85)',
+        background: 'rgba(0, 0, 0, 0.15)',
+        isRounded: false
     };
 
     let _orgchart: any = {
