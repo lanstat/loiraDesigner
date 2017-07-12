@@ -75,6 +75,7 @@ gulp.task('copyStyles', function(){
     console.log('Copiando estilos');
     return gulp
         .src('styles/**')
+        .pipe(plug.concat('loira.min.css'))
         .pipe(gulp.dest(paths.build+'/styles'));
 });
 

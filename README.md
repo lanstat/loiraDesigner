@@ -1,70 +1,60 @@
-[Loira Designer](http://lanstat.net) - Libreria de diseño de diagramas UML
-=========
-Loira Designer is a library that allows design diagrams directly in a web browser, with the help of JS canvas and HTML5.
+# Loira Designer - Web based diagram designer
+
+Loira Designer is a library that allows design diagrams directly in a web browser, with the power of JS canvas and HTML5.
 
 [![Build Status](https://travis-ci.org/lanstat/loiraDesigner.svg?branch=master)](https://travis-ci.org/lanstat/loiraDesigner)
 [![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/lanstat/loiraDesigner/master/LICENSE)
 
-Supported browsers
---------------------------------------
+## Getting Started
+
+Clone this repo to your desktop and run `npm install` to install all the dependencies.
+
+### Supported browsers
 
 - Chrome
 - Firefox
 - IE (Until on testing)
 
-Plugins / Diagrams
---------------------------------------
+### Installing
 
-- Use case
-- Workflow
-- Box
-- Organization Chart
-
-Implementation
---------------------------------------
-
-```javascript
-Loira.Config.assetsPath = '../../assets/glyphs.png';
-
-var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000});
-
-var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});
-var case2 = new UseCase.UseCase({x:500,y:200, text:'Iniciar sesion'});
-var actor = new Common.Actor({x:20, y:10, text:'Administrador'});
-
-canvas.on('relation:selected', function(event){
-   console.log(event.selected);
-});
-
-canvas.add([case1, case2, actor]);
-
-canvas.add([new Relation.Dependency({start:case1, end:case2})]);
-
-document.getElementById('addObject').addEventListener('click', function(){
-    var case1 = new UseCase.UseCase({x:140,y:140, text:'Mostrar evento'});
-    canvas.add(case1);
-    canvas.renderAll();
-});
-document.getElementById('setDirectRelation').addEventListener('click', function(){
-    canvas.defaultRelation = 'Relation.DirectAssociation';
-});
+Npm
+```
+npm install loira-designer
 ```
 
-##### Scroll container and background #####
+Bower
+```
+bower install loira-designer
+```
 
+
+Basic example
 ```html
-<div id="container" style="width: 85%; height: 500px; float: left; overflow: auto">
-    <div id="_canvas"></div>
-</div>
+<div id="_canvas"></div>
+
+<script type="text/javascript" src="../build/min/loira.min.js"></script>
 ```
 
 ```javascript
-var canvas = new Loira.Canvas('_canvas', {height: 500, width: 800});
+Loira.Config.assetsPath = '../build/assets/glyphs.png';
 
-var image = new Image();
-image.src = 'test.jpg';
-image.onload = function () {
-    canvas.setBackground(image, true);
-    canvas.renderAll();
-};
+var canvas = new Loira.Canvas('_canvas');
+
+canvas.add([new UseCase.UseCase({x:190,y:200, text:'Hello World'})]);
 ```
+
+## Running the tests
+
+```
+npm test
+```
+
+## Authors
+
+* **Javier Garson** - *Developer* - [lanstat](https://github.com/lanstat)
+
+See also the list of [contributors](https://github.com/lanstat/loiraDesigner/contributors) who participated in this project.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
