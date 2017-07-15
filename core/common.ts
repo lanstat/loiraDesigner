@@ -433,6 +433,7 @@ module Common{
         private _horSize: number;
         private _verSize: number;
         private _virtual: Loira.VirtualCanvas;
+        public selected: string;
 
         constructor(canvas: Loira.Canvas){
             super(new BaseOption());
@@ -454,17 +455,17 @@ module Common{
             let config: any = Loira.Config.scrollBar;
 
             if (this._virtual.width > this._virtual.viewportWidth){
-                ctx.fillStyle = Loira.Config.scrollBar.background;
-                ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
-                ctx.fillStyle = Loira.Config.scrollBar.color;
-                ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
+                ctx.fillStyle = config.background;
+                ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
+                ctx.fillStyle = config.color;
+                ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
             }
 
             if (this._virtual.height > this._virtual.viewportHeight){
-                ctx.fillStyle = Loira.Config.scrollBar.background;
-                ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
-                ctx.fillStyle = Loira.Config.scrollBar.color;
-                ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
+                ctx.fillStyle = config.background;
+                ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
+                ctx.fillStyle = config.color;
+                ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
             }
 
             ctx.fillStyle = "#000000";
@@ -482,16 +483,35 @@ module Common{
          * @returns {boolean}
          */
         checkCollision(x: number, y: number): boolean {
+            let virtual: Loira.VirtualCanvas = this._virtual;
+            let _x: number = x - virtual.x,
+                _y: number = y - virtual.y;
+
+            if (_x > this._horPos && _x < (this._horPos + this._horSize)
+                && _y > (virtual.viewportHeight - Loira.Config.scrollBar.size) && _y < virtual.viewportHeight){
+                this.selected = 'H';
+
+                return true;
+            }
+
+            if (_x > (virtual.viewportWidth - Loira.Config.scrollBar.size) && _x < virtual.viewportWidth
+                && _y > this._verPos && _y < (this._verPos + this._verSize)){
+                this.selected = 'V';
+
+                return true;
+            }
+
+            this.selected = null;
             return false;
         }
 
-        addMovement(dir: string, delta: number): void{
+        addMovement(dir: string, delta: number, inc: number = 30): void{
             let tmp: number;
             let virtual: Loira.VirtualCanvas = this._virtual;
             let background = this._canvas._background;
 
             if (dir === 'H'){
-                tmp = this._horPos + delta * 30;
+                tmp = this._horPos + delta * inc;
                 if (tmp < 0) {
                     this._horPos = 0;
                 } else if (tmp + this._horSize > virtual.viewportWidth){
@@ -504,7 +524,7 @@ module Common{
                     background.style.marginLeft = '-'+virtual.x+'px';
                 }
             } else if(dir === 'V') {
-                tmp = this._verPos + delta * 30;
+                tmp = this._verPos + delta * inc;
                 if (tmp < 0) {
                     this._verPos = 0;
                 } else if (tmp + this._verSize > virtual.viewportHeight){
@@ -535,6 +555,14 @@ module Common{
                 background.style.marginTop = '-'+virtual.y+'px';
                 background.style.marginLeft = '-'+virtual.x+'px';
             }
+        }
+
+        isSelected(): boolean{
+            return !!this.selected;
+        }
+
+        dragScroll(x: number, y: number): void{
+            this.addMovement(this.selected, this.selected === 'H'? x:y, 1);
         }
     }
 }

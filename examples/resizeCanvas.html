@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resize canvas</title>
+    <script type="text/javascript" src="../build/min/loira.min.js"></script>
+    <link href="../build/styles/loira.min.css" rel="stylesheet">
+</head>
+<body>
+<div style="margin-bottom: 10px">
+    <input id="width"> x <input id="height"> <button id="resize-button">Resize</button>
+</div>
+<div style="width: 100%">
+    <div style="width: 500px; height: 500px; float: left">
+        <div id="_canvas"></div>
+    </div>
+</div>
+<script>
+    window.onload = function(){
+        Loira.Config.assetsPath = '../build/assets/glyphs.png';
+
+        var canvas = new Loira.Canvas('_canvas');
+        var case1 = new UseCase.UseCase({x:190,y:200, text:'Hello world'});
+
+        canvas.add([case1]);
+
+        document.getElementById('width').value = canvas.width;
+        document.getElementById('height').value = canvas.height;
+
+        document.getElementById('resize-button').onclick = function(){
+            canvas.width = document.getElementById('width').value;
+            canvas.height = document.getElementById('height').value;
+            canvas.refreshScreen();
+        }
+    }
+</script>

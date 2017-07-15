@@ -80,8 +80,8 @@ module Loira{
         update(delta:number){
             this._scale += delta / Math.abs(delta);
             if (this._scale < 9 && this._scale > 0){
-                this.scrollX = Math.floor(this._canvas._config.width/20);
-                this.scrollY = Math.floor(this._canvas._config.height/20);
+                this.scrollX = Math.floor(this._canvas.width/20);
+                this.scrollY = Math.floor(this._canvas.height/20);
             }
         }
     }
@@ -144,8 +144,6 @@ module Loira{
 
         private _border: any;
 
-        public _config: CanvasConfig;
-
         private _fps: FpsCounter;
 
         private _zoom: ZoomData;
@@ -153,6 +151,18 @@ module Loira{
         public controller: BaseController;
 
         public userAgent: UserAgent;
+
+        public width: number;
+
+        public height: number;
+
+        public viewportWidth: number;
+
+        public viewportHeight: number;
+
+        public fps: number;
+
+        public dragCanvas: boolean;
 
         /**
          * Create a new instance of canvas
@@ -179,11 +189,17 @@ module Loira{
             config.viewportHeight = config.viewportHeight || this.container.offsetHeight || this.container.parentElement.offsetHeight || config.height;
 
             this.readOnly = config.readOnly || false;
-            this._config = config;
             this._tmp.pointer = {x: 0, y: 0};
 
             this._callbacks = {};
             this.items = [];
+
+            this.width = config.width;
+            this.height = config.height;
+            this.viewportHeight = config.viewportHeight;
+            this.viewportWidth = config.viewportWidth;
+            this.dragCanvas = config.dragCanvas;
+            this.fps = config.fps;
 
             this.defaultRelation = 'Relation.Association';
 
@@ -209,12 +225,12 @@ module Loira{
         refreshScreen() {
             this.destroy();
 
-            this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
-            this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
+            this.container.style.width = this.container.style.maxWidth = this.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = this.viewportHeight + 'px';
             this.container.style.position = 'relative';
             this.container.style.overflow = 'hidden';
 
-            this._canvas = this.createHiDPICanvas(this._config.viewportWidth, this._config.viewportHeight);
+            this._canvas = this.createHiDPICanvas(this.viewportWidth, this.viewportHeight);
             this._canvas.style.position = 'absolute';
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
@@ -227,11 +243,11 @@ module Loira{
             this.virtualCanvas = {
                 x: 0,
                 y: 0,
-                viewportWidth: this._config.viewportWidth,
-                viewportHeight: this._config.viewportHeight,
-                width: this._config.width,
-                height: this._config.height,
-                area: this._config.viewportHeight * this._config.viewportWidth
+                viewportWidth: this.viewportWidth,
+                viewportHeight: this.viewportHeight,
+                width: this.width,
+                height: this.height,
+                area: this.viewportHeight * this.viewportWidth
             };
 
             if (document.defaultView && document.defaultView.getComputedStyle) {
@@ -619,6 +635,11 @@ module Loira{
                     _this._canvas.style.cursor = 'move';
                 }
 
+                if (_this._scrollBar.checkCollision(real.x, real.y)){
+                    _this._isDragged = true;
+                    return;
+                }
+
                 if (_this._selected && !_this.readOnly) {
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
                     if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
@@ -735,80 +756,87 @@ module Loira{
             };
 
             _this._canvas.onmousemove = function (evt) {
-                if (_this.readOnly){return;}
+                if (_this.readOnly && !_this._scrollBar.isSelected()){return;}
                 if (_this._isDragged) {
                     let real:Point = _this._getMouse(evt);
                     let x:number = real.x - _this._tmp.pointer.x;
                     let y:number = real.y - _this._tmp.pointer.y;
 
-                    /**
-                     * Evento que encapsula el movimiento del mouse sobre el canvas
-                     *
-                     * @event mouse:move
-                     * @type { object }
-                     * @property {int} x - Posicion x del puntero
-                     * @property {int} y - Posicion y del puntero
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('mouse:move', new MouseEvent(real.x, real.y));
-                    if (_this._selected) {
-                        if (_this._tmp.transform) {
-                            if (_this._selected.baseType !== 'relation') {
-                                x = Math.floor(x);
-                                y = Math.floor(y);
-                                switch (_this._tmp.transform) {
-                                    case 'tc':
-                                        _this._selected.y += y;
-                                        _this._selected.height -= y;
-                                        break;
-                                    case 'bc':
-                                        _this._selected.height += y;
-                                        break;
-                                    case 'ml':
-                                        _this._selected.x += x;
-                                        _this._selected.width -= x;
-                                        break;
-                                    case 'mr':
-                                        _this._selected.width += x;
-                                        break;
-                                }
-                            } else {
-                                (<Common.Relation>_this._selected).movePoint(parseInt(_this._tmp.transform), x, y);
-                            }
+                    if (_this._scrollBar.isSelected()){
+                        _this._scrollBar.dragScroll(x, y);
+                        _this.renderAll();
 
-                            _this.renderAll();
-                        } else {
-                            if (_this._selected.draggable){
-                                _this._selected.x += x;
-                                _this._selected.y += y;
-                                /**
-                                 * Evento que encapsula el arrastre de un objeto
-                                 *
-                                 * @event object:dragging
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('object:dragging', new ObjectEvent(_this._selected));
-                                _this.renderAll();
-                            }
-                        }
+                        _this._tmp.pointer = _this._getMouse(evt);
                     } else {
-                        // TODO Verificar cuando se complete el canvas
-                        /*if (_this._config.dragCanvas){
-                            if (_this._canvas && _this._canvasContainer) {
-                                x = x === 0? x : x/Math.abs(x);
-                                y =  y === 0? y : y/Math.abs(y);
+                        /**
+                         * Evento que encapsula el movimiento del mouse sobre el canvas
+                         *
+                         * @event mouse:move
+                         * @type { object }
+                         * @property {int} x - Posicion x del puntero
+                         * @property {int} y - Posicion y del puntero
+                         * @property {string} type - Tipo de evento
+                         */
+                        _this.emit('mouse:move', new MouseEvent(real.x, real.y));
+                        if (_this._selected) {
+                            if (_this._tmp.transform) {
+                                if (_this._selected.baseType !== 'relation') {
+                                    x = Math.floor(x);
+                                    y = Math.floor(y);
+                                    switch (_this._tmp.transform) {
+                                        case 'tc':
+                                            _this._selected.y += y;
+                                            _this._selected.height -= y;
+                                            break;
+                                        case 'bc':
+                                            _this._selected.height += y;
+                                            break;
+                                        case 'ml':
+                                            _this._selected.x += x;
+                                            _this._selected.width -= x;
+                                            break;
+                                        case 'mr':
+                                            _this._selected.width += x;
+                                            break;
+                                    }
+                                } else {
+                                    (<Common.Relation>_this._selected).movePoint(parseInt(_this._tmp.transform), x, y);
+                                }
 
-                                _this.container.scrollLeft -= _this._zoom.scrollX*x;
-                                _this.container.scrollTop -= _this._zoom.scrollY*y;
-
-                                _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
-                                _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                                _this.renderAll();
+                            } else {
+                                if (_this._selected.draggable){
+                                    _this._selected.x += x;
+                                    _this._selected.y += y;
+                                    /**
+                                     * Evento que encapsula el arrastre de un objeto
+                                     *
+                                     * @event object:dragging
+                                     * @type { object }
+                                     * @property {object} selected - Objeto seleccionado
+                                     * @property {string} type - Tipo de evento
+                                     */
+                                    _this.emit('object:dragging', new ObjectEvent(_this._selected));
+                                    _this.renderAll();
+                                }
                             }
-                        }*/
+                        } else {
+                            // TODO Verificar cuando se complete el canvas
+                            /*if (_this._config.dragCanvas){
+                             if (_this._canvas && _this._canvasContainer) {
+                             x = x === 0? x : x/Math.abs(x);
+                             y =  y === 0? y : y/Math.abs(y);
+
+                             _this.container.scrollLeft -= _this._zoom.scrollX*x;
+                             _this.container.scrollTop -= _this._zoom.scrollY*y;
+
+                             _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
+                             _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                             }
+                             }*/
+                        }
+                        _this._tmp.pointer = real;
                     }
-                    _this._tmp.pointer = real;
                 }
             };
 
@@ -817,6 +845,7 @@ module Loira{
                 let real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
+                _this._scrollBar.selected = null;
 
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
@@ -975,10 +1004,10 @@ module Loira{
          */
         cleanBackground() {
             this.container.removeChild(this.container.firstChild);
-            this._canvas.width = this._config.width;
-            this._canvas.height = this._config.height;
-            this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
-            this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
+            this._canvas.width = this.width;
+            this._canvas.height = this.height;
+            this.container.style.width = this.container.style.maxWidth = this.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = this.viewportHeight + 'px';
             this._canvas.style.backgroundColor = Loira.Config.background;
         }
 

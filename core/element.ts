@@ -235,7 +235,7 @@ module Loira{
 
         attach(canvas: Loira.Canvas): void {
             this._canvas = canvas;
-            this.animation.setFps(canvas._config.fps);
+            this.animation.setFps(canvas.fps);
         }
 
         isVisible(virtual: VirtualCanvas): boolean{
@@ -270,7 +270,7 @@ module Loira{
         }
 
         animateTo(point: Point, seconds: number = 1): void {
-            let time: number = this._canvas._config.fps * seconds;
+            let time: number = this._canvas.fps * seconds;
         }
 
         destroy(): void {

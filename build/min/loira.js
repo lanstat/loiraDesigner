@@ -226,8 +226,8 @@ var Loira;
         ZoomData.prototype.update = function (delta) {
             this._scale += delta / Math.abs(delta);
             if (this._scale < 9 && this._scale > 0) {
-                this.scrollX = Math.floor(this._canvas._config.width / 20);
-                this.scrollY = Math.floor(this._canvas._config.height / 20);
+                this.scrollX = Math.floor(this._canvas.width / 20);
+                this.scrollY = Math.floor(this._canvas.height / 20);
             }
         };
         return ZoomData;
@@ -304,10 +304,15 @@ var Loira;
             config.viewportWidth = config.viewportWidth || this.container.offsetWidth || this.container.parentElement.offsetWidth || config.width;
             config.viewportHeight = config.viewportHeight || this.container.offsetHeight || this.container.parentElement.offsetHeight || config.height;
             this.readOnly = config.readOnly || false;
-            this._config = config;
             this._tmp.pointer = { x: 0, y: 0 };
             this._callbacks = {};
             this.items = [];
+            this.width = config.width;
+            this.height = config.height;
+            this.viewportHeight = config.viewportHeight;
+            this.viewportWidth = config.viewportWidth;
+            this.dragCanvas = config.dragCanvas;
+            this.fps = config.fps;
             this.defaultRelation = 'Relation.Association';
             this.refreshScreen();
             var _this = this;
@@ -325,11 +330,11 @@ var Loira;
         }
         Canvas.prototype.refreshScreen = function () {
             this.destroy();
-            this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
-            this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
+            this.container.style.width = this.container.style.maxWidth = this.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = this.viewportHeight + 'px';
             this.container.style.position = 'relative';
             this.container.style.overflow = 'hidden';
-            this._canvas = this.createHiDPICanvas(this._config.viewportWidth, this._config.viewportHeight);
+            this._canvas = this.createHiDPICanvas(this.viewportWidth, this.viewportHeight);
             this._canvas.style.position = 'absolute';
             this._canvas.style.left = '0';
             this._canvas.style.top = '0';
@@ -340,11 +345,11 @@ var Loira;
             this.virtualCanvas = {
                 x: 0,
                 y: 0,
-                viewportWidth: this._config.viewportWidth,
-                viewportHeight: this._config.viewportHeight,
-                width: this._config.width,
-                height: this._config.height,
-                area: this._config.viewportHeight * this._config.viewportWidth
+                viewportWidth: this.viewportWidth,
+                viewportHeight: this.viewportHeight,
+                width: this.width,
+                height: this.height,
+                area: this.viewportHeight * this.viewportWidth
             };
             if (document.defaultView && document.defaultView.getComputedStyle) {
                 this._border = {
@@ -699,6 +704,10 @@ var Loira;
                     _this._isDragged = true;
                     _this._canvas.style.cursor = 'move';
                 }
+                if (_this._scrollBar.checkCollision(real.x, real.y)) {
+                    _this._isDragged = true;
+                    return;
+                }
                 if (_this._selected && !_this.readOnly) {
                     _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
                     if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
@@ -812,83 +821,90 @@ var Loira;
                 return false;
             };
             _this._canvas.onmousemove = function (evt) {
-                if (_this.readOnly) {
+                if (_this.readOnly && !_this._scrollBar.isSelected()) {
                     return;
                 }
                 if (_this._isDragged) {
                     var real = _this._getMouse(evt);
                     var x = real.x - _this._tmp.pointer.x;
                     var y = real.y - _this._tmp.pointer.y;
-                    /**
-                     * Evento que encapsula el movimiento del mouse sobre el canvas
-                     *
-                     * @event mouse:move
-                     * @type { object }
-                     * @property {int} x - Posicion x del puntero
-                     * @property {int} y - Posicion y del puntero
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('mouse:move', new MouseEvent(real.x, real.y));
-                    if (_this._selected) {
-                        if (_this._tmp.transform) {
-                            if (_this._selected.baseType !== 'relation') {
-                                x = Math.floor(x);
-                                y = Math.floor(y);
-                                switch (_this._tmp.transform) {
-                                    case 'tc':
-                                        _this._selected.y += y;
-                                        _this._selected.height -= y;
-                                        break;
-                                    case 'bc':
-                                        _this._selected.height += y;
-                                        break;
-                                    case 'ml':
-                                        _this._selected.x += x;
-                                        _this._selected.width -= x;
-                                        break;
-                                    case 'mr':
-                                        _this._selected.width += x;
-                                        break;
-                                }
-                            }
-                            else {
-                                _this._selected.movePoint(parseInt(_this._tmp.transform), x, y);
-                            }
-                            _this.renderAll();
-                        }
-                        else {
-                            if (_this._selected.draggable) {
-                                _this._selected.x += x;
-                                _this._selected.y += y;
-                                /**
-                                 * Evento que encapsula el arrastre de un objeto
-                                 *
-                                 * @event object:dragging
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('object:dragging', new ObjectEvent(_this._selected));
-                                _this.renderAll();
-                            }
-                        }
+                    if (_this._scrollBar.isSelected()) {
+                        _this._scrollBar.dragScroll(x, y);
+                        _this.renderAll();
+                        _this._tmp.pointer = _this._getMouse(evt);
                     }
                     else {
-                        // TODO Verificar cuando se complete el canvas
-                        /*if (_this._config.dragCanvas){
-                            if (_this._canvas && _this._canvasContainer) {
-                                x = x === 0? x : x/Math.abs(x);
-                                y =  y === 0? y : y/Math.abs(y);
-
-                                _this.container.scrollLeft -= _this._zoom.scrollX*x;
-                                _this.container.scrollTop -= _this._zoom.scrollY*y;
-
-                                _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
-                                _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                        /**
+                         * Evento que encapsula el movimiento del mouse sobre el canvas
+                         *
+                         * @event mouse:move
+                         * @type { object }
+                         * @property {int} x - Posicion x del puntero
+                         * @property {int} y - Posicion y del puntero
+                         * @property {string} type - Tipo de evento
+                         */
+                        _this.emit('mouse:move', new MouseEvent(real.x, real.y));
+                        if (_this._selected) {
+                            if (_this._tmp.transform) {
+                                if (_this._selected.baseType !== 'relation') {
+                                    x = Math.floor(x);
+                                    y = Math.floor(y);
+                                    switch (_this._tmp.transform) {
+                                        case 'tc':
+                                            _this._selected.y += y;
+                                            _this._selected.height -= y;
+                                            break;
+                                        case 'bc':
+                                            _this._selected.height += y;
+                                            break;
+                                        case 'ml':
+                                            _this._selected.x += x;
+                                            _this._selected.width -= x;
+                                            break;
+                                        case 'mr':
+                                            _this._selected.width += x;
+                                            break;
+                                    }
+                                }
+                                else {
+                                    _this._selected.movePoint(parseInt(_this._tmp.transform), x, y);
+                                }
+                                _this.renderAll();
                             }
-                        }*/
+                            else {
+                                if (_this._selected.draggable) {
+                                    _this._selected.x += x;
+                                    _this._selected.y += y;
+                                    /**
+                                     * Evento que encapsula el arrastre de un objeto
+                                     *
+                                     * @event object:dragging
+                                     * @type { object }
+                                     * @property {object} selected - Objeto seleccionado
+                                     * @property {string} type - Tipo de evento
+                                     */
+                                    _this.emit('object:dragging', new ObjectEvent(_this._selected));
+                                    _this.renderAll();
+                                }
+                            }
+                        }
+                        else {
+                            // TODO Verificar cuando se complete el canvas
+                            /*if (_this._config.dragCanvas){
+                             if (_this._canvas && _this._canvasContainer) {
+                             x = x === 0? x : x/Math.abs(x);
+                             y =  y === 0? y : y/Math.abs(y);
+
+                             _this.container.scrollLeft -= _this._zoom.scrollX*x;
+                             _this.container.scrollTop -= _this._zoom.scrollY*y;
+
+                             _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
+                             _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                             }
+                             }*/
+                        }
+                        _this._tmp.pointer = real;
                     }
-                    _this._tmp.pointer = real;
                 }
             };
             _this._canvas.onmouseup = function (evt) {
@@ -898,6 +914,7 @@ var Loira;
                 var real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
+                _this._scrollBar.selected = null;
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
                  *
@@ -1033,10 +1050,10 @@ var Loira;
          */
         Canvas.prototype.cleanBackground = function () {
             this.container.removeChild(this.container.firstChild);
-            this._canvas.width = this._config.width;
-            this._canvas.height = this._config.height;
-            this.container.style.width = this.container.style.maxWidth = this._config.viewportWidth + 'px';
-            this.container.style.height = this.container.style.maxHeight = this._config.viewportHeight + 'px';
+            this._canvas.width = this.width;
+            this._canvas.height = this.height;
+            this.container.style.width = this.container.style.maxWidth = this.viewportWidth + 'px';
+            this.container.style.height = this.container.style.maxHeight = this.viewportHeight + 'px';
             this._canvas.style.backgroundColor = Loira.Config.background;
         };
         /**
@@ -1507,7 +1524,7 @@ var Loira;
         };
         Element.prototype.attach = function (canvas) {
             this._canvas = canvas;
-            this.animation.setFps(canvas._config.fps);
+            this.animation.setFps(canvas.fps);
         };
         Element.prototype.isVisible = function (virtual) {
             var p1 = null, p2 = null, a1 = null, a2 = null;
@@ -1539,7 +1556,7 @@ var Loira;
         };
         Element.prototype.animateTo = function (point, seconds) {
             if (seconds === void 0) { seconds = 1; }
-            var time = this._canvas._config.fps * seconds;
+            var time = this._canvas.fps * seconds;
         };
         Element.prototype.destroy = function () {
             this._canvas = null;
@@ -1906,16 +1923,16 @@ var Common;
         ScrollBar.prototype.render = function (ctx) {
             var config = Loira.Config.scrollBar;
             if (this._virtual.width > this._virtual.viewportWidth) {
-                ctx.fillStyle = Loira.Config.scrollBar.background;
-                ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
-                ctx.fillStyle = Loira.Config.scrollBar.color;
-                ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
+                ctx.fillStyle = config.background;
+                ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
+                ctx.fillStyle = config.color;
+                ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
             }
             if (this._virtual.height > this._virtual.viewportHeight) {
-                ctx.fillStyle = Loira.Config.scrollBar.background;
-                ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
-                ctx.fillStyle = Loira.Config.scrollBar.color;
-                ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
+                ctx.fillStyle = config.background;
+                ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
+                ctx.fillStyle = config.color;
+                ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
             }
             ctx.fillStyle = "#000000";
         };
@@ -1930,14 +1947,28 @@ var Common;
          * @returns {boolean}
          */
         ScrollBar.prototype.checkCollision = function (x, y) {
+            var virtual = this._virtual;
+            var _x = x - virtual.x, _y = y - virtual.y;
+            if (_x > this._horPos && _x < (this._horPos + this._horSize)
+                && _y > (virtual.viewportHeight - Loira.Config.scrollBar.size) && _y < virtual.viewportHeight) {
+                this.selected = 'H';
+                return true;
+            }
+            if (_x > (virtual.viewportWidth - Loira.Config.scrollBar.size) && _x < virtual.viewportWidth
+                && _y > this._verPos && _y < (this._verPos + this._verSize)) {
+                this.selected = 'V';
+                return true;
+            }
+            this.selected = null;
             return false;
         };
-        ScrollBar.prototype.addMovement = function (dir, delta) {
+        ScrollBar.prototype.addMovement = function (dir, delta, inc) {
+            if (inc === void 0) { inc = 30; }
             var tmp;
             var virtual = this._virtual;
             var background = this._canvas._background;
             if (dir === 'H') {
-                tmp = this._horPos + delta * 30;
+                tmp = this._horPos + delta * inc;
                 if (tmp < 0) {
                     this._horPos = 0;
                 }
@@ -1953,7 +1984,7 @@ var Common;
                 }
             }
             else if (dir === 'V') {
-                tmp = this._verPos + delta * 30;
+                tmp = this._verPos + delta * inc;
                 if (tmp < 0) {
                     this._verPos = 0;
                 }
@@ -1982,6 +2013,12 @@ var Common;
                 background.style.marginTop = '-' + virtual.y + 'px';
                 background.style.marginLeft = '-' + virtual.x + 'px';
             }
+        };
+        ScrollBar.prototype.isSelected = function () {
+            return !!this.selected;
+        };
+        ScrollBar.prototype.dragScroll = function (x, y) {
+            this.addMovement(this.selected, this.selected === 'H' ? x : y, 1);
         };
         return ScrollBar;
     }(Loira.Element));
