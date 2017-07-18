@@ -23,6 +23,7 @@
         <button id="direct">Data</button>
         <button id="gener">Decision</button>
         <button id="part">Partir</button>
+        <button id="returns">Retorno</button>
     </div>
     <div style="width: 85%; float: left">
         <div id="_canvas"></div>
@@ -32,7 +33,7 @@
     window.onload = function(){
         Loira.Config.assetsPath = '../../assets/glyphs.png';
 
-        var canvas = new Loira.Canvas('_canvas', {width:800, height:500});
+        var canvas = new Loira.Canvas('_canvas', {width:1800, height:500});
         var relation = null;
         canvas.defaultRelation = 'Relation.DirectAssociation';
 
@@ -62,13 +63,12 @@
             canvas.renderAll();
         });
 
-        canvas.on('relation:added', function(evt){
-            relation = evt.selected;
-            relation.text = 'asdasdasdasdasd';
+        document.getElementById('returns').addEventListener('click', function(){
+            canvas.defaultRelation = 'Workflow.Returns';
         });
 
-        canvas.on('relation:selected', function(evt){
-            console.log('asdasdasdasdasdasdasdasd');
+        canvas.on('relation:added', function(evt){
+            relation = evt.selected;
         });
     }
 </script>

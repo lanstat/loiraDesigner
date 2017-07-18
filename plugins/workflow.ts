@@ -6,6 +6,7 @@
 module Workflow{
     import BaseOption = Loira.util.BaseOption;
     import Point = Loira.util.Point;
+    import RelOption = Loira.util.RelOption;
 
     export class WorkflowOption extends BaseOption{
         startPoint: boolean;
@@ -110,13 +111,13 @@ module Workflow{
             return Math.sqrt(Math.pow(x, 2) + Math.pow(axis, 2));
         }
 
-        render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
             ctx.beginPath();
             ctx.lineWidth = 2;
 
-            ctx.rect(this.x, this.y, this.width, this.height);
+            ctx.rect(this.x - vX, this.y - vY, this.width, this.height);
             ctx.stroke();
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
@@ -152,13 +153,15 @@ module Workflow{
             return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
         }
 
-        render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
-            let x = this.x +20;
-            let y = this.y;
-            let xw = this.x + this.width - 20;
-            let yh = this.y + this.height;
+            let x = this.x - vX;
+            let y = this.y - vY;
+            let xw = x + this.width - 20;
+            let yh = y + this.height;
+
+            x += 20;
 
             ctx.beginPath();
             ctx.lineWidth = 2;
@@ -189,7 +192,7 @@ module Workflow{
 
         constructor(options: WorkflowOption){
             options.width = options.width? options.width : 100;
-            options.height = options.height? options.height : 70;
+            options.height = options.height? options.height : 30;
 
             super(options);
 
@@ -238,13 +241,15 @@ module Workflow{
             return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
         }
 
-        render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
-            let x = this.x +20;
-            let y = this.y;
-            let xw = this.x + this.width;
-            let yh = this.y + this.height;
+            let x = this.x - vX;
+            let y = this.y - vY;
+            let xw = x + this.width;
+            let yh = y + this.height;
+
+            x += 20;
 
             ctx.beginPath();
             ctx.lineWidth = 2;
@@ -304,15 +309,15 @@ module Workflow{
             return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
         }
 
-        render(ctx: CanvasRenderingContext2D): void {
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
-            let x = this.x;
-            let y = this.y;
-            let xm = this.x + this.width/2;
-            let ym = this.y + this.height/2;
-            let xw = this.x + this.width;
-            let yh = this.y + this.height;
+            let x = this.x - vX;
+            let y = this.y - vY;
+            let xm = x + this.width/2;
+            let ym = y + this.height/2;
+            let xw = x + this.width;
+            let yh = y + this.height;
 
             ctx.beginPath();
             ctx.lineWidth = 2;
@@ -333,6 +338,24 @@ module Workflow{
         }
 
         recalculateBorders() {
+        }
+    }
+
+    /**
+     * Contiene las funciones para relacion de extension
+     *
+     * @class
+     * @memberof UseCase
+     * @augments Common.Relation
+     */
+    export class Returns extends Common.Relation{
+        constructor(options: RelOption){
+            options.icon = 'spear1';
+            options.text = '<<returns>>';
+            options.isDashed = true;
+
+            super(options);
+            this.type = 'returns';
         }
     }
 }

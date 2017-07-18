@@ -2037,7 +2037,7 @@ var Loira;
     var _regions = {
         'actor': { x: 0, y: 98, width: 35, height: 72 },
         'spear': { x: 0, y: 0, width: 15, height: 14 },
-        'spear1': { x: 0, y: 31, width: 27, height: 28 },
+        'spear1': { x: 0, y: 13, width: 14, height: 15 },
         'spear2': { x: 34, y: 0, width: 25, height: 26 },
         'arrow': { x: 27, y: 26, width: 12, height: 16 }
     };
@@ -2623,11 +2623,11 @@ var Workflow;
             var axis = result.y - (this.y + this.height / 2);
             return Math.sqrt(Math.pow(x, 2) + Math.pow(axis, 2));
         };
-        Process.prototype.render = function (ctx) {
+        Process.prototype.render = function (ctx, vX, vY) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             ctx.beginPath();
             ctx.lineWidth = 2;
-            ctx.rect(this.x, this.y, this.width, this.height);
+            ctx.rect(this.x - vX, this.y - vY, this.width, this.height);
             ctx.stroke();
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
@@ -2662,12 +2662,13 @@ var Workflow;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        Terminator.prototype.render = function (ctx) {
+        Terminator.prototype.render = function (ctx, vX, vY) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            var x = this.x + 20;
-            var y = this.y;
-            var xw = this.x + this.width - 20;
-            var yh = this.y + this.height;
+            var x = this.x - vX;
+            var y = this.y - vY;
+            var xw = x + this.width - 20;
+            var yh = y + this.height;
+            x += 20;
             ctx.beginPath();
             ctx.lineWidth = 2;
             ctx.moveTo(x, y);
@@ -2690,7 +2691,7 @@ var Workflow;
         function StartTerminator(options) {
             var _this = this;
             options.width = options.width ? options.width : 100;
-            options.height = options.height ? options.height : 70;
+            options.height = options.height ? options.height : 30;
             _this = _super.call(this, options) || this;
             _this.text = 'INICIO';
             _this.startPoint = true;
@@ -2739,12 +2740,13 @@ var Workflow;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
-        Data.prototype.render = function (ctx) {
+        Data.prototype.render = function (ctx, vX, vY) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            var x = this.x + 20;
-            var y = this.y;
-            var xw = this.x + this.width;
-            var yh = this.y + this.height;
+            var x = this.x - vX;
+            var y = this.y - vY;
+            var xw = x + this.width;
+            var yh = y + this.height;
+            x += 20;
             ctx.beginPath();
             ctx.lineWidth = 2;
             ctx.moveTo(x, y);
@@ -2791,14 +2793,14 @@ var Workflow;
             y = result.y - (this.y + this.height / 2);
             return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
         };
-        Decision.prototype.render = function (ctx) {
+        Decision.prototype.render = function (ctx, vX, vY) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            var x = this.x;
-            var y = this.y;
-            var xm = this.x + this.width / 2;
-            var ym = this.y + this.height / 2;
-            var xw = this.x + this.width;
-            var yh = this.y + this.height;
+            var x = this.x - vX;
+            var y = this.y - vY;
+            var xm = x + this.width / 2;
+            var ym = y + this.height / 2;
+            var xw = x + this.width;
+            var yh = y + this.height;
             ctx.beginPath();
             ctx.lineWidth = 2;
             ctx.moveTo(xm, y);
@@ -2817,6 +2819,27 @@ var Workflow;
         return Decision;
     }(Symbol));
     Workflow.Decision = Decision;
+    /**
+     * Contiene las funciones para relacion de extension
+     *
+     * @class
+     * @memberof UseCase
+     * @augments Common.Relation
+     */
+    var Returns = (function (_super) {
+        __extends(Returns, _super);
+        function Returns(options) {
+            var _this = this;
+            options.icon = 'spear1';
+            options.text = '<<returns>>';
+            options.isDashed = true;
+            _this = _super.call(this, options) || this;
+            _this.type = 'returns';
+            return _this;
+        }
+        return Returns;
+    }(Common.Relation));
+    Workflow.Returns = Returns;
 })(Workflow || (Workflow = {}));
 //# sourceMappingURL=workflow.js.map
 var __extends = (this && this.__extends) || (function () {
