@@ -37,6 +37,14 @@ module Loira{
         UNKNOWN = 4
     }
 
+    export enum Key {
+        ENTER = 13,
+        DELETE = 46,
+        CONTROL = 17,
+        ALT = 18,
+        SHIFT = 16
+    }
+
     class FpsCounter {
         private _fps: number;
         private _elapsed: number;
@@ -102,7 +110,7 @@ module Loira{
         /**
          * @property {Object}  _selected - Objeto que se encuentra seleccionado
          */
-        private _selected: Loira.Element = null;
+        private _selected: Loira.Element[] = [];
         /**
          * @property {Boolean}  _isDragged - Determina si el usuario esta arrastrando un objeto
          */
@@ -323,12 +331,17 @@ module Loira{
                     }
                 }
 
-                if (this._selected && this._selected.selectable) {
+                if (this._selected.length > 0) {
                     util.logger(LogLevel.INFO, 'Selected');
-                    ctx.save();
-                    this._selected.drawSelected(ctx);
-                    ctx.restore();
-                    this._selected.renderButtons(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
+
+                    for (let j: number = 0; j < this._selected.length; j++){
+                        if (this._selected[j].selectable){
+                            ctx.save();
+                            this._selected[j].drawSelected(ctx);
+                            ctx.restore();
+                            this._selected[j].renderButtons(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
+                        }
+                    }
                 }
 
                 this._scrollBar.render(ctx);
@@ -418,12 +431,14 @@ module Loira{
         remove(args: Loira.Element[], fireEvent: boolean = true) {
             let _items:Loira.Element[] = this.items;
             let _this = this;
+            let indexDelete: number;
 
             for (let item of args){
                 let toDelete:number[] = [];
 
-                if (item == this._selected){
-                    this._selected = null;
+                indexDelete = Loira.util.getIndex(this._selected, item);
+                if (indexDelete >= 0){
+                    this._selected.splice(indexDelete, 1);
                 }
                 toDelete.push(_items.indexOf(item));
 
@@ -559,13 +574,12 @@ module Loira{
             document.getElementsByTagName('body')[0].appendChild(contextMenu);
 
             let onKeyDown = function(evt, isGlobal){
-                if (evt.keyCode == 18){return;}
                 _this._tmp.lastKey = evt.keyCode;
 
                 if (!isGlobal){
-                    if (_this._tmp.lastKey === 46) {
+                    if (_this._tmp.lastKey === Key.DELETE) {
                         if (_this._selected) {
-                            _this.remove([_this._selected]);
+                            _this.remove(_this._selected);
                         }
                     }
                 }
@@ -592,11 +606,11 @@ module Loira{
             });
 
             _this._canvas.onmousewheel = function(evt){
-                if (_this._tmp.lastKey == 17){
+                if (_this._tmp.lastKey == Key.CONTROL){
                     _this._zoom.update(evt.deltaY);
                     return false;
                 }else {
-                    _this._scrollBar.addMovement(_this._tmp.lastKey === 16? 'H': 'V', (evt.deltaY/Math.abs(evt.deltaY)));
+                    _this._scrollBar.addMovement(_this._tmp.lastKey === Key.SHIFT? 'H': 'V', (evt.deltaY/Math.abs(evt.deltaY)));
                 }
 
                 _this.renderAll();
@@ -641,22 +655,25 @@ module Loira{
                 }
 
                 if (_this._selected && !_this.readOnly) {
-                    _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
-                    if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
-                        switch (_this._tmp.transform) {
-                            case 'tc':
-                            case 'bc':
-                                _this._canvas.style.cursor = 'ns-resize';
-                                break;
-                            case 'ml':
-                            case 'mr':
-                                _this._canvas.style.cursor = 'ew-resize';
-                                break;
+                    for (let i: number = 0; i<_this._selected.length;i++){
+                        _this._tmp.transform = _this._selected[i].getSelectedCorner(real.x, real.y);
+                        if (_this._tmp.transform || _this._selected[i].callCustomButton(real.x, real.y)) {
+                            switch (_this._tmp.transform) {
+                                case 'tc':
+                                case 'bc':
+                                    _this._canvas.style.cursor = 'ns-resize';
+                                    break;
+                                case 'ml':
+                                case 'mr':
+                                    _this._canvas.style.cursor = 'ew-resize';
+                                    break;
+                            }
+                            return;
+                        } else {
+                            // TODO agregar verificacion cuando este activo la tecla ALT
+                            _this._selected = [];
+                            _this.emit('object:unselected', new MouseEvent(real.x, real.y));
                         }
-                        return;
-                    } else {
-                        _this._selected = null;
-                        _this.emit('object:unselected', new MouseEvent(real.x, real.y));
                     }
                 }
 

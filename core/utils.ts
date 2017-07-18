@@ -130,6 +130,18 @@ module Loira.util{
         }
     }
 
+    export function getIndex<T>(vector: T[], item: T): number{
+        let response: number = -1;
+        for(let i:number = 0; i< vector.length; i++){
+            if (vector[i] == item){
+                response = i;
+                break;
+            }
+        }
+
+        return response;
+    }
+
     export function logger(logLevel: Loira.LogLevel, message?: string, data?: string){
         // let padStr = function(i){
         //     return (i < 10)? '0' + i : '' + i;
