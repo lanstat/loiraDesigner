@@ -401,7 +401,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('container:added', new ObjectEvent(item), fireEvent);
+                    _this.emit('container:added', new ObjectEvent([item]), fireEvent);
                 } else {
                     if (item.centerObject) {
                         item.x = (_this.virtualCanvas.viewportWidth / 2) + _this.virtualCanvas.x - (item.width / 2);
@@ -417,7 +417,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('object:added', new ObjectEvent(item), fireEvent);
+                    _this.emit('object:added', new ObjectEvent([item]), fireEvent);
                 }
             }
         }
@@ -471,7 +471,7 @@ module Loira{
                  * @property {object} selected - Objeto seleccionado
                  * @property {string} type - Tipo de evento
                  */
-                _this.emit('object:removed', new ObjectEvent(item), fireEvent);
+                _this.emit('object:removed', new ObjectEvent([item]), fireEvent);
             }
 
             this.renderAll(true);
@@ -654,10 +654,12 @@ module Loira{
                     return;
                 }
 
-                if (_this._selected && !_this.readOnly) {
-                    for (let i: number = 0; i<_this._selected.length;i++){
-                        _this._tmp.transform = _this._selected[i].getSelectedCorner(real.x, real.y);
-                        if (_this._tmp.transform || _this._selected[i].callCustomButton(real.x, real.y)) {
+                if (_this._selected.length > 0 && !_this.readOnly) {
+                    let inSelected: boolean = false;
+
+                    if (_this._selected.length === 1){
+                        _this._tmp.transform = _this._selected[0].getSelectedCorner(real.x, real.y);
+                        if (_this._tmp.transform || _this._selected[0].callCustomButton(real.x, real.y)) {
                             switch (_this._tmp.transform) {
                                 case 'tc':
                                 case 'bc':
@@ -669,11 +671,18 @@ module Loira{
                                     break;
                             }
                             return;
-                        } else {
-                            // TODO agregar verificacion cuando este activo la tecla ALT
-                            _this._selected = [];
-                            _this.emit('object:unselected', new MouseEvent(real.x, real.y));
                         }
+                    }
+
+                    for (let i: number = 0; i<_this._selected.length;i++){
+                        if (_this._selected[i].checkCollision(real.x, real.y)){
+                            inSelected = true;
+                            break;
+                        }
+                    }
+                    if (!inSelected && _this._tmp.lastKey != Key.SHIFT){
+                        _this._selected = [];
+                        _this.emit('object:unselected', new MouseEvent(real.x, real.y));
                     }
                 }
 
@@ -681,7 +690,8 @@ module Loira{
                 for (let i:number = _this.items.length - 1; i >= 0; i--) {
                     item = _this.items[i];
                     if (item.checkCollision(real.x, real.y)) {
-                        _this._selected = item;
+                        // TODO Agregar verificacion de duplicidad de elementos
+                        _this._selected.push(item);
 
                         if (item.baseType !== 'relation') {
                             if (isDoubleClick) {
@@ -693,7 +703,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('object:dblclick', new ObjectEvent(item));
+                                _this.emit('object:dblclick', new ObjectEvent([item]));
                             } else {
                                 util.logger(LogLevel.INFO, 'down');
                                 /**
@@ -704,7 +714,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('object:selected', new ObjectEvent(item));
+                                _this.emit('object:selected', new ObjectEvent([item]));
                             }
                             break;
                         } else {
@@ -717,7 +727,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionadonpm
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('relation:dblclick', new ObjectEvent(item));
+                                _this.emit('relation:dblclick', new ObjectEvent([item]));
                             } else {
                                 /**
                                  * Evento que encapsula un click sobre una relacion
@@ -727,7 +737,7 @@ module Loira{
                                  * @property {object} selected - Objeto seleccionado
                                  * @property {string} type - Tipo de evento
                                  */
-                                _this.emit('relation:selected', new ObjectEvent(item));
+                                _this.emit('relation:selected', new ObjectEvent([item]));
                             }
                             break;
                         }
@@ -795,47 +805,50 @@ module Loira{
                          * @property {string} type - Tipo de evento
                          */
                         _this.emit('mouse:move', new MouseEvent(real.x, real.y));
-                        if (_this._selected) {
+                        if (_this._selected.length > 0) {
                             if (_this._tmp.transform) {
-                                if (_this._selected.baseType !== 'relation') {
+                                if (_this._selected[0].baseType !== 'relation') {
                                     x = Math.floor(x);
                                     y = Math.floor(y);
                                     switch (_this._tmp.transform) {
                                         case 'tc':
-                                            _this._selected.y += y;
-                                            _this._selected.height -= y;
+                                            _this._selected[0].y += y;
+                                            _this._selected[0].height -= y;
                                             break;
                                         case 'bc':
-                                            _this._selected.height += y;
+                                            _this._selected[0].height += y;
                                             break;
                                         case 'ml':
-                                            _this._selected.x += x;
-                                            _this._selected.width -= x;
+                                            _this._selected[0].x += x;
+                                            _this._selected[0].width -= x;
                                             break;
                                         case 'mr':
-                                            _this._selected.width += x;
+                                            _this._selected[0].width += x;
                                             break;
                                     }
                                 } else {
-                                    (<Common.Relation>_this._selected).movePoint(parseInt(_this._tmp.transform), x, y);
+                                    (<Common.Relation>_this._selected[0]).movePoint(parseInt(_this._tmp.transform), x, y);
                                 }
 
                                 _this.renderAll();
                             } else {
-                                if (_this._selected.draggable){
-                                    _this._selected.x += x;
-                                    _this._selected.y += y;
-                                    /**
-                                     * Evento que encapsula el arrastre de un objeto
-                                     *
-                                     * @event object:dragging
-                                     * @type { object }
-                                     * @property {object} selected - Objeto seleccionado
-                                     * @property {string} type - Tipo de evento
-                                     */
-                                    _this.emit('object:dragging', new ObjectEvent(_this._selected));
-                                    _this.renderAll();
+                                for (let i=0; i< _this._selected.length; i++){
+                                    if (_this._selected[i].draggable){
+                                        _this._selected[i].x += x;
+                                        _this._selected[i].y += y;
+                                    }
                                 }
+
+                                /**
+                                 * Evento que encapsula el arrastre de un objeto
+                                 *
+                                 * @event object:dragging
+                                 * @type { object }
+                                 * @property {object} selected - Objeto seleccionado
+                                 * @property {string} type - Tipo de evento
+                                 */
+                                _this.emit('object:dragging', new ObjectEvent(_this._selected));
+                                _this.renderAll();
                             }
                         } else {
                             // TODO Verificar cuando se complete el canvas
@@ -874,7 +887,7 @@ module Loira{
                  * @property {string} type - Tipo de evento
                  */
                 _this.emit('mouse:up', new MouseEvent(real.x, real.y));
-                if (_this._selected) {
+                if (_this._selected.length > 0) {
                     /**
                      * Evento que encapsula la liberacion de un objeto
                      *
@@ -885,7 +898,10 @@ module Loira{
                      */
                     _this.emit('object:released', new ObjectEvent(_this._selected));
                     _this._tmp.transform = null;
-                    _this._selected.recalculateBorders();
+
+                    for(let i=0; i<_this._selected.length;i++){
+                        _this._selected[i].recalculateBorders();
+                    }
                 }
             };
 

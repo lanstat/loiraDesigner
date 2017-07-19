@@ -36,10 +36,10 @@ module Loira.event{
      * @property {string} type - Tipo de evento
      */
     export class ObjectEvent extends Event{
-        public selected: Loira.Element;
+        public selected: Loira.Element[];
         public type: string;
 
-        constructor(selected: Loira.Element) {
+        constructor(selected: Loira.Element[]) {
             super();
             this.selected = selected;
         }
