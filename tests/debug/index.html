@@ -13,7 +13,7 @@
         <button id="setDirectRelation">Relacion directa</button>
 		<script>
 			window.onload = function(){
-				Loira.Config.assetsPath = 'http://i65.tinypic.com/bmmx.png';
+				Loira.Config.assetsPath = '../../assets/glyphs.png';
 
 				var canvas = new Loira.Canvas('_canvas', {width: 1800, height:1000});
 
@@ -27,7 +27,7 @@
 
 				canvas.add([case1, case2, actor]);
 
-                canvas.add(new Relation.Dependency({start:case1, end:case2}));
+                canvas.add(new UseCase.Extends({start:case1, end:case2}));
 
                 document.getElementById('addObject').addEventListener('click', function(){
                     var case1 = new UseCase.UseCase({x:140,y:140, text:'Mostrar evento'});

@@ -14,11 +14,12 @@ module Loira{
     let _assetsPath:string = '../assets/glyphs.png';
 
     let _regions: {[id: string] : Region} = {
-        'actor': {x: 0, y: 98, width: 35, height: 72},
-        'spear': {x: 0, y: 0, width: 15, height: 14},
-        'spear1': {x: 0, y: 13, width: 14, height: 15},
-        'spear2': {x: 34, y: 0, width: 25, height: 26},
-        'arrow': {x: 27, y: 26, width: 12, height: 16}
+        'actor': {x: 0, y: 30, width: 30, height: 60},
+        'spear': {x: 0, y: 0, width: 15, height: 15},
+        'spear1': {x: 0, y: 15, width: 15, height: 15},
+        'spear2': {x: 15, y: 0, width: 15, height: 15},
+        'spear3': {x: 30, y: 15, width: 15, height: 15},
+        'arrow': {x: 15, y: 15, width: 15, height: 15}
     };
 
     let _scrollBar: any = {

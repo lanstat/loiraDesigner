@@ -53,7 +53,7 @@ module Common{
                 ym: number;
 
             start = new Rect(this.start.x - vX, this.start.y - vY, this.start.width, this.start.height);
-            end = new Rect(this.end.x - vX, this.end.y - vY, this.end.width, this.end.height);
+            end = new Rect(this.end.x, this.end.y, this.end.width, this.end.height);
 
             this.points[0] = {x: start.x + start.width/2, y: start.y + start.height/2};
             this.points[this.points.length - 1] = {x: end.x + end.width/2, y: end.y + end.height/2};
@@ -69,11 +69,7 @@ module Common{
             }
 
             for (let i:number = 1; i < this.points.length; i++){
-                if(i < this.points.length -1){
-                    this.points[i].x -= vX;
-                    this.points[i].y -= vY;
-                }
-                ctx.lineTo(this.points[i].x, this.points[i].y);
+                ctx.lineTo(this.points[i].x - vX, this.points[i].y - vY);
             }
 
             ctx.stroke();
@@ -92,7 +88,7 @@ module Common{
                     tmp += Math.PI;
                 }
 
-                ctx.translate(last.x, last.y);
+                ctx.translate(last.x - vX, last.y - vY);
                 ctx.rotate(tmp);
 
                 let region:Region = Loira.drawable.get(this.icon);
@@ -100,7 +96,7 @@ module Common{
 
                 Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height/2));
                 ctx.rotate(-tmp);
-                ctx.translate(-last.x, -last.y);
+                ctx.translate(-last.x - vX, -last.y -vY);
             }
 
             if (this.text || this.text.length > 0){
@@ -220,8 +216,11 @@ module Common{
 
             ctx.fillStyle= Loira.Config.selected.color;
 
+            let x: number = this._canvas.virtualCanvas.x;
+            let y: number = this._canvas.virtualCanvas.y;
+
             for (let i:number = 0; i < this.points.length; i++){
-                ctx.fillRect(this.points[i].x-4, this.points[i].y-4, 8, 8);
+                ctx.fillRect(this.points[i].x-4 - x, this.points[i].y-4 -y, 8, 8);
             }
 
             ctx.strokeStyle= '#000000';
