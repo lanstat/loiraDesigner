@@ -33,9 +33,19 @@
     window.onload = function(){
         Loira.Config.assetsPath = '../../assets/glyphs.png';
 
-        var canvas = new Loira.Canvas('_canvas', {width:1800, height:500});
+        var canvas = new Loira.Canvas('_canvas', {width:1800, height:1500, viewportHeight: 500, fps: 40});
         var relation = null;
         canvas.defaultRelation = 'Relation.DirectAssociation';
+
+        var data1 = new Workflow.Process({x:150, y:150, text:' '}),
+            data2 = new Workflow.Process({x:350, y:350, text:' '});
+        canvas.add([
+            data1,
+            data2,
+            new Relation.DirectAssociation({start:data1, end: data2})
+        ]);
+
+        canvas.renderAll();
 
         document.getElementById('actor').addEventListener('click', function(){
             canvas.add(new Workflow.Process({x:150, y:150, text:'Cambiar de decision'}));
@@ -67,7 +77,7 @@
             canvas.defaultRelation = 'Workflow.Returns';
         });
 
-        canvas.on('relation:added', function(evt){
+        canvas.on('relation:selected', function(evt){
             relation = evt.selected;
         });
     }

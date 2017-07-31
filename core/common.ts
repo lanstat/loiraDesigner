@@ -79,10 +79,16 @@ module Common{
                 init = this.points[this.points.length - 2];
                 last = this.points[this.points.length - 1];
 
-                xm = last.x - init.x;
-                ym = last.y - init.y;
+                if(this.points.length === 2){
+                    init.x += vX;
+                    init.y += vY;
+                    console.log('asdasdasd');
+                }
 
-                tmp = Math.atan(ym / xm);
+                xm = (last.x - init.x);
+                ym = (last.y - init.y);
+
+                tmp = Math.atan(ym/xm);
 
                 if (xm<0){
                     tmp += Math.PI;
