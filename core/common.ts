@@ -52,7 +52,7 @@ module Common{
                 xm: number,
                 ym: number;
 
-            start = new Rect(this.start.x - vX, this.start.y - vY, this.start.width, this.start.height);
+            start = new Rect(this.start.x, this.start.y, this.start.width, this.start.height);
             end = new Rect(this.end.x, this.end.y, this.end.width, this.end.height);
 
             this.points[0] = {x: start.x + start.width/2, y: start.y + start.height/2};
@@ -62,13 +62,13 @@ module Common{
 
             ctx.beginPath();
             ctx.lineWidth = 1;
-            ctx.moveTo(init.x, init.y);
+            ctx.moveTo(init.x - vX, init.y - vY);
 
             if (this.isDashed){
                 ctx.setLineDash([5, 5]);
             }
 
-            for (let i:number = 1; i < this.points.length; i++){
+            for (let i:number = 0; i < this.points.length; i++){
                 ctx.lineTo(this.points[i].x - vX, this.points[i].y - vY);
             }
 
@@ -78,12 +78,6 @@ module Common{
             if (this.icon){
                 init = this.points[this.points.length - 2];
                 last = this.points[this.points.length - 1];
-
-                if(this.points.length === 2){
-                    init.x += vX;
-                    init.y += vY;
-                    console.log('asdasdasd');
-                }
 
                 xm = (last.x - init.x);
                 ym = (last.y - init.y);
