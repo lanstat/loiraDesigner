@@ -37,10 +37,10 @@
         var relation = null;
         canvas.defaultRelation = 'Relation.DirectAssociation';
 
-        var data1 = new Workflow.Process({x:10, y:200, text:' '}),
+        var data1 = new Workflow.Process({x:332, y:288, text:'Meu lugar'}),
             data2 = new Workflow.Process({x:400, y:10, text:' ', width: 300});
 
-        var rel =new Relation.DirectAssociation({start:data1, end: data2, text: 'Proof of concept'});
+        var rel =new Relation.DirectAssociation({start:data1, end: data2, text: 'Proof of concept', points: [{x:332, y:288}, {x:100, y:100}, {x:400,y:10}]});
 
         canvas.add([
             data1,

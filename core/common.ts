@@ -154,7 +154,7 @@ module Common{
                 let b: number = last.y - init.y;
                 let c: number = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
 
-                let c1: number = ((this.points.length == 2)? ((c - buffE - buffS)/2): d) + buffS;
+                let c1: number = ((this.points.length == 2)? ((c - buffE - buffS)/2) + buffS: d);
 
                 let b1: number = Math.floor(b/c*c1);
                 let a1: number = Math.floor(a/c*c1);
