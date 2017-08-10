@@ -564,6 +564,7 @@ module Loira{
 
                 if (!isGlobal){
                     if (_this._tmp.lastKey === 46) {
+                        if (_this.readOnly){return;}
                         if (_this._selected) {
                             _this.remove([_this._selected]);
                         }
@@ -572,17 +573,14 @@ module Loira{
             };
 
             _this._canvas.onkeydown = function (evt) {
-                if (_this.readOnly){return;}
                 onKeyDown(evt, false);
             };
 
             document.addEventListener('keydown', function(evt){
-                if (_this.readOnly){return;}
                 onKeyDown(evt, true);
             });
 
             _this._canvas.onkeyup = function(){
-                if (_this.readOnly){return;}
                 _this._tmp.lastKey = null;
             };
 
@@ -594,12 +592,13 @@ module Loira{
             _this._canvas.onmousewheel = function(evt){
                 if (_this._tmp.lastKey == 17){
                     _this._zoom.update(evt.deltaY);
-                    return false;
                 }else {
                     _this._scrollBar.addMovement(_this._tmp.lastKey === 16? 'H': 'V', (evt.deltaY/Math.abs(evt.deltaY)));
                 }
 
                 _this.renderAll();
+
+                return false;
             };
 
             let onDown = function (evt, isDoubleClick) {
@@ -841,7 +840,6 @@ module Loira{
             };
 
             _this._canvas.onmouseup = function (evt) {
-                if (_this.readOnly){return;}
                 let real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;

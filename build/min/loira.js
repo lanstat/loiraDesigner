@@ -633,6 +633,9 @@ var Loira;
                 _this._tmp.lastKey = evt.keyCode;
                 if (!isGlobal) {
                     if (_this._tmp.lastKey === 46) {
+                        if (_this.readOnly) {
+                            return;
+                        }
                         if (_this._selected) {
                             _this.remove([_this._selected]);
                         }
@@ -640,21 +643,12 @@ var Loira;
                 }
             };
             _this._canvas.onkeydown = function (evt) {
-                if (_this.readOnly) {
-                    return;
-                }
                 onKeyDown(evt, false);
             };
             document.addEventListener('keydown', function (evt) {
-                if (_this.readOnly) {
-                    return;
-                }
                 onKeyDown(evt, true);
             });
             _this._canvas.onkeyup = function () {
-                if (_this.readOnly) {
-                    return;
-                }
                 _this._tmp.lastKey = null;
             };
             document.addEventListener('keyup', function () {
@@ -666,12 +660,12 @@ var Loira;
             _this._canvas.onmousewheel = function (evt) {
                 if (_this._tmp.lastKey == 17) {
                     _this._zoom.update(evt.deltaY);
-                    return false;
                 }
                 else {
                     _this._scrollBar.addMovement(_this._tmp.lastKey === 16 ? 'H' : 'V', (evt.deltaY / Math.abs(evt.deltaY)));
                 }
                 _this.renderAll();
+                return false;
             };
             var onDown = function (evt, isDoubleClick) {
                 var real = _this._getMouse(evt);
@@ -908,9 +902,6 @@ var Loira;
                 }
             };
             _this._canvas.onmouseup = function (evt) {
-                if (_this.readOnly) {
-                    return;
-                }
                 var real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
@@ -1231,8 +1222,18 @@ var Loira;
         }(BaseOption));
         util.RelOption = RelOption;
         var Line = (function () {
-            function Line() {
+            function Line(x1, y1, x2, y2) {
+                this.x1 = x1;
+                this.y1 = y1;
+                this.x2 = x2;
+                this.y2 = y2;
             }
+            Line.prototype.xm = function () {
+                return this.x2 - this.x1;
+            };
+            Line.prototype.ym = function () {
+                return this.y2 - this.y1;
+            };
             return Line;
         }());
         util.Line = Line;
@@ -1579,6 +1580,7 @@ var __extends = (this && this.__extends) || (function () {
 var Common;
 (function (Common) {
     var Point = Loira.util.Point;
+    var Line = Loira.util.Line;
     var BaseOption = Loira.util.BaseOption;
     var Rect = Loira.util.Rect;
     var TypeLine;
@@ -1610,57 +1612,93 @@ var Common;
          * @protected
          */
         Relation.prototype.render = function (ctx, vX, vY) {
-            var start, end, tmp, init, last, xm, ym;
-            start = new Rect(this.start.x - vX, this.start.y - vY, this.start.width, this.start.height);
-            end = new Rect(this.end.x - vX, this.end.y - vY, this.end.width, this.end.height);
+            var start, end, tmp, init, last, xm, ym, line, delta = [], distance = 0;
+            start = new Rect(this.start.x, this.start.y, this.start.width, this.start.height);
+            end = new Rect(this.end.x, this.end.y, this.end.width, this.end.height);
             this.points[0] = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
             this.points[this.points.length - 1] = { x: end.x + end.width / 2, y: end.y + end.height / 2 };
             init = this.points[0];
             last = this.points[1];
             ctx.beginPath();
             ctx.lineWidth = 1;
-            ctx.moveTo(init.x, init.y);
+            ctx.moveTo(init.x - vX, init.y - vY);
             if (this.isDashed) {
                 ctx.setLineDash([5, 5]);
             }
-            for (var i = 1; i < this.points.length; i++) {
-                if (i < this.points.length - 1) {
-                    this.points[i].x -= vX;
-                    this.points[i].y -= vY;
+            for (var i = 0; i < this.points.length; i++) {
+                ctx.lineTo(this.points[i].x - vX, this.points[i].y - vY);
+                if (i > 0) {
+                    delta[i - 1] = Math.sqrt(Math.pow((this.points[i].x - this.points[i - 1].x), 2) + Math.pow((this.points[i].y - this.points[i - 1].y), 2));
+                    distance += delta[i - 1];
                 }
-                ctx.lineTo(this.points[i].x, this.points[i].y);
             }
             ctx.stroke();
             ctx.setLineDash([]);
             if (this.icon) {
                 init = this.points[this.points.length - 2];
                 last = this.points[this.points.length - 1];
-                xm = last.x - init.x;
-                ym = last.y - init.y;
+                xm = (last.x - init.x);
+                ym = (last.y - init.y);
                 tmp = Math.atan(ym / xm);
                 if (xm < 0) {
                     tmp += Math.PI;
                 }
-                ctx.translate(last.x, last.y);
+                ctx.translate(last.x - vX, last.y - vY);
                 ctx.rotate(tmp);
+                line = new Line(init.x, init.y, last.x, last.y);
                 var region = Loira.drawable.get(this.icon);
-                var border = this.end.obtainBorderPos(xm, ym, { x1: init.x, y1: init.y, x2: last.x, y2: last.y }, ctx);
+                var border = this.end.obtainBorderPos(line, ctx);
                 Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height / 2));
                 ctx.rotate(-tmp);
-                ctx.translate(-last.x, -last.y);
+                ctx.translate(-last.x - vX, -last.y - vY);
             }
             if (this.text || this.text.length > 0) {
                 ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-                var pivot = Math.round(this.points.length / 2);
-                init = this.points[pivot - 1];
-                last = this.points[pivot];
-                xm = last.x - init.x;
-                ym = last.y - init.y;
+                var buffE = 0;
+                var buffS = 0;
+                var d = 0;
+                /*
+                 * Primero se obtiene el tamanho de la recta visible y se la divide a la mitad(c1), despues se usa como pivot
+                 * el punto inicial y se usa la distancia cubierta por el elemento y se le suma la distancia visible(c1)
+                 * Luego los puntos inicial y final se los trata como un triangulo rectangulo de catetos (a,b,c) y mediante
+                 * interpolacion se obtiene el punto medio.
+                 */
+                if (this.points.length == 2) {
+                    init = this.points[0];
+                    last = this.points[1];
+                    line = new Line(init.x, init.y, last.x, last.y);
+                    buffE = this.end.obtainBorderPos(line, ctx);
+                    buffS = this.start.obtainBorderPos(line, ctx);
+                }
+                else {
+                    buffS = this.start.obtainBorderPos(new Line(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y), ctx);
+                    buffE = this.end.obtainBorderPos(new Line(this.points[this.points.length - 2].x, this.points[this.points.length - 2].y, this.points[this.points.length - 1].x, this.points[this.points.length - 1].y), ctx);
+                    d = ((distance - buffS - buffE) / 2) + buffS;
+                    var i = 0;
+                    while (d - delta[i] > 0) {
+                        d -= delta[i];
+                        i++;
+                    }
+                    init = this.points[i];
+                    last = this.points[i + 1];
+                    if (i !== 0) {
+                        buffS = 0;
+                    }
+                    if (i !== this.points.length - 2) {
+                        buffE = 0;
+                    }
+                }
+                var a = last.x - init.x;
+                var b = last.y - init.y;
+                var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+                var c1 = ((this.points.length == 2) ? ((c - buffE - buffS) / 2) : d) + buffS;
+                var b1 = Math.floor(b / c * c1);
+                var a1 = Math.floor(a / c * c1);
                 tmp = ctx.measureText(this.text).width;
                 ctx.fillStyle = Loira.Config.background;
-                ctx.fillRect(init.x + xm / 2 - tmp / 2, init.y + ym / 2 - 15, tmp, 12);
+                ctx.fillRect(init.x + vX + a1 - tmp / 2, init.y + vY + b1 - 13, tmp, 12);
                 ctx.fillStyle = "#000000";
-                ctx.fillText(this.text, init.x + xm / 2 - tmp / 2, init.y + ym / 2 - 5);
+                ctx.fillText(this.text, init.x + vX + a1 - tmp / 2, init.y + vY + b1 - 3);
                 ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             }
         };
@@ -1740,8 +1778,10 @@ var Common;
         Relation.prototype.drawSelected = function (ctx) {
             ctx.beginPath();
             ctx.fillStyle = Loira.Config.selected.color;
+            var x = this._canvas.virtualCanvas.x;
+            var y = this._canvas.virtualCanvas.y;
             for (var i = 0; i < this.points.length; i++) {
-                ctx.fillRect(this.points[i].x - 4, this.points[i].y - 4, 8, 8);
+                ctx.fillRect(this.points[i].x - 4 - x, this.points[i].y - 4 - y, 8, 8);
             }
             ctx.strokeStyle = '#000000';
         };
@@ -1864,9 +1904,9 @@ var Common;
             _this.type = 'actor';
             return _this;
         }
-        Actor.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
+        Actor.prototype.obtainBorderPos = function (points, ctx) {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            var textW = ctx.measureText(this.text).width;
+            var textW = ctx.measureText(this.text).width, xm = points.x2 - points.x1, ym = points.y2 - points.y1;
             if (textW > this.width) {
                 this.x = this.x + this.width / 2 - textW / 2;
                 this.width = textW;
@@ -1877,10 +1917,10 @@ var Common;
             }
             var result = null;
             if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)) {
-                result = Loira.util.intersectPointLine(points, { x1: this.x, y1: -100, x2: this.x, y2: 100 });
+                result = Loira.util.intersectPointLine(points, new Line(this.x, -100, this.x, 100));
             }
             else {
-                result = Loira.util.intersectPointLine(points, { x1: -100, y1: this.y, x2: 100, y2: this.y });
+                result = Loira.util.intersectPointLine(points, new Line(-100, this.y, 100, this.y));
             }
             return Math.sqrt(Math.pow((result.x - (this.x + this.width / 2)), 2) + Math.pow((result.y - (this.y + this.height / 2)), 2));
         };
@@ -2035,11 +2075,12 @@ var Loira;
     var _background = '#aacccc';
     var _assetsPath = '../assets/glyphs.png';
     var _regions = {
-        'actor': { x: 0, y: 98, width: 35, height: 72 },
-        'spear': { x: 0, y: 0, width: 15, height: 14 },
-        'spear1': { x: 0, y: 13, width: 14, height: 15 },
-        'spear2': { x: 34, y: 0, width: 25, height: 26 },
-        'arrow': { x: 27, y: 26, width: 12, height: 16 }
+        'actor': { x: 0, y: 30, width: 30, height: 60 },
+        'spear': { x: 0, y: 0, width: 15, height: 15 },
+        'spear1': { x: 0, y: 15, width: 15, height: 15 },
+        'spear2': { x: 15, y: 0, width: 15, height: 15 },
+        'spear3': { x: 30, y: 15, width: 15, height: 15 },
+        'arrow': { x: 15, y: 15, width: 15, height: 15 }
     };
     var _scrollBar = {
         size: 10,
@@ -2366,9 +2407,8 @@ var UseCase;
             _this.type = 'use_case';
             return _this;
         }
-        UseCase.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
-            var a = this.width / 2;
-            var b = this.height / 2;
+        UseCase.prototype.obtainBorderPos = function (points, ctx) {
+            var a = this.width / 2, b = this.height / 2, xm = points.xm(), ym = points.ym();
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
             return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
         };
@@ -2532,6 +2572,7 @@ var Workflow;
 (function (Workflow) {
     var BaseOption = Loira.util.BaseOption;
     var Point = Loira.util.Point;
+    var Line = Loira.util.Line;
     var WorkflowOption = (function (_super) {
         __extends(WorkflowOption, _super);
         function WorkflowOption() {
@@ -2607,17 +2648,18 @@ var Workflow;
             _this.maxOutGoingRelation = 1;
             return _this;
         }
-        Process.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
+        Process.prototype.obtainBorderPos = function (points, ctx) {
+            var xm = points.x2 - points.x1, ym = points.y2 - points.y1;
             var angle = Math.atan(ym / xm);
             if (xm < 0) {
                 angle += Math.PI;
             }
             var result = { x: 100, y: this.y - 10 };
             if ((angle > this.borders.bottomLeft && angle < this.borders.topLeft) || (angle > this.borders.topRight && angle < this.borders.bottomRight)) {
-                result = Loira.util.intersectPointLine(points, { x1: this.x, y1: -100, x2: this.x, y2: 100 });
+                result = Loira.util.intersectPointLine(points, new Line(this.x, -100, this.x, 100));
             }
             else {
-                result = Loira.util.intersectPointLine(points, { x1: -100, y1: this.y, x2: 100, y2: this.y });
+                result = Loira.util.intersectPointLine(points, new Line(-100, this.y, 100, this.y));
             }
             var x = result.x - (this.x + this.width / 2);
             var axis = result.y - (this.y + this.height / 2);
@@ -2656,7 +2698,8 @@ var Workflow;
         function Terminator() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        Terminator.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
+        Terminator.prototype.obtainBorderPos = function (points, ctx) {
+            var xm = points.x2 - points.x1, ym = points.y2 - points.y1;
             var a = this.width / 2;
             var b = this.height / 2;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
@@ -2734,7 +2777,8 @@ var Workflow;
             _this.type = 'data';
             return _this;
         }
-        Data.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
+        Data.prototype.obtainBorderPos = function (points, ctx) {
+            var xm = points.x2 - points.x1, ym = points.y2 - points.y1;
             var a = this.width / 2;
             var b = this.height / 2;
             var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
@@ -2776,7 +2820,8 @@ var Workflow;
             _this.type = 'decision';
             return _this;
         }
-        Decision.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
+        Decision.prototype.obtainBorderPos = function (points, ctx) {
+            var xm = points.x2 - points.x1, ym = points.y2 - points.y1;
             var x = this.x, y = this.y, xP = this.x + this.width / 2, yP = this.y + this.height / 2, xw = this.x + this.width;
             var angle = Math.atan(yP / xm);
             var result;
@@ -2784,10 +2829,10 @@ var Workflow;
                 angle += Math.PI;
             }
             if ((angle > 0 && angle < 1.6) || (angle > 3.15 && angle < 4.7)) {
-                result = Loira.util.intersectPointLine(points, { x1: x, y1: yP, x2: xP, y2: y });
+                result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, y));
             }
             else {
-                result = Loira.util.intersectPointLine(points, { x1: xP, y1: y, x2: xw, y2: yP });
+                result = Loira.util.intersectPointLine(points, new Line(xP, y, xw, yP));
             }
             x = result.x - (this.x + this.width / 2);
             y = result.y - (this.y + this.height / 2);
@@ -3258,7 +3303,7 @@ var OrgChart;
         };
         Role.prototype.recalculateBorders = function () {
         };
-        Role.prototype.obtainBorderPos = function (xm, ym, points, ctx) {
+        Role.prototype.obtainBorderPos = function (points, ctx) {
             return 0;
         };
         Role.prototype.drawSelected = function (ctx) {

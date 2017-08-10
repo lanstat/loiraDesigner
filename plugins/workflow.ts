@@ -7,6 +7,7 @@ module Workflow{
     import BaseOption = Loira.util.BaseOption;
     import Point = Loira.util.Point;
     import RelOption = Loira.util.RelOption;
+    import Line = Loira.util.Line;
 
     export class WorkflowOption extends BaseOption{
         startPoint: boolean;
@@ -90,7 +91,9 @@ module Workflow{
             this.maxOutGoingRelation = 1;
         }
 
-        obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+        obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+            let xm: number = points.x2 - points.x1,
+                ym: number = points.y2 - points.y1;
             let angle = Math.atan(ym / xm);
 
             if (xm<0){
@@ -100,9 +103,9 @@ module Workflow{
             let result = {x:100, y:this.y-10};
 
             if ((angle > this.borders.bottomLeft && angle < this.borders.topLeft) || (angle > this.borders.topRight && angle < this.borders.bottomRight)){
-                result = Loira.util.intersectPointLine(points, {x1:this.x, y1:-100, x2:this.x, y2:100});
+                result = Loira.util.intersectPointLine(points, new Line(this.x, -100, this.x, 100));
             }else{
-                result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
+                result = Loira.util.intersectPointLine(points, new Line(-100, this.y, 100, this.y));
             }
 
             let x = result.x - (this.x + this.width/2);
@@ -145,7 +148,10 @@ module Workflow{
      * @augments Common.Symbol
      */
     export class Terminator extends Symbol{
-        obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+        obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+            let xm: number = points.x2 - points.x1,
+                ym: number = points.y2 - points.y1;
+
             let a = this.width/2;
             let b = this.height/2;
             let ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
@@ -233,7 +239,9 @@ module Workflow{
             this.type = 'data';
         }
 
-        obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+        obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+            let xm: number = points.x2 - points.x1,
+                ym: number = points.y2 - points.y1;
             let a = this.width/2;
             let b = this.height/2;
             let ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
@@ -283,7 +291,9 @@ module Workflow{
             this.type = 'decision';
         }
 
-        obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+        obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+            let xm: number = points.x2 - points.x1,
+                ym: number = points.y2 - points.y1;
             let x = this.x,
                 y = this.y,
                 xP = this.x + this.width/2,
@@ -298,9 +308,9 @@ module Workflow{
             }
 
             if ((angle > 0 && angle < 1.6) || (angle > 3.15 && angle < 4.7)){
-                result = Loira.util.intersectPointLine(points, {x1: x, y1: yP, x2: xP, y2: y});
+                result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, y));
             } else {
-                result = Loira.util.intersectPointLine(points, {x1: xP, y1: y, x2: xw, y2: yP});
+                result = Loira.util.intersectPointLine(points, new Line(xP, y, xw, yP));
             }
 
             x = result.x - (this.x + this.width/2);

@@ -23,9 +23,11 @@ module UseCase{
             this.type = 'use_case';
         }
 
-        obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
-            let a = this.width/2;
-            let b = this.height/2;
+        obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+            let a: number = this.width/2,
+                b: number = this.height/2,
+                xm: number = points.xm(),
+                ym: number = points.ym();
             let ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
 
             return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));

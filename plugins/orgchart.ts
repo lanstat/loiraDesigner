@@ -496,7 +496,7 @@ module OrgChart{
         recalculateBorders() {
         }
 
-        obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+        obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
             return 0;
         }
 

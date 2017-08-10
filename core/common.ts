@@ -50,7 +50,10 @@ module Common{
                 init: Point,
                 last: Point,
                 xm: number,
-                ym: number;
+                ym: number,
+                line: Line,
+                delta: number[] = [],
+                distance: number = 0;
 
             start = new Rect(this.start.x, this.start.y, this.start.width, this.start.height);
             end = new Rect(this.end.x, this.end.y, this.end.width, this.end.height);
@@ -70,6 +73,10 @@ module Common{
 
             for (let i:number = 0; i < this.points.length; i++){
                 ctx.lineTo(this.points[i].x - vX, this.points[i].y - vY);
+                if (i>0){
+                    delta[i-1] = Math.sqrt(Math.pow((this.points[i].x - this.points[i-1].x), 2) + Math.pow((this.points[i].y - this.points[i-1].y), 2));
+                    distance += delta[i-1];
+                }
             }
 
             ctx.stroke();
@@ -90,9 +97,10 @@ module Common{
 
                 ctx.translate(last.x - vX, last.y - vY);
                 ctx.rotate(tmp);
+                line = new Line(init.x, init.y, last.x, last.y);
 
                 let region:Region = Loira.drawable.get(this.icon);
-                let border:number = this.end.obtainBorderPos(xm, ym, {x1:init.x, y1: init.y, x2:last.x, y2:last.y}, ctx);
+                let border:number = this.end.obtainBorderPos(line, ctx);
 
                 Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height/2));
                 ctx.rotate(-tmp);
@@ -101,24 +109,65 @@ module Common{
 
             if (this.text || this.text.length > 0){
                 ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+                let buffE: number = 0;
+                let buffS: number = 0;
+                let d: number = 0;
 
-                let pivot: number = Math.round(this.points.length / 2);
+                /*
+                 * Primero se obtiene el tamanho de la recta visible y se la divide a la mitad(c1), despues se usa como pivot
+                 * el punto inicial y se usa la distancia cubierta por el elemento y se le suma la distancia visible(c1)
+                 * Luego los puntos inicial y final se los trata como un triangulo rectangulo de catetos (a,b,c) y mediante
+                 * interpolacion se obtiene el punto medio.
+                 */
+                if (this.points.length == 2){
+                    init = this.points[0];
+                    last = this.points[1];
 
-                init = this.points[pivot - 1];
-                last = this.points[pivot];
+                    line = new Line(init.x, init.y, last.x, last.y);
 
-                xm = last.x - init.x;
-                ym = last.y - init.y;
+                    buffE = this.end.obtainBorderPos(line, ctx);
+                    buffS = this.start.obtainBorderPos(line, ctx);
+                } else {
+                    buffS = this.start.obtainBorderPos(new Line(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y), ctx);
+                    buffE = this.end.obtainBorderPos(new Line(this.points[this.points.length-2].x, this.points[this.points.length-2].y, this.points[this.points.length-1].x, this.points[this.points.length-1].y), ctx);
+
+                    d = ((distance - buffS - buffE) / 2) + buffS;
+                    let i: number = 0;
+
+                    while(d - delta[i] > 0){
+                        d -= delta[i];
+                        i++;
+                    }
+
+                    init = this.points[i];
+                    last = this.points[i+1];
+
+                    if(i!==0){
+                        buffS = 0;
+                    }
+
+                    if(i!==this.points.length -2){
+                        buffE = 0;
+                    }
+                }
+                let a: number = last.x - init.x;
+                let b: number = last.y - init.y;
+                let c: number = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+
+                let c1: number = ((this.points.length == 2)? ((c - buffE - buffS)/2): d) + buffS;
+
+                let b1: number = Math.floor(b/c*c1);
+                let a1: number = Math.floor(a/c*c1);
 
                 tmp = ctx.measureText(this.text).width;
 
                 ctx.fillStyle = Loira.Config.background;
-                ctx.fillRect(init.x + xm/2 - tmp/2, init.y + ym/2 - 15, tmp, 12);
+                ctx.fillRect(init.x + vX + a1 - tmp/2, init.y + vY + b1 - 13, tmp, 12);
                 ctx.fillStyle = "#000000";
 
                 ctx.fillText(this.text,
-                    init.x + xm/2 - tmp/2,
-                    init.y + ym/2 - 5);
+                    init.x + vX + a1 - tmp/2,
+                    init.y + vY + b1 - 3);
 
                 ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             }
@@ -321,13 +370,11 @@ module Common{
          * Obtiene la posicion del borde del simbolo interesectado por un relacion (linea)
          *
          * @memberof Common.Symbol#
-         * @param xm {number} Delta x de la relacion
-         * @param ym {number} Delta y de la relacion
          * @param points Puntos que forman la recta
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
          * @returns {number} Distancia borde del simbolo
          */
-        abstract obtainBorderPos(xm: number, ym: number, points: Line, ctx: CanvasRenderingContext2D): number;
+        abstract obtainBorderPos(points: Line, ctx: CanvasRenderingContext2D): number;
 
         protected splitText(ctx: CanvasRenderingContext2D, text: string, padding: number = 10) {
             let words:string[] = text.split(' ');
@@ -375,9 +422,12 @@ module Common{
             this.type = 'actor';
         }
 
-        obtainBorderPos(xm: number, ym: number, points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+        obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            let textW: number = ctx.measureText(this.text).width;
+            let textW: number = ctx.measureText(this.text).width,
+                xm: number = points.x2 - points.x1,
+                ym: number = points.y2 - points.y1;
+
             if (textW > this.width){
                 this.x = this.x + this.width/2 - textW/2;
                 this.width = textW;
@@ -392,9 +442,9 @@ module Common{
             let result:Point = null;
 
             if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)){
-                result = Loira.util.intersectPointLine(points, {x1:this.x, y1:-100, x2:this.x, y2:100});
+                result = Loira.util.intersectPointLine(points, new Line(this.x, -100, this.x, 100));
             }else{
-                result = Loira.util.intersectPointLine(points, {x1:-100, y1:this.y, x2:100, y2:this.y});
+                result = Loira.util.intersectPointLine(points, new Line(-100, this.y, 100, this.y));
             }
 
             return Math.sqrt(Math.pow((result.x - (this.x + this.width/2)), 2) + Math.pow((result.y - (this.y + this.height/2)), 2));

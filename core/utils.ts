@@ -34,10 +34,18 @@ module Loira.util{
     }
 
     export class Line{
-        x1: number;
-        y1: number;
-        x2: number;
-        y2: number;
+        constructor(public x1: number,
+                    public y1: number,
+                    public x2: number,
+                    public y2: number){}
+
+        public xm(): number{
+            return this.x2 - this.x1;
+        }
+
+        public ym(): number{
+            return this.y2 - this.y1;
+        }
     }
 
     export class Region{
