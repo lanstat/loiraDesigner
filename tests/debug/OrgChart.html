@@ -20,8 +20,17 @@
 <body>
 <div class="container">
     <div class="row">
+        <div class="col-sm-12">
+            hola
+        </div>
+    </div>
+    <div class="row">
         <div class="col-sm-9">
-            <div id="_canvas">
+            <div style="height: 800px;overflow-y: auto">
+                <div style="height: 1500px">
+                    <div id="_canvas">
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-sm-3">
@@ -152,7 +161,10 @@
         canvas.controller.load([
             {id: 1, title: 'Especialista en plantas y demases yerbas afines', personName: 'Javier', parent: 0},
             {id: 2, title: '2', parent: 1},
-            {id: 3, title: '3', parent: 2}
+            {id: 3, title: '3', parent: 2},
+            {id: 4, title: '4', parent: 3},
+            {id: 5, title: '5', parent: 4},
+            {id: 6, title: '6', parent: 5}
         ]);
         refreshData();
 

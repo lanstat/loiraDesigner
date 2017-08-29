@@ -1691,7 +1691,7 @@ var Common;
                 var a = last.x - init.x;
                 var b = last.y - init.y;
                 var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-                var c1 = ((this.points.length == 2) ? ((c - buffE - buffS) / 2) : d) + buffS;
+                var c1 = ((this.points.length == 2) ? ((c - buffE - buffS) / 2) + buffS : d);
                 var b1 = Math.floor(b / c * c1);
                 var a1 = Math.floor(a / c * c1);
                 tmp = ctx.measureText(this.text).width;
