@@ -988,6 +988,13 @@ var Loira;
                     offsetX += element.offsetLeft;
                     offsetY += element.offsetTop;
                 } while ((element = element.offsetParent));
+                element = this._canvas;
+                do {
+                    if (element.nodeName !== 'BODY') {
+                        offsetY -= element.scrollTop;
+                        offsetX -= element.scrollLeft;
+                    }
+                } while ((element = element.parentElement));
             }
             var border = this._border;
             offsetX += border.paddingLeft;

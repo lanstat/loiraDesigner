@@ -932,13 +932,16 @@ module Loira{
                 offsetY: number = 0;
 
             if (element.offsetParent) {
-                // do {
-                //     offsetX += element.offsetLeft;
-                //     offsetY += element.offsetTop;
-                // } while ((element = <HTMLElement> element.offsetParent));
                 do {
                     offsetX += element.offsetLeft;
                     offsetY += element.offsetTop;
+                } while ((element = <HTMLElement> element.offsetParent));
+                element = <HTMLElement> this._canvas;
+                do {
+                    if (element.nodeName !== 'BODY'){
+                        offsetY -= element.scrollTop;
+                        offsetX -= element.scrollLeft;
+                    }
                 } while ((element = element.parentElement));
             }
             let border = this._border;
@@ -949,9 +952,6 @@ module Loira{
             offsetY += border.borderTop;
 
             let response: Point = {x: (evt.pageX - offsetX), y: (evt.pageY - offsetY)};
-
-            //console.log(evt.pageX, evt.pageY);
-            console.log(offsetX, offsetY);
 
             response.x += this.virtualCanvas.x;
             response.y += this.virtualCanvas.y;
