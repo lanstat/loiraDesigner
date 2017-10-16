@@ -593,7 +593,7 @@ module Loira{
                 if (_this._tmp.lastKey == 17){
                     _this._zoom.update(evt.deltaY);
                 }else {
-                    _this._scrollBar.addMovement(_this._tmp.lastKey === 16? 'H': 'V', (evt.deltaY/Math.abs(evt.deltaY)));
+                    _this._scrollBar.addMovementWheel(_this._tmp.lastKey === 16? 'H': 'V', (evt.deltaY/Math.abs(evt.deltaY)));
                 }
 
                 _this.renderAll();

@@ -280,7 +280,10 @@ module OrgChart{
                 }
 
                 group = new Group(new Role(option));
-                group.role.on(null);
+
+                if (readOnly){
+                    group.role.on(null);
+                }
 
                 if (record.parent){
                     let parent = this.getGroupById(record.parent?record.parent.toString():'').item;

@@ -298,7 +298,8 @@ module Workflow{
                 y = this.y,
                 xP = this.x + this.width/2,
                 yP = this.y + this.height/2,
-                xw = this.x + this.width;
+                xw = this.x + this.width,
+                yh = this.y + this.height;
 
             let angle = Math.atan(yP / xm);
             let result:Point;
@@ -307,10 +308,20 @@ module Workflow{
                 angle += Math.PI;
             }
 
-            if ((angle > 0 && angle < 1.6) || (angle > 3.15 && angle < 4.7)){
-                result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, y));
+            ym = ym/Math.abs(ym);
+
+            if (angle > 0 && angle < 1.6){
+                if (ym > 0){
+                    result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, y));
+                } else {
+                    result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, yh));
+                }
             } else {
-                result = Loira.util.intersectPointLine(points, new Line(xP, y, xw, yP));
+                if (ym > 0){
+                    result = Loira.util.intersectPointLine(points, new Line(xP, y, xw, yP));
+                } else {
+                    result = Loira.util.intersectPointLine(points, new Line(xP, yh, xw, yP));
+                }
             }
 
             x = result.x - (this.x + this.width/2);

@@ -3138,7 +3138,9 @@ var OrgChart;
                     option.isDuplicate = true;
                 }
                 group = new Group(new Role(option));
-                group.role.on(null);
+                if (readOnly) {
+                    group.role.on(null);
+                }
                 if (record.parent) {
                     var parent_1 = this.getGroupById(record.parent ? record.parent.toString() : '').item;
                     parent_1.children.push(group);

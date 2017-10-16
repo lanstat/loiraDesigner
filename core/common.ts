@@ -568,12 +568,52 @@ module Common{
                 } else {
                     this._horPos = tmp;
                 }
+
                 virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
+
                 if(background){
                     background.style.marginLeft = '-'+virtual.x+'px';
                 }
             } else if(dir === 'V') {
                 tmp = this._verPos + delta * inc;
+                if (tmp < 0) {
+                    this._verPos = 0;
+                } else if (tmp + this._verSize > virtual.viewportHeight){
+                    this._verPos = virtual.viewportHeight - this._verSize;
+                } else {
+                    this._verPos = tmp;
+                }
+                virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
+                if(background){
+                    background.style.marginTop = '-'+virtual.y+'px';
+                }
+            }
+        }
+
+        addMovementWheel(dir: string, delta: number, inc: number = 30): void{
+            let tmp: number;
+            let virtual: Loira.VirtualCanvas = this._virtual;
+            let background = this._canvas._background;
+            let realTmp: number = 1;
+
+            if (dir === 'H'){
+                //realTmp =
+                tmp = this._horPos + Math.round(delta * virtual.viewportWidth * (inc / virtual.width));
+                if (tmp < 0) {
+                    this._horPos = 0;
+                } else if (tmp + this._horSize > virtual.viewportWidth){
+                    this._horPos = virtual.viewportWidth - this._horSize;
+                } else {
+                    this._horPos = tmp;
+                }
+
+                virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
+
+                if(background){
+                    background.style.marginLeft = '-'+virtual.x+'px';
+                }
+            } else if(dir === 'V') {
+                tmp = this._verPos + Math.round(delta * virtual.viewportHeight * (inc / virtual.height));
                 if (tmp < 0) {
                     this._verPos = 0;
                 } else if (tmp + this._verSize > virtual.viewportHeight){
