@@ -63,6 +63,7 @@ module Loira{
         public pointer:Point;
         public transform:string;
         public lastKey:number;
+        public globalPointer: Point;
     }
 
     class ZoomData{
@@ -635,6 +636,7 @@ module Loira{
                 }
 
                 if (_this._scrollBar.checkCollision(real.x, real.y)){
+                    _this._tmp.globalPointer = {x: evt.pageX, y: evt.pageY};
                     _this._isDragged = true;
                     return;
                 }
@@ -761,12 +763,7 @@ module Loira{
                     let x:number = real.x - _this._tmp.pointer.x;
                     let y:number = real.y - _this._tmp.pointer.y;
 
-                    if (_this._scrollBar.isSelected()){
-                        _this._scrollBar.dragScroll(x, y);
-                        _this.renderAll();
-
-                        _this._tmp.pointer = _this._getMouse(evt);
-                    } else {
+                    if (!_this._scrollBar.isSelected()){
                         /**
                          * Evento que encapsula el movimiento del mouse sobre el canvas
                          *
@@ -843,7 +840,6 @@ module Loira{
                 let real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
-                _this._scrollBar.selected = null;
 
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
@@ -882,6 +878,22 @@ module Loira{
             _this._canvas.onselectstart = function () {
                 return false;
             };
+
+            /**
+             * Capture the global mouse move event for
+             */
+            document.addEventListener('mousemove', function(evt){
+                if (_this._scrollBar.isSelected()){
+                    _this._scrollBar.dragScroll(evt.pageX - _this._tmp.globalPointer.x, evt.pageY - _this._tmp.globalPointer.y);
+                    _this.renderAll();
+
+                    _this._tmp.globalPointer = {x: evt.pageX, y: evt.pageY};
+                }
+            });
+
+            document.addEventListener('mouseup', function(){
+                _this._scrollBar.selected = null;
+            });
         }
 
         private bindResizeWindow(){
