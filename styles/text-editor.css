@@ -1,0 +1,6 @@
+.loira-text-editor {
+    display: none;
+    z-index: 1000;
+    position: absolute;
+    outline: none;
+}

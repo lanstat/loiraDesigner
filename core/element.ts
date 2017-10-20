@@ -28,7 +28,8 @@ module Loira{
         public selectable: boolean;
         public resizable: boolean;
         public draggable: boolean;
-        public menu: {item: string, callback: (evt: any, element: Element) => void}[];
+        public menu: MenuItem[];
+        protected selectedArea: any;
 
         /**
          * Inicializa los valores de la clase
@@ -193,6 +194,7 @@ module Loira{
          * @returns
          */
         getSelectedCorner(pX: number, pY: number): string {
+            if (!this.resizable) {return ''}
             let x: number = this.x - 2,
                 y: number = this.y - 2,
                 w: number = this.width,
@@ -275,6 +277,10 @@ module Loira{
 
         destroy(): void {
             this._canvas = null;
+        }
+
+        public getMenu(x: number, y: number): MenuItem[]{
+            return this.menu;
         }
     }
 }

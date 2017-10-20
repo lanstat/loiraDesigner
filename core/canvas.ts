@@ -8,6 +8,7 @@ module Loira{
     import ObjectEvent = Loira.event.ObjectEvent;
     import MouseEvent = Loira.event.MouseEvent;
     import Point = Loira.util.Point;
+    import Region = Loira.util.Region;
 
     export class VirtualCanvas {
         public x: number = 0;
@@ -164,6 +165,10 @@ module Loira{
         public fps: number;
 
         public dragCanvas: boolean;
+
+        private contextMenu: HTMLUListElement;
+
+        private textEditor: HTMLTextAreaElement;
 
         /**
          * Create a new instance of canvas
@@ -333,6 +338,10 @@ module Loira{
                 }
 
                 this._scrollBar.render(ctx);
+
+                if (Loira.Config.showBanner){
+                    Loira.Canvas.drawBanner(ctx);
+                }
             }
         }
 
@@ -363,7 +372,7 @@ module Loira{
                 if (item.baseType === 'relation') {
                     relation = <Common.Relation>item;
 
-                    if (!_this.emit('relation:pre-add', new RelationEvent(relation))){ return; }
+                    if (!_this.emit(Loira.event.RELATION_PRE_ADD, new RelationEvent(relation))){ return; }
 
                     let index:number = _items.indexOf(relation.start);
                     index = index < _items.indexOf(relation.end) ? index : _items.indexOf(relation.end);
@@ -378,7 +387,7 @@ module Loira{
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('relation:added', new RelationEvent(relation), fireEvent);
+                    _this.emit(Loira.event.RELATION_ADDED, new RelationEvent(relation), fireEvent);
                 } else if (item.baseType === 'container') {
                     _items.splice(0, 0, item);
                     /**
@@ -391,6 +400,8 @@ module Loira{
                      */
                     _this.emit('container:added', new ObjectEvent(item), fireEvent);
                 } else {
+                    if (!_this.emit('object:pre-add', new ObjectEvent(item))){ return; }
+
                     if (item.centerObject) {
                         item.x = (_this.virtualCanvas.viewportWidth / 2) + _this.virtualCanvas.x - (item.width / 2);
                         item.y = (_this.virtualCanvas.viewportHeight / 2) + _this.virtualCanvas.y - (item.height / 2);
@@ -457,7 +468,7 @@ module Loira{
                  * @property {object} selected - Objeto seleccionado
                  * @property {string} type - Tipo de evento
                  */
-                _this.emit('object:removed', new ObjectEvent(item), fireEvent);
+                _this.emit(Loira.event.OBJECT_REMOVED, new ObjectEvent(item), fireEvent);
             }
 
             this.renderAll(true);
@@ -493,7 +504,15 @@ module Loira{
                 this._canvas.onselectstart = null;
             }
 
-            document.createElement('ul').remove();
+            if (this.contextMenu){
+                this.contextMenu.remove();
+                this.contextMenu = null;
+            }
+
+            if (this.textEditor){
+                this.textEditor.remove();
+                this.textEditor = null;
+            }
 
             this._canvas = null;
 
@@ -554,10 +573,14 @@ module Loira{
         _bind() {
             let _this = this;
 
-            let contextMenu = document.createElement('ul');
-            contextMenu.id = 'loira-context-menu';
-            contextMenu.oncontextmenu = function(){return false;};
-            document.getElementsByTagName('body')[0].appendChild(contextMenu);
+            this.contextMenu = document.createElement('ul');
+            this.contextMenu.className = 'loira-context-menu';
+            this.contextMenu.oncontextmenu = function(){return false;};
+            document.getElementsByTagName('body')[0].appendChild(this.contextMenu);
+
+            this.textEditor = document.createElement('textarea');
+            this.textEditor.className = 'loira-text-editor';
+            document.getElementsByTagName('body')[0].appendChild(this.textEditor);
 
             let onKeyDown = function(evt, isGlobal){
                 if (evt.keyCode == 18){return;}
@@ -723,34 +746,43 @@ module Loira{
 
             _this._canvas.onmousedown = function (evt) {
                 util.logger(LogLevel.INFO,'Mouse');
-                contextMenu.style.display = 'none';
+                _this.contextMenu.style.display = 'none';
                 onDown(evt, false);
             };
 
             _this._canvas.oncontextmenu = function(evt){
-                contextMenu.style.display = 'none';
+                _this.contextMenu.style.display = 'none';
                 let point: Point = _this._getMouse(evt);
                 let element: Element = _this.getElementByPosition(point.x, point.y);
 
-                if (element && element.menu){
+                if (element){
+                    let menu: MenuItem[] = element.getMenu(point.x, point.y);
+                    if (!menu){
+                        return false;
+                    }
                     let menuItem;
-                    contextMenu.innerHTML = '';
+                    _this.contextMenu.innerHTML = '';
 
-                    for (let item of element.menu){
+                    for (let item of menu){
                         menuItem = document.createElement('li');
-                        menuItem.innerHTML = item.item;
-                        menuItem.onclick = function(){
-                            item.callback(this, element);
-                            contextMenu.style.display = 'none';
-                        };
-                        contextMenu.appendChild(menuItem);
+                        if (item){
+                            menuItem.innerHTML = item.text;
+                            menuItem.onclick = function(){
+                                item.callback(this, element);
+                                _this.contextMenu.style.display = 'none';
+                            };
+                        } else {
+                            menuItem.className = 'null-line';
+                        }
+
+                        _this.contextMenu.appendChild(menuItem);
                     }
 
-                    contextMenu.style.top = evt.clientY + 'px';
-                    contextMenu.style.left = evt.clientX + 'px';
-                    contextMenu.style.display = 'block';
+                    _this.contextMenu.style.top = evt.clientY + 'px';
+                    _this.contextMenu.style.left = evt.clientX + 'px';
+                    _this.contextMenu.style.display = 'block';
 
-                    contextMenu.style.opacity = '1';
+                    _this.contextMenu.style.opacity = '1';
                 }
 
                 return false;
@@ -971,6 +1003,39 @@ module Loira{
             return response;
         }
 
+        private getGlobalPoint(x: number, y: number): Point {
+            let element: HTMLElement = <HTMLElement> this._canvas,
+                offsetX: number = 0,
+                offsetY: number = 0;
+
+            if (element.offsetParent) {
+                do {
+                    offsetX += element.offsetLeft;
+                    offsetY += element.offsetTop;
+                } while ((element = <HTMLElement> element.offsetParent));
+                element = <HTMLElement> this._canvas;
+                do {
+                    if (element.nodeName !== 'BODY'){
+                        offsetY -= element.scrollTop;
+                        offsetX -= element.scrollLeft;
+                    }
+                } while ((element = element.parentElement));
+            }
+            let border = this._border;
+            offsetX += border.paddingLeft;
+            offsetY += border.paddingTop;
+
+            offsetX += border.borderLeft;
+            offsetY += border.borderTop;
+
+            let response: Point = {x: (x + offsetX), y: (y + offsetY)};
+
+            response.x -= this.virtualCanvas.x;
+            response.y -= this.virtualCanvas.y;
+
+            return response;
+        }
+
         removeRelation(start: Loira.Element, end: Loira.Element){
             let relations: Common.Relation[] = this.getRelationsFromObject(start, false, true);
             let toDelete: Common.Relation[] = [];
@@ -1151,12 +1216,45 @@ module Loira{
             let item:Loira.Element;
             for (let i:number = this.items.length - 1; i >= 0; i--) {
                 item = this.items[i];
-                if (item.checkCollision(x, y)) {
+                if (item.isVisible(this.virtualCanvas) && item.checkCollision(x, y)) {
                     return item;
                 }
             }
 
             return null;
+        }
+
+        /**
+         * Draw the banner of the library and the version
+         * @param ctx Context of the canvas
+         */
+        static drawBanner(ctx: CanvasRenderingContext2D): void {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, 114, 16);
+
+            ctx.font = '12px Arial';
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillText('loira-designer v0.5.7', 2, 12);
+        }
+
+        showEditor(region: Region, text: string, callback: (text: string)=> void){
+            let point: Point = this.getGlobalPoint(region.x, region.y);
+
+            this.textEditor.style.top = point.y + 'px';
+            this.textEditor.style.left = point.x + 'px';
+            this.textEditor.style.display = 'block';
+            this.textEditor.style.width = region.width + 'px';
+            this.textEditor.style.height = region.height + 'px';
+            this.textEditor.focus();
+
+            this.textEditor.value = text;
+            let scope = this;
+
+            let listener = this.on('mouse:down', function(){
+                scope.textEditor.style.display = 'none';
+                callback(scope.textEditor.value);
+                scope.fall('mouse:down', listener);
+            });
         }
     }
 }

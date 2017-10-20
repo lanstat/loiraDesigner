@@ -33,19 +33,27 @@
     window.onload = function(){
         Loira.Config.assetsPath = '../../assets/glyphs.png';
 
-        var canvas = new Loira.Canvas('_canvas', {width:50800, height:10500, viewportHeight: 500, fps: 40});
+        var canvas = new Loira.Canvas('_canvas', {
+            width:50800,
+            height:10500,
+            viewportHeight: 500,
+            fps: 40,
+            controller: new Workflow.Controller()
+        });
+
         var relation = null;
-        canvas.defaultRelation = 'Relation.DirectAssociation';
 
         var data1 = new Workflow.Process({x:332, y:288, text:'Meu lugar'}),
-            data2 = new Workflow.Decision({x:400, y:10, text:' ', width: 300});
+            data2 = new Workflow.Decision({x:400, y:10, text:' ', width: 300}),
+            parallel = new Workflow.ParallelEnd({x: 100, y: 100, key: '2'});
 
-        var rel =new Relation.DirectAssociation({start:data1, end: data2, text: 'Proof of concept', points: [{x:332, y:288}, {x:100, y:100}, {x:400,y:10}]});
+        var rel =new Workflow.Association({start:data1, end: data2, text: 'Proof of concept', points: [{x:332, y:288}, {x:100, y:100}, {x:400,y:10}]});
 
         canvas.add([
             data1,
             data2,
-            rel
+            rel,
+            parallel
         ]);
 
         canvas.renderAll();
@@ -80,8 +88,16 @@
             canvas.defaultRelation = 'Workflow.Returns';
         });
 
+        canvas.on('workflow:open-property', function(){
+           alert('property');
+        });
+
         canvas.on('relation:selected', function(evt){
             relation = evt.selected;
+        });
+
+        canvas.on('error:message', function(evt){
+           console.log(evt);
         });
     }
 </script>

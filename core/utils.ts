@@ -9,28 +9,28 @@ module Loira.util{
     export class BaseOption{
         x: number = 0;
         y: number = 0;
-        width: number = 0;
-        height: number = 0;
-        centerObject: boolean = false;
-        maxOutGoingRelation: number = 0;
-        _canvas: Loira.Canvas;
-        type: string;
-        baseType: string;
-        extras: any = {};
-        text: string = '';
-        selectable: boolean = true;
-        resizable: boolean = true;
-        draggable: boolean = true;
+        width?: number = 0;
+        height?: number = 0;
+        centerObject?: boolean = false;
+        maxOutGoingRelation?: number = 0;
+        _canvas?: Loira.Canvas;
+        type?: string;
+        baseType?: string;
+        extras?: any = {};
+        text?: string = '';
+        selectable?: boolean = true;
+        resizable?: boolean = true;
+        draggable?: boolean = true;
     }
 
     export class RelOption extends BaseOption{
         start: Common.Symbol;
         end: Common.Symbol;
-        text: string;
-        isDashed: boolean;
-        points: Point[];
-        icon: string;
-        typeLine: TypeLine;
+        text?: string;
+        isDashed?: boolean;
+        points?: Point[];
+        icon?: string;
+        typeLine?: TypeLine;
     }
 
     export class Line{
@@ -84,6 +84,10 @@ module Loira.util{
             text += possible.charAt(Math.floor(Math.random() * possible.length));
 
         return text;
+    }
+
+    export function createRandomNumber(negative: boolean): number{
+        return Math.floor(Math.random() * 10000000);
     }
 
     /**

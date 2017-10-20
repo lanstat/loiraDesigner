@@ -20,6 +20,7 @@ module Common{
         public points: Point[];
         public icon: string;
         public typeLine: TypeLine;
+        public pointMenu: MenuItem[];
 
         constructor(options: RelOption){
             super(options);
@@ -207,6 +208,8 @@ module Common{
             let point1: Point = {x: 0, y: 0};
             let point2: Point = {x: 0, y: 0};
             let m:number;
+            let px: number = 0,
+                py: number = 0;
 
             for (let i:number = 1; i < this.points.length; i++){
                 init = this.points[i - 1];
@@ -231,19 +234,19 @@ module Common{
                     yd = Math.abs(last.y - init.y);
                     xd = Math.abs(last.x - init.x);
 
-                    x = Math.abs(x - init.x);
-                    y = Math.abs(y - init.y);
+                    px = Math.abs(x - init.x);
+                    py = Math.abs(y - init.y);
 
                     if (xd > yd){
-                        m = Math.abs((yd / xd) * x);
+                        m = Math.abs((yd / xd) * px);
 
-                        if ((m === 0 && (y > point1.y && y < point2.y)) || (m > y - 8 && m < y + 8)){
+                        if ((m === 0 && (py > point1.y && py < point2.y)) || (m > py - 8 && m < py + 8)){
                             return true;
                         }
                     } else {
-                        m = Math.abs((xd / yd) * y);
+                        m = Math.abs((xd / yd) * py);
 
-                        if ((m === 0 && (x > point1.x && x < point2.x)) || (m > x - 8 && m < x + 8)){
+                        if ((m === 0 && (px > point1.x && px < point2.x)) || (m > px - 8 && m < px + 8)){
                             return true;
                         }
                     }
@@ -285,6 +288,10 @@ module Common{
             this.points.splice(1, 0, {x: x, y: y});
         }
 
+        removePoint(index: number): void{
+            this.points.splice(index, 1);
+        }
+
         /**
          * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
          *
@@ -321,6 +328,11 @@ module Common{
 
         isVisible(virtual: VirtualCanvas): boolean{
             return true;
+        }
+
+        public getMenu(x: number, y: number): MenuItem[]{
+            this.selectedArea = this.getSelectedCorner(x, y);
+            return this.selectedArea? this.pointMenu : this.menu;
         }
     }
 

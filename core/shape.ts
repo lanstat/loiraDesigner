@@ -29,6 +29,27 @@ module Loira.shape {
         ctx.fill();
     }
 
+    export function drawDiamond(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number){
+        let xm: number = x + width/2,
+            ym: number = y + height/2,
+            xw: number = x + width,
+            yh: number = y + height;
+
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+
+        ctx.moveTo(xm, y);
+
+        ctx.lineTo(xw, ym);
+        ctx.lineTo(xm, yh);
+        ctx.lineTo(x, ym);
+        ctx.lineTo(xm, y);
+
+        ctx.stroke();
+        ctx.fillStyle = "#fcf5d9";
+        ctx.fill();
+    }
+
     export function drawText(ctx: CanvasRenderingContext2D, text: string, position: Point){
 
     }

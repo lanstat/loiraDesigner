@@ -1,4 +1,11 @@
 module Loira.event{
+    export const ERROR_MESSAGE = 'error:message';
+    export const OBJECT_ADDED = 'object:added';
+    export const OBJECT_PRE_ADD = 'object:pre-add';
+    export const RELATION_PRE_ADD = 'relation:pre-add';
+    export const RELATION_ADDED = 'relation:added';
+    export const OBJECT_REMOVED = 'object:removed';
+
     /**
      * Objeto que encapsula un click sobre un objeto
      *
@@ -58,6 +65,12 @@ module Loira.event{
         constructor(selectedRel: Common.Relation) {
             super();
             this.selected = selectedRel;
+        }
+    }
+
+    export class MessageEvent extends Event{
+        constructor(public message: string){
+            super();
         }
     }
 }

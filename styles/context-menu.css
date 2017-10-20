@@ -1,4 +1,4 @@
-#loira-context-menu{
+.loira-context-menu{
     display: none;
     z-index: 1000;
     position: absolute;
@@ -19,11 +19,23 @@
     box-shadow: 0 0 15px black;
 }
 
-#loira-context-menu li{
+.loira-context-menu li{
     padding: 5px 8px;
     cursor: pointer;
 }
 
-#loira-context-menu li:hover {
+.loira-context-menu li:hover {
     background-color: #284160;
+}
+
+.loira-context-menu li.null-line{
+    padding: 0;
+    cursor: default;
+    margin: 0;
+    border-bottom: white 1px solid;
+    height: 1px;
+}
+
+.loira-context-menu li.null-line:hover {
+    background-color: black;
 }
