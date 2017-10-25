@@ -18,91 +18,75 @@ module Workflow{
         startPoint?: boolean;
         endPoint?: boolean;
         key?: string;
+        labelId?: string;
     }
 
     export class Controller extends BaseController {
-        private startId: number = null;
-
-        private getLevel(canvas: Loira.Canvas, parentId: number): Loira.Element[] {
-            let elements: Loira.Element[] = [];
-            let initial: Common.Relation;
-
-            for (let i: number = 0; i<canvas.items.length;i++){
-                let item: Loira.Element = canvas.items[i];
-                if (item.baseType === 'relation'){}
-            }
-
-            let exploration = function(id: number){
-
-            };
-
-            exploration(parentId);
-
-            return elements;
-        }
+        private iteratorKey: number=0;
+        private canvas: Loira.Canvas;
 
         bind(canvas: Loira.Canvas) {
             let scope = this;
+            this.canvas = canvas;
 
             canvas.defaultRelation = 'Workflow.Association';
 
             canvas.on(Loira.event.OBJECT_PRE_ADD, function(evt){
-                if (evt.selected.type === 'start_terminator' && scope.startId){
+                /*if (evt.selected.type === 'start_terminator'){
                     canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'Existe ya un inicio de flujo'});
                     return false;
-                }
-            });
-
-            canvas.on(Loira.event.OBJECT_ADDED, function(evt){
-                if (evt.selected.type === 'start_terminator'){
-                    scope.startId = evt.selected.uniqueId;
-                }
-            });
-
-            canvas.on(Loira.event.RELATION_PRE_ADD, function(evt){
-                if (evt.selected.start.parentId && evt.selected.end.parentId && evt.selected.start.parentId != evt.selected.end.parentId){
-                    canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'No pertenecen al mismo padre'});
-                    return false;
-                }
-            });
-
-            canvas.on(Loira.event.RELATION_ADDED, function(evt){
-                if (evt.selected.start.type === 'parallel_start' || evt.selected.start.type === 'start_terminator'){
-                    evt.selected.end.parentId = evt.selected.start.uniqueId;
-                } else {
-                    if (evt.selected.start.parentId){
-                        evt.selected.end.parentId = evt.selected.start.parentId;
-                    } else {
-                        evt.selected.start.parentId = evt.selected.end.parentId;
+                }*/
+                if (evt.selected.type === 'parallel_start' || evt.selected.type === 'parallel_end'){
+                    for (let item of canvas.items){
+                        if (item.type == evt.selected.type && item['key'] == evt.selected.key){
+                            canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'Existe un nodo con la misma llave en el diagrama.'});
+                            return false;
+                        }
                     }
                 }
             });
 
-            canvas.on(Loira.event.OBJECT_REMOVED, function(evt: ObjectEvent){
-                if (evt.selected.baseType === 'relation'){
-
+            canvas.on(Loira.event.OBJECT_ADDED, function(evt){
+                if (evt.selected.type === 'parallel_start' && !evt.selected.label){
+                    scope.iteratorKey++;
+                    evt.selected.label = scope.iteratorKey;
                 }
             });
-        }
+        };
 
         load(data: any) {
-        }
+        };
 
         exportData(): any {
             return undefined;
+        };
+
+        defineLabelId(): void{
+            let data = {};
+
+            for (let item of this.canvas.items){
+                if (item.type === 'parallel_start'){
+                    if (!data[item['key']]){
+                        data[item['key']] = item['label'];
+                    }
+                }
+            }
+
+            for (let item of this.canvas.items){
+                if (item.type === 'parallel_end'){
+                    item['label'] = data[item['key']];
+                }
+            }
         }
     }
 
     export abstract class Symbol extends Common.Symbol{
         protected startPoint: boolean;
         protected endPoint: boolean;
-        public uniqueId: number;
-        public parentId: number;
 
         constructor(options: WorkflowOption){
             super(options);
 
-            this.uniqueId = Loira.util.createRandomNumber(true);
             this.startPoint = options.startPoint? options.startPoint: false;
             this.endPoint = options.endPoint? options.endPoint: false;
             let scope = this;
@@ -112,9 +96,9 @@ module Workflow{
                     scope._linkSymbol();
                 }},
                 {text: Loira.Config.workflow.menu.deleteBtn, callback: function(){
-                    scope._canvas.remove([scope], true);
+                    scope._canvas.remove([scope]);
                 }},
-                null,
+                /*null,
                 {text: 'Editar texto', callback: function(){
                     scope._canvas.showEditor({x:scope.x, y: scope.y, width: scope.width, height: scope.height}, scope.text, function (text) {
                         scope.text = text;
@@ -123,7 +107,7 @@ module Workflow{
                 null,
                 {text:Loira.Config.workflow.menu.property, callback: function(){
                     scope._canvas.emit(EVT_OPEN_PROPERTY, new ObjectEvent(scope));
-                }}
+                }}*/
             ];
         }
 
@@ -307,6 +291,7 @@ module Workflow{
             this.text = 'INICIO';
             this.startPoint = true;
             this.maxOutGoingRelation = 1;
+            this.resizable = false;
 
             this.type = 'start_terminator';
         }
@@ -321,6 +306,7 @@ module Workflow{
             this.text = 'FIN';
             this.endPoint = true;
             this.type = 'end_terminator';
+            this.resizable = false;
         }
     }
 
@@ -457,7 +443,7 @@ module Workflow{
     export class Returns extends Common.Relation{
         constructor(options: RelOption){
             options.icon = 'spear1';
-            options.text = '<<returns>>';
+            options.text = options.text || '<<returns>>';
             options.isDashed = true;
 
             super(options);
@@ -468,12 +454,14 @@ module Workflow{
                 {text:'Partir', callback: function(){
                     scope.addPoint();
                 }},
-                {text:'Borrar', callback: function(evt, item){
-                    console.log(item);
-                }},
-                null,
-                {text:'Propiedades', callback: function(){
-                    scope._canvas.emit(EVT_OPEN_PROPERTY, new ObjectEvent(scope));
+                {text:'Borrar', callback: function(){
+                    scope._canvas.remove([scope]);
+                }}
+            ];
+
+            this.pointMenu = [
+                {text:'Borrar punto', callback: function(){
+                    scope.removePoint(scope.selectedArea);
                 }}
             ];
         }
@@ -508,17 +496,18 @@ module Workflow{
         }
     }
 
-    export class ParallelStart extends Symbol{
-        protected key: string;
+    export abstract class ParallelBase extends Symbol{
+        public label: string;
+        public key: string;
 
         constructor(options: WorkflowOption){
             options.width = options.width? options.width : 30;
             options.height = options.height? options.height : 30;
             super(options);
 
-            this.type = 'parallel_start';
             this.resizable = false;
             this.key = options.key;
+            this.label = options.labelId;
         }
 
         obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
@@ -561,58 +550,79 @@ module Workflow{
         }
 
         render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
-            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+            ctx.font = 'bold ' + Loira.Config.fontSize + "px " + Loira.Config.fontType;
 
             let x = this.x - vX;
             let y = this.y - vY;
             Loira.shape.drawDiamond(ctx, x, y, this.width, this.height);
 
-            ctx.fillStyle = "#000000";
-
-            ctx.beginPath();
-            ctx.moveTo(x + 12, y + 10);
-            ctx.lineTo(x + 12, y + 18);
-            ctx.moveTo(x + 18, y + 10);
-            ctx.lineTo(x + 18, y + 18);
-            ctx.moveTo(x + 12, y + 8);
-            ctx.lineTo(x + 18, y + 8);
-            ctx.stroke();
-
-            this.drawText(ctx, this.key);
+            this.renderCustom(ctx, x, y);
         }
+
+        abstract renderCustom(ctx: CanvasRenderingContext2D, vX: number, vY: number): void;
 
         recalculateBorders() {
         }
     }
 
-    export class ParallelEnd extends ParallelStart{
+    export class ParallelStart extends ParallelBase{
         constructor(options: WorkflowOption){
             super(options);
-            this.type = 'parallel_end';
+
+            this.type = 'parallel_start';
+            this.key = this.key || Loira.util.createRandom(5);
+            let scope = this;
+
+            this.menu.push(null);
+            this.menu.push({
+                text:'Agregar punto de fin', callback: function(){
+                    scope._canvas.add([new Workflow.ParallelEnd({x: scope.x, y: scope.y + 50, key: scope.key, labelId: scope.label})]);
+                }}
+            );
         }
 
-        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
-            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-
-            let x = this.x - vX;
-            let y = this.y - vY;
-            Loira.shape.drawDiamond(ctx, x, y, this.width, this.height);
-
-            ctx.fillStyle = "#000000";
-
+        renderCustom(ctx: CanvasRenderingContext2D, x: number, y: number): void{
+            ctx.fillStyle = '#000000';
             ctx.beginPath();
-            ctx.moveTo(x + 12, y + 10);
-            ctx.lineTo(x + 12, y + 18);
-            ctx.moveTo(x + 18, y + 10);
-            ctx.lineTo(x + 18, y + 18);
-            ctx.moveTo(x + 12, y + 20);
-            ctx.lineTo(x + 18, y + 20);
+            ctx.arc(x + 15, y + 15, 5, 0, 2 * Math.PI, false);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
             ctx.stroke();
 
-            ctx.fillText(this.key, x + 25, y + Loira.Config.fontSize - 5);
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(this.label, x + 25, y + Loira.Config.fontSize - 5);
+        }
+    }
+
+    export class ParallelEnd extends ParallelBase{
+        constructor(options: WorkflowOption){
+            super(options);
+
+            this.type = 'parallel_end';
+            this.maxOutGoingRelation = 1;
+            let scope = this;
+
+            this.menu.push(null);
+            this.menu.push({
+                text:'Agregar punto de inicio', callback: function(){
+                    scope._canvas.add([new Workflow.ParallelStart({x: scope.x, y: scope.y + 50, key: scope.key, labelId: scope.label})]);
+                }}
+            );
         }
 
-        recalculateBorders() {
+        renderCustom(ctx: CanvasRenderingContext2D, x: number, y: number): void{
+            ctx.beginPath();
+            ctx.arc(x + 15, y + 15, 5, 0, 2 * Math.PI, false);
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(this.label, x + 25, y + Loira.Config.fontSize - 5);
         }
     }
 }

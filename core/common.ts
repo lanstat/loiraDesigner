@@ -104,6 +104,7 @@ module Common{
                 let border:number = this.end.obtainBorderPos(line, ctx);
 
                 Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height/2));
+
                 ctx.rotate(-tmp);
                 ctx.translate(-last.x - vX, -last.y -vY);
             }
@@ -332,7 +333,7 @@ module Common{
 
         public getMenu(x: number, y: number): MenuItem[]{
             this.selectedArea = this.getSelectedCorner(x, y);
-            return this.selectedArea? this.pointMenu : this.menu;
+            return this.selectedArea? this.pointMenu || this.menu : this.menu;
         }
     }
 

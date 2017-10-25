@@ -12,6 +12,12 @@ var Loira;
 (function (Loira) {
     var event;
     (function (event) {
+        event.ERROR_MESSAGE = 'error:message';
+        event.OBJECT_ADDED = 'object:added';
+        event.OBJECT_PRE_ADD = 'object:pre-add';
+        event.RELATION_PRE_ADD = 'relation:pre-add';
+        event.RELATION_ADDED = 'relation:added';
+        event.OBJECT_REMOVED = 'object:removed';
         /**
          * Objeto que encapsula un click sobre un objeto
          *
@@ -78,6 +84,16 @@ var Loira;
             return RelationEvent;
         }(Event));
         event.RelationEvent = RelationEvent;
+        var MessageEvent = (function (_super) {
+            __extends(MessageEvent, _super);
+            function MessageEvent(message) {
+                var _this = _super.call(this) || this;
+                _this.message = message;
+                return _this;
+            }
+            return MessageEvent;
+        }(Event));
+        event.MessageEvent = MessageEvent;
     })(event = Loira.event || (Loira.event = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=events.js.map
@@ -146,6 +162,20 @@ var Loira;
             ctx.fill();
         }
         shape.drawRoundRect = drawRoundRect;
+        function drawDiamond(ctx, x, y, width, height) {
+            var xm = x + width / 2, ym = y + height / 2, xw = x + width, yh = y + height;
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.moveTo(xm, y);
+            ctx.lineTo(xw, ym);
+            ctx.lineTo(xm, yh);
+            ctx.lineTo(x, ym);
+            ctx.lineTo(xm, y);
+            ctx.stroke();
+            ctx.fillStyle = "#fcf5d9";
+            ctx.fill();
+        }
+        shape.drawDiamond = drawDiamond;
         function drawText(ctx, text, position) {
         }
         shape.drawText = drawText;
@@ -419,6 +449,9 @@ var Loira;
                     this._selected.renderButtons(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
                 }
                 this._scrollBar.render(ctx);
+                if (Loira.Config.showBanner) {
+                    Loira.Canvas.drawBanner(ctx);
+                }
             }
         };
         /**
@@ -449,7 +482,7 @@ var Loira;
                 item.attach(_this);
                 if (item.baseType === 'relation') {
                     relation = item;
-                    if (!_this.emit('relation:pre-add', new RelationEvent(relation))) {
+                    if (!_this.emit(Loira.event.RELATION_PRE_ADD, new RelationEvent(relation))) {
                         return;
                     }
                     var index = _items.indexOf(relation.start);
@@ -463,7 +496,7 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('relation:added', new RelationEvent(relation), fireEvent);
+                    _this.emit(Loira.event.RELATION_ADDED, new RelationEvent(relation), fireEvent);
                 }
                 else if (item.baseType === 'container') {
                     _items.splice(0, 0, item);
@@ -478,6 +511,9 @@ var Loira;
                     _this.emit('container:added', new ObjectEvent(item), fireEvent);
                 }
                 else {
+                    if (!_this.emit('object:pre-add', new ObjectEvent(item))) {
+                        return;
+                    }
                     if (item.centerObject) {
                         item.x = (_this.virtualCanvas.viewportWidth / 2) + _this.virtualCanvas.x - (item.width / 2);
                         item.y = (_this.virtualCanvas.viewportHeight / 2) + _this.virtualCanvas.y - (item.height / 2);
@@ -536,7 +572,7 @@ var Loira;
                  * @property {object} selected - Objeto seleccionado
                  * @property {string} type - Tipo de evento
                  */
-                _this.emit('object:removed', new ObjectEvent(item), fireEvent);
+                _this.emit(Loira.event.OBJECT_REMOVED, new ObjectEvent(item), fireEvent);
             }
             this.renderAll(true);
             this._selected = null;
@@ -567,7 +603,14 @@ var Loira;
                 this._canvas.ondblclick = null;
                 this._canvas.onselectstart = null;
             }
-            document.createElement('ul').remove();
+            if (this.contextMenu) {
+                this.contextMenu.remove();
+                this.contextMenu = null;
+            }
+            if (this.textEditor) {
+                this.textEditor.remove();
+                this.textEditor = null;
+            }
             this._canvas = null;
             while (this.container.firstChild) {
                 this.container.removeChild(this.container.firstChild);
@@ -622,10 +665,13 @@ var Loira;
          */
         Canvas.prototype._bind = function () {
             var _this = this;
-            var contextMenu = document.createElement('ul');
-            contextMenu.id = 'loira-context-menu';
-            contextMenu.oncontextmenu = function () { return false; };
-            document.getElementsByTagName('body')[0].appendChild(contextMenu);
+            this.contextMenu = document.createElement('ul');
+            this.contextMenu.className = 'loira-context-menu';
+            this.contextMenu.oncontextmenu = function () { return false; };
+            document.getElementsByTagName('body')[0].appendChild(this.contextMenu);
+            this.textEditor = document.createElement('textarea');
+            this.textEditor.className = 'loira-text-editor';
+            document.getElementsByTagName('body')[0].appendChild(this.textEditor);
             var onKeyDown = function (evt, isGlobal) {
                 if (evt.keyCode == 18) {
                     return;
@@ -662,7 +708,7 @@ var Loira;
                     _this._zoom.update(evt.deltaY);
                 }
                 else {
-                    _this._scrollBar.addMovement(_this._tmp.lastKey === 16 ? 'H' : 'V', (evt.deltaY / Math.abs(evt.deltaY)));
+                    _this._scrollBar.addMovementWheel(_this._tmp.lastKey === 16 ? 'H' : 'V', (evt.deltaY / Math.abs(evt.deltaY)));
                 }
                 _this.renderAll();
                 return false;
@@ -699,6 +745,7 @@ var Loira;
                     _this._canvas.style.cursor = 'move';
                 }
                 if (_this._scrollBar.checkCollision(real.x, real.y)) {
+                    _this._tmp.globalPointer = { x: evt.pageX, y: evt.pageY };
                     _this._isDragged = true;
                     return;
                 }
@@ -784,33 +831,42 @@ var Loira;
             };
             _this._canvas.onmousedown = function (evt) {
                 Loira.util.logger(Loira.LogLevel.INFO, 'Mouse');
-                contextMenu.style.display = 'none';
+                _this.contextMenu.style.display = 'none';
                 onDown(evt, false);
             };
             _this._canvas.oncontextmenu = function (evt) {
-                contextMenu.style.display = 'none';
+                _this.contextMenu.style.display = 'none';
                 var point = _this._getMouse(evt);
                 var element = _this.getElementByPosition(point.x, point.y);
-                if (element && element.menu) {
+                if (element) {
+                    var menu = element.getMenu(point.x, point.y);
+                    if (!menu) {
+                        return false;
+                    }
                     var menuItem = void 0;
-                    contextMenu.innerHTML = '';
+                    _this.contextMenu.innerHTML = '';
                     var _loop_1 = function (item) {
                         menuItem = document.createElement('li');
-                        menuItem.innerHTML = item.item;
-                        menuItem.onclick = function () {
-                            item.callback(this, element);
-                            contextMenu.style.display = 'none';
-                        };
-                        contextMenu.appendChild(menuItem);
+                        if (item) {
+                            menuItem.innerHTML = item.text;
+                            menuItem.onclick = function () {
+                                item.callback(this, element);
+                                _this.contextMenu.style.display = 'none';
+                            };
+                        }
+                        else {
+                            menuItem.className = 'null-line';
+                        }
+                        _this.contextMenu.appendChild(menuItem);
                     };
-                    for (var _i = 0, _a = element.menu; _i < _a.length; _i++) {
-                        var item = _a[_i];
+                    for (var _i = 0, menu_1 = menu; _i < menu_1.length; _i++) {
+                        var item = menu_1[_i];
                         _loop_1(item);
                     }
-                    contextMenu.style.top = evt.clientY + 'px';
-                    contextMenu.style.left = evt.clientX + 'px';
-                    contextMenu.style.display = 'block';
-                    contextMenu.style.opacity = '1';
+                    _this.contextMenu.style.top = evt.clientY + 'px';
+                    _this.contextMenu.style.left = evt.clientX + 'px';
+                    _this.contextMenu.style.display = 'block';
+                    _this.contextMenu.style.opacity = '1';
                 }
                 return false;
             };
@@ -822,12 +878,7 @@ var Loira;
                     var real = _this._getMouse(evt);
                     var x = real.x - _this._tmp.pointer.x;
                     var y = real.y - _this._tmp.pointer.y;
-                    if (_this._scrollBar.isSelected()) {
-                        _this._scrollBar.dragScroll(x, y);
-                        _this.renderAll();
-                        _this._tmp.pointer = _this._getMouse(evt);
-                    }
-                    else {
+                    if (!_this._scrollBar.isSelected()) {
                         /**
                          * Evento que encapsula el movimiento del mouse sobre el canvas
                          *
@@ -905,7 +956,6 @@ var Loira;
                 var real = _this._getMouse(evt);
                 _this._canvas.style.cursor = 'default';
                 _this._isDragged = false;
-                _this._scrollBar.selected = null;
                 /**
                  * Evento que encapsula la liberacion del mouse sobre el canvas
                  *
@@ -940,6 +990,19 @@ var Loira;
             _this._canvas.onselectstart = function () {
                 return false;
             };
+            /**
+             * Capture the global mouse move event for
+             */
+            document.addEventListener('mousemove', function (evt) {
+                if (_this._scrollBar.isSelected()) {
+                    _this._scrollBar.dragScroll(evt.pageX - _this._tmp.globalPointer.x, evt.pageY - _this._tmp.globalPointer.y);
+                    _this.renderAll();
+                    _this._tmp.globalPointer = { x: evt.pageX, y: evt.pageY };
+                }
+            });
+            document.addEventListener('mouseup', function () {
+                _this._scrollBar.selected = null;
+            });
         };
         Canvas.prototype.bindResizeWindow = function () {
             var resizeID = -1;
@@ -1004,6 +1067,31 @@ var Loira;
             var response = { x: (evt.pageX - offsetX), y: (evt.pageY - offsetY) };
             response.x += this.virtualCanvas.x;
             response.y += this.virtualCanvas.y;
+            return response;
+        };
+        Canvas.prototype.getGlobalPoint = function (x, y) {
+            var element = this._canvas, offsetX = 0, offsetY = 0;
+            if (element.offsetParent) {
+                do {
+                    offsetX += element.offsetLeft;
+                    offsetY += element.offsetTop;
+                } while ((element = element.offsetParent));
+                element = this._canvas;
+                do {
+                    if (element.nodeName !== 'BODY') {
+                        offsetY -= element.scrollTop;
+                        offsetX -= element.scrollLeft;
+                    }
+                } while ((element = element.parentElement));
+            }
+            var border = this._border;
+            offsetX += border.paddingLeft;
+            offsetY += border.paddingTop;
+            offsetX += border.borderLeft;
+            offsetY += border.borderTop;
+            var response = { x: (x + offsetX), y: (y + offsetY) };
+            response.x -= this.virtualCanvas.x;
+            response.y -= this.virtualCanvas.y;
             return response;
         };
         Canvas.prototype.removeRelation = function (start, end) {
@@ -1162,11 +1250,38 @@ var Loira;
             var item;
             for (var i = this.items.length - 1; i >= 0; i--) {
                 item = this.items[i];
-                if (item.checkCollision(x, y)) {
+                if (item.isVisible(this.virtualCanvas) && item.checkCollision(x, y)) {
                     return item;
                 }
             }
             return null;
+        };
+        /**
+         * Draw the banner of the library and the version
+         * @param ctx Context of the canvas
+         */
+        Canvas.drawBanner = function (ctx) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, 114, 16);
+            ctx.font = '12px Arial';
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillText('loira-designer v0.5.7', 2, 12);
+        };
+        Canvas.prototype.showEditor = function (region, text, callback) {
+            var point = this.getGlobalPoint(region.x, region.y);
+            this.textEditor.style.top = point.y + 'px';
+            this.textEditor.style.left = point.x + 'px';
+            this.textEditor.style.display = 'block';
+            this.textEditor.style.width = region.width + 'px';
+            this.textEditor.style.height = region.height + 'px';
+            this.textEditor.focus();
+            this.textEditor.value = text;
+            var scope = this;
+            var listener = this.on('mouse:down', function () {
+                scope.textEditor.style.display = 'none';
+                callback(scope.textEditor.value);
+                scope.fall('mouse:down', listener);
+            });
         };
         return Canvas;
     }());
@@ -1282,6 +1397,10 @@ var Loira;
             return text;
         }
         util.createRandom = createRandom;
+        function createRandomNumber(negative) {
+            return Math.floor(Math.random() * 10000000);
+        }
+        util.createRandomNumber = createRandomNumber;
         /**
          * Determina la el punto de intereseccion entre 2 lineas
          *
@@ -1503,6 +1622,9 @@ var Loira;
          * @returns
          */
         Element.prototype.getSelectedCorner = function (pX, pY) {
+            if (!this.resizable) {
+                return '';
+            }
             var x = this.x - 2, y = this.y - 2, w = this.width, h = this.height, mw = w / 2, mh = h / 2;
             if (x - 4 <= pX && pX <= x + 4 && y - 4 <= pY && pY <= y + 4)
                 return 'tl';
@@ -1568,6 +1690,9 @@ var Loira;
         };
         Element.prototype.destroy = function () {
             this._canvas = null;
+        };
+        Element.prototype.getMenu = function (x, y) {
+            return this.menu;
         };
         return Element;
     }());
@@ -1739,6 +1864,7 @@ var Common;
             var point1 = { x: 0, y: 0 };
             var point2 = { x: 0, y: 0 };
             var m;
+            var px = 0, py = 0;
             for (var i = 1; i < this.points.length; i++) {
                 init = this.points[i - 1];
                 last = this.points[i];
@@ -1757,17 +1883,17 @@ var Common;
                 if (x > point1.x - 5 && x < point2.x + 5 && y > point1.y - 5 && y < point2.y + 5) {
                     yd = Math.abs(last.y - init.y);
                     xd = Math.abs(last.x - init.x);
-                    x = Math.abs(x - init.x);
-                    y = Math.abs(y - init.y);
+                    px = Math.abs(x - init.x);
+                    py = Math.abs(y - init.y);
                     if (xd > yd) {
-                        m = Math.abs((yd / xd) * x);
-                        if ((m === 0 && (y > point1.y && y < point2.y)) || (m > y - 8 && m < y + 8)) {
+                        m = Math.abs((yd / xd) * px);
+                        if ((m === 0 && (py > point1.y && py < point2.y)) || (m > py - 8 && m < py + 8)) {
                             return true;
                         }
                     }
                     else {
-                        m = Math.abs((xd / yd) * y);
-                        if ((m === 0 && (x > point1.x && x < point2.x)) || (m > x - 8 && m < x + 8)) {
+                        m = Math.abs((xd / yd) * py);
+                        if ((m === 0 && (px > point1.x && px < point2.x)) || (m > px - 8 && m < px + 8)) {
                             return true;
                         }
                     }
@@ -1797,6 +1923,9 @@ var Common;
             var x = Math.round((last.x - init.x) / 2) + init.x;
             var y = Math.round((last.y - init.y) / 2) + init.y;
             this.points.splice(1, 0, { x: x, y: y });
+        };
+        Relation.prototype.removePoint = function (index) {
+            this.points.splice(index, 1);
         };
         /**
          * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
@@ -1829,6 +1958,10 @@ var Common;
         };
         Relation.prototype.isVisible = function (virtual) {
             return true;
+        };
+        Relation.prototype.getMenu = function (x, y) {
+            this.selectedArea = this.getSelectedCorner(x, y);
+            return this.selectedArea ? this.pointMenu || this.menu : this.menu;
         };
         return Relation;
     }(Loira.Element));
@@ -2047,6 +2180,46 @@ var Common;
                 }
             }
         };
+        ScrollBar.prototype.addMovementWheel = function (dir, delta, inc) {
+            if (inc === void 0) { inc = 30; }
+            var tmp;
+            var virtual = this._virtual;
+            var background = this._canvas._background;
+            var realTmp = 1;
+            if (dir === 'H') {
+                //realTmp =
+                tmp = this._horPos + Math.round(delta * virtual.viewportWidth * (inc / virtual.width));
+                if (tmp < 0) {
+                    this._horPos = 0;
+                }
+                else if (tmp + this._horSize > virtual.viewportWidth) {
+                    this._horPos = virtual.viewportWidth - this._horSize;
+                }
+                else {
+                    this._horPos = tmp;
+                }
+                virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
+                if (background) {
+                    background.style.marginLeft = '-' + virtual.x + 'px';
+                }
+            }
+            else if (dir === 'V') {
+                tmp = this._verPos + Math.round(delta * virtual.viewportHeight * (inc / virtual.height));
+                if (tmp < 0) {
+                    this._verPos = 0;
+                }
+                else if (tmp + this._verSize > virtual.viewportHeight) {
+                    this._verPos = virtual.viewportHeight - this._verSize;
+                }
+                else {
+                    this._verPos = tmp;
+                }
+                virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
+                if (background) {
+                    background.style.marginTop = '-' + virtual.y + 'px';
+                }
+            }
+        };
         ScrollBar.prototype.setPosition = function (x, y) {
             var virtual = this._virtual;
             var background = this._canvas._background;
@@ -2079,15 +2252,20 @@ var Loira;
     var _selected = {
         color: '#339966'
     };
+    var _showBanner = true;
     var _background = '#aacccc';
     var _assetsPath = '../assets/glyphs.png';
     var _regions = {
         'actor': { x: 0, y: 30, width: 30, height: 60 },
-        'spear': { x: 0, y: 0, width: 15, height: 15 },
+        'spear': { x: 0, y: 0, width: 14, height: 15 },
         'spear1': { x: 0, y: 15, width: 15, height: 15 },
         'spear2': { x: 15, y: 0, width: 15, height: 15 },
         'spear3': { x: 30, y: 15, width: 15, height: 15 },
-        'arrow': { x: 15, y: 15, width: 15, height: 15 }
+        'arrow': { x: 15, y: 15, width: 15, height: 15 },
+        'start1': { x: 30, y: 15, width: 15, height: 15 },
+        'end1': { x: 30, y: 30, width: 15, height: 15 },
+        'start2': { x: 30, y: 45, width: 15, height: 15 },
+        'end2': { x: 30, y: 60, width: 15, height: 15 }
     };
     var _scrollBar = {
         size: 10,
@@ -2096,6 +2274,13 @@ var Loira;
     };
     var _orgchart = {
         roleWidth: 150
+    };
+    var _workflow = {
+        menu: {
+            joinTo: 'Unir a...',
+            deleteBtn: 'Borrar',
+            property: 'Propiedades'
+        }
     };
     var LogLevel;
     (function (LogLevel) {
@@ -2116,6 +2301,8 @@ var Loira;
         Config.logLevel = LogLevel.SYSTEM;
         Config.scrollBar = _scrollBar;
         Config.orgChart = _orgchart;
+        Config.showBanner = _showBanner;
+        Config.workflow = _workflow;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
 //# sourceMappingURL=config.js.map
@@ -2580,6 +2767,9 @@ var Workflow;
     var BaseOption = Loira.util.BaseOption;
     var Point = Loira.util.Point;
     var Line = Loira.util.Line;
+    var BaseController = Loira.BaseController;
+    var ObjectEvent = Loira.event.ObjectEvent;
+    var EVT_OPEN_PROPERTY = 'workflow:open-property';
     var WorkflowOption = (function (_super) {
         __extends(WorkflowOption, _super);
         function WorkflowOption() {
@@ -2588,12 +2778,82 @@ var Workflow;
         return WorkflowOption;
     }(BaseOption));
     Workflow.WorkflowOption = WorkflowOption;
+    var Controller = (function (_super) {
+        __extends(Controller, _super);
+        function Controller() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.iteratorKey = 0;
+            return _this;
+        }
+        Controller.prototype.bind = function (canvas) {
+            var scope = this;
+            this.canvas = canvas;
+            canvas.defaultRelation = 'Workflow.Association';
+            canvas.on(Loira.event.OBJECT_PRE_ADD, function (evt) {
+                /*if (evt.selected.type === 'start_terminator'){
+                    canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'Existe ya un inicio de flujo'});
+                    return false;
+                }*/
+                if (evt.selected.type === 'parallel_start' || evt.selected.type === 'parallel_end') {
+                    for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
+                        var item = _a[_i];
+                        if (item.type == evt.selected.type && item['key'] == evt.selected.key) {
+                            canvas.emit(Loira.event.ERROR_MESSAGE, { message: 'Existe un nodo con la misma llave en el diagrama.' });
+                            return false;
+                        }
+                    }
+                }
+            });
+            canvas.on(Loira.event.OBJECT_ADDED, function (evt) {
+                if (evt.selected.type === 'parallel_start' && !evt.selected.label) {
+                    scope.iteratorKey++;
+                    evt.selected.label = scope.iteratorKey;
+                }
+            });
+        };
+        ;
+        Controller.prototype.load = function (data) {
+        };
+        ;
+        Controller.prototype.exportData = function () {
+            return undefined;
+        };
+        ;
+        Controller.prototype.defineLabelId = function () {
+            var data = {};
+            for (var _i = 0, _a = this.canvas.items; _i < _a.length; _i++) {
+                var item = _a[_i];
+                if (item.type === 'parallel_start') {
+                    if (!data[item['key']]) {
+                        data[item['key']] = item['label'];
+                    }
+                }
+            }
+            for (var _b = 0, _c = this.canvas.items; _b < _c.length; _b++) {
+                var item = _c[_b];
+                if (item.type === 'parallel_end') {
+                    item['label'] = data[item['key']];
+                }
+            }
+        };
+        return Controller;
+    }(BaseController));
+    Workflow.Controller = Controller;
     var Symbol = (function (_super) {
         __extends(Symbol, _super);
         function Symbol(options) {
             var _this = _super.call(this, options) || this;
             _this.startPoint = options.startPoint ? options.startPoint : false;
             _this.endPoint = options.endPoint ? options.endPoint : false;
+            var scope = _this;
+            _this.menu = [
+                { text: Loira.Config.workflow.menu.joinTo, callback: function () {
+                        scope._linkSymbol();
+                    } },
+                { text: Loira.Config.workflow.menu.deleteBtn, callback: function () {
+                        scope._canvas.remove([scope]);
+                    } },
+            ];
             return _this;
         }
         Symbol.prototype._linkSymbol = function () {
@@ -2746,6 +3006,7 @@ var Workflow;
             _this.text = 'INICIO';
             _this.startPoint = true;
             _this.maxOutGoingRelation = 1;
+            _this.resizable = false;
             _this.type = 'start_terminator';
             return _this;
         }
@@ -2761,6 +3022,7 @@ var Workflow;
             _this.text = 'FIN';
             _this.endPoint = true;
             _this.type = 'end_terminator';
+            _this.resizable = false;
             return _this;
         }
         return EndTerminator;
@@ -2829,17 +3091,28 @@ var Workflow;
         }
         Decision.prototype.obtainBorderPos = function (points, ctx) {
             var xm = points.x2 - points.x1, ym = points.y2 - points.y1;
-            var x = this.x, y = this.y, xP = this.x + this.width / 2, yP = this.y + this.height / 2, xw = this.x + this.width;
+            var x = this.x, y = this.y, xP = this.x + this.width / 2, yP = this.y + this.height / 2, xw = this.x + this.width, yh = this.y + this.height;
             var angle = Math.atan(yP / xm);
             var result;
             if (xm < 0) {
                 angle += Math.PI;
             }
-            if ((angle > 0 && angle < 1.6) || (angle > 3.15 && angle < 4.7)) {
-                result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, y));
+            ym = ym / Math.abs(ym);
+            if (angle > 0 && angle < 1.6) {
+                if (ym > 0) {
+                    result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, y));
+                }
+                else {
+                    result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, yh));
+                }
             }
             else {
-                result = Loira.util.intersectPointLine(points, new Line(xP, y, xw, yP));
+                if (ym > 0) {
+                    result = Loira.util.intersectPointLine(points, new Line(xP, y, xw, yP));
+                }
+                else {
+                    result = Loira.util.intersectPointLine(points, new Line(xP, yh, xw, yP));
+                }
             }
             x = result.x - (this.x + this.width / 2);
             y = result.y - (this.y + this.height / 2);
@@ -2849,20 +3122,7 @@ var Workflow;
             ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
             var x = this.x - vX;
             var y = this.y - vY;
-            var xm = x + this.width / 2;
-            var ym = y + this.height / 2;
-            var xw = x + this.width;
-            var yh = y + this.height;
-            ctx.beginPath();
-            ctx.lineWidth = 2;
-            ctx.moveTo(xm, y);
-            ctx.lineTo(xw, ym);
-            ctx.lineTo(xm, yh);
-            ctx.lineTo(x, ym);
-            ctx.lineTo(xm, y);
-            ctx.stroke();
-            ctx.fillStyle = "#fcf5d9";
-            ctx.fill();
+            Loira.shape.drawDiamond(ctx, x, y, this.width, this.height);
             ctx.fillStyle = "#000000";
             this.drawText(ctx, this.text);
         };
@@ -2883,15 +3143,171 @@ var Workflow;
         function Returns(options) {
             var _this = this;
             options.icon = 'spear1';
-            options.text = '<<returns>>';
+            options.text = options.text || '<<returns>>';
             options.isDashed = true;
             _this = _super.call(this, options) || this;
             _this.type = 'returns';
+            var scope = _this;
+            _this.menu = [
+                { text: 'Partir', callback: function () {
+                        scope.addPoint();
+                    } },
+                { text: 'Borrar', callback: function () {
+                        scope._canvas.remove([scope]);
+                    } }
+            ];
+            _this.pointMenu = [
+                { text: 'Borrar punto', callback: function () {
+                        scope.removePoint(scope.selectedArea);
+                    } }
+            ];
             return _this;
         }
         return Returns;
     }(Common.Relation));
     Workflow.Returns = Returns;
+    var Association = (function (_super) {
+        __extends(Association, _super);
+        function Association(options) {
+            var _this = this;
+            options.icon = 'spear';
+            _this = _super.call(this, options) || this;
+            _this.type = 'workflow_association';
+            var scope = _this;
+            _this.menu = [
+                { text: 'Partir', callback: function () {
+                        scope.addPoint();
+                    } },
+                { text: 'Borrar', callback: function () {
+                        scope._canvas.remove([scope], true);
+                    } },
+                null,
+                { text: 'Propiedades', callback: function () {
+                        scope._canvas.emit(EVT_OPEN_PROPERTY, new ObjectEvent(scope));
+                    } }
+            ];
+            _this.pointMenu = [
+                { text: 'Borrar punto', callback: function () {
+                        scope.removePoint(scope.selectedArea);
+                    } }
+            ];
+            return _this;
+        }
+        return Association;
+    }(Common.Relation));
+    Workflow.Association = Association;
+    var ParallelBase = (function (_super) {
+        __extends(ParallelBase, _super);
+        function ParallelBase(options) {
+            var _this = this;
+            options.width = options.width ? options.width : 30;
+            options.height = options.height ? options.height : 30;
+            _this = _super.call(this, options) || this;
+            _this.resizable = false;
+            _this.key = options.key;
+            _this.label = options.labelId;
+            return _this;
+        }
+        ParallelBase.prototype.obtainBorderPos = function (points, ctx) {
+            var xm = points.x2 - points.x1, ym = points.y2 - points.y1;
+            var x = this.x, y = this.y, xP = this.x + this.width / 2, yP = this.y + this.height / 2, xw = this.x + this.width, yh = this.y + this.height;
+            var angle = Math.atan(yP / xm);
+            var result;
+            if (xm < 0) {
+                angle += Math.PI;
+            }
+            ym = ym / Math.abs(ym);
+            if (angle > 0 && angle < 1.6) {
+                if (ym > 0) {
+                    result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, y));
+                }
+                else {
+                    result = Loira.util.intersectPointLine(points, new Line(x, yP, xP, yh));
+                }
+            }
+            else {
+                if (ym > 0) {
+                    result = Loira.util.intersectPointLine(points, new Line(xP, y, xw, yP));
+                }
+                else {
+                    result = Loira.util.intersectPointLine(points, new Line(xP, yh, xw, yP));
+                }
+            }
+            x = result.x - (this.x + this.width / 2);
+            y = result.y - (this.y + this.height / 2);
+            return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+        };
+        ParallelBase.prototype.render = function (ctx, vX, vY) {
+            ctx.font = 'bold ' + Loira.Config.fontSize + "px " + Loira.Config.fontType;
+            var x = this.x - vX;
+            var y = this.y - vY;
+            Loira.shape.drawDiamond(ctx, x, y, this.width, this.height);
+            this.renderCustom(ctx, x, y);
+        };
+        ParallelBase.prototype.recalculateBorders = function () {
+        };
+        return ParallelBase;
+    }(Symbol));
+    Workflow.ParallelBase = ParallelBase;
+    var ParallelStart = (function (_super) {
+        __extends(ParallelStart, _super);
+        function ParallelStart(options) {
+            var _this = _super.call(this, options) || this;
+            _this.type = 'parallel_start';
+            _this.key = _this.key || Loira.util.createRandom(5);
+            var scope = _this;
+            _this.menu.push(null);
+            _this.menu.push({
+                text: 'Agregar punto de fin', callback: function () {
+                    scope._canvas.add([new Workflow.ParallelEnd({ x: scope.x, y: scope.y + 50, key: scope.key, labelId: scope.label })]);
+                }
+            });
+            return _this;
+        }
+        ParallelStart.prototype.renderCustom = function (ctx, x, y) {
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(x + 15, y + 15, 5, 0, 2 * Math.PI, false);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(this.label, x + 25, y + Loira.Config.fontSize - 5);
+        };
+        return ParallelStart;
+    }(ParallelBase));
+    Workflow.ParallelStart = ParallelStart;
+    var ParallelEnd = (function (_super) {
+        __extends(ParallelEnd, _super);
+        function ParallelEnd(options) {
+            var _this = _super.call(this, options) || this;
+            _this.type = 'parallel_end';
+            _this.maxOutGoingRelation = 1;
+            var scope = _this;
+            _this.menu.push(null);
+            _this.menu.push({
+                text: 'Agregar punto de inicio', callback: function () {
+                    scope._canvas.add([new Workflow.ParallelStart({ x: scope.x, y: scope.y + 50, key: scope.key, labelId: scope.label })]);
+                }
+            });
+            return _this;
+        }
+        ParallelEnd.prototype.renderCustom = function (ctx, x, y) {
+            ctx.beginPath();
+            ctx.arc(x + 15, y + 15, 5, 0, 2 * Math.PI, false);
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(this.label, x + 25, y + Loira.Config.fontSize - 5);
+        };
+        return ParallelEnd;
+    }(ParallelBase));
+    Workflow.ParallelEnd = ParallelEnd;
 })(Workflow || (Workflow = {}));
 //# sourceMappingURL=workflow.js.map
 var __extends = (this && this.__extends) || (function () {

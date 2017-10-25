@@ -1,8 +1,7 @@
 <html>
 <head>
-    <link href="css/font-awesome.min.css" rel="stylesheet">
-
-    <script type="text/javascript" src="../../LoiraDesigner.js"></script>
+    <script type="text/javascript" src="../../build/min/loira.js"></script>
+    <link href="../../build/styles/loira.min.css" rel="stylesheet">
     <style>
         #buttons{
             padding: 5px;
@@ -19,16 +18,13 @@
 <div style="width: 100%">
     <div id="buttons" style="width: 10%; float: left">
         <p>Comunes</p>
-        <button id="actor"><i class="fa fa-reorder"></i>Proceso</button>
+        <button id="actor">Proceso</button>
         <button id="assoc">Inicio</button>
         <button id="fin">Fin</button>
         <button id="direct">Data</button>
         <button id="gener">Decision</button>
         <button id="part">Partir</button>
         <button id="returns">Retorno</button>
-        <button id="multi">MultiParalelp</button>
-
-        <button id="refactor">Refactor</button>
     </div>
     <div style="width: 85%; float: left">
         <div id="_canvas"></div>
@@ -50,7 +46,8 @@
 
         var data1 = new Workflow.Process({x:332, y:288, text:'Meu lugar'}),
             data2 = new Workflow.Decision({x:400, y:10, text:' ', width: 300}),
-            parallelStart = new Workflow.ParallelStart({x: 200, y: 100});
+            parallel = new Workflow.ParallelEnd({x: 100, y: 100, key: '2'}),
+            parallelStart = new Workflow.ParallelStart({x: 200, y: 100, key: '2'});
 
         var rel =new Workflow.Association({start:data1, end: data2, text: 'Proof of concept', points: [{x:332, y:288}, {x:100, y:100}, {x:400,y:10}]});
 
@@ -58,8 +55,8 @@
             data1,
             data2,
             rel,
-            parallelStart,
-            new Workflow.ParallelEnd({x: 400, y: 100, key: parallelStart.key})
+            parallel,
+            parallelStart
         ]);
 
         canvas.renderAll();
@@ -94,18 +91,8 @@
             canvas.defaultRelation = 'Workflow.Returns';
         });
 
-        document.getElementById('multi').addEventListener('click', function(){
-            canvas.add(new Workflow.ParallelStart({x: 200, y: 100}));
-            canvas.renderAll();
-        });
-
-        document.getElementById('refactor').addEventListener('click', function(){
-            canvas.controller.defineLabelId();
-            canvas.renderAll();
-        });
-
         canvas.on('workflow:open-property', function(){
-           alert('property');
+            alert('property');
         });
 
         canvas.on('relation:selected', function(evt){
@@ -113,7 +100,7 @@
         });
 
         canvas.on('error:message', function(evt){
-           console.log(evt);
+            console.log(evt);
         });
     }
 </script>

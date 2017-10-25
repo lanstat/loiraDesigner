@@ -21,7 +21,11 @@ module Loira{
         'spear1': {x: 0, y: 15, width: 15, height: 15},
         'spear2': {x: 15, y: 0, width: 15, height: 15},
         'spear3': {x: 30, y: 15, width: 15, height: 15},
-        'arrow': {x: 15, y: 15, width: 15, height: 15}
+        'arrow': {x: 15, y: 15, width: 15, height: 15},
+        'start1': {x: 30, y: 15, width: 15, height: 15},
+        'end1': {x: 30, y: 30, width: 15, height: 15},
+        'start2': {x: 30, y: 45, width: 15, height: 15},
+        'end2': {x: 30, y: 60, width: 15, height: 15}
     };
 
     let _scrollBar: any = {
