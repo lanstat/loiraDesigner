@@ -978,6 +978,7 @@ var Loira;
                     _this.emit('object:released', new ObjectEvent(_this._selected));
                     _this._tmp.transform = null;
                     _this._selected.recalculateBorders();
+                    _this.save();
                 }
             };
             _this._canvas.onmouseenter = function () {
@@ -1282,6 +1283,11 @@ var Loira;
                 callback(scope.textEditor.value);
                 scope.fall('mouse:down', listener);
             });
+        };
+        Canvas.prototype.restore = function () {
+        };
+        Canvas.prototype.save = function (step) {
+            if (step === void 0) { step = 1; }
         };
         return Canvas;
     }());
@@ -2768,7 +2774,6 @@ var Workflow;
     var Point = Loira.util.Point;
     var Line = Loira.util.Line;
     var BaseController = Loira.BaseController;
-    var ObjectEvent = Loira.event.ObjectEvent;
     var EVT_OPEN_PROPERTY = 'workflow:open-property';
     var WorkflowOption = (function (_super) {
         __extends(WorkflowOption, _super);
@@ -2794,7 +2799,10 @@ var Workflow;
                     canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'Existe ya un inicio de flujo'});
                     return false;
                 }*/
-                if (evt.selected.type === 'parallel_start' || evt.selected.type === 'parallel_end') {
+                if (evt.selected.type === 'parallel_start' ||
+                    evt.selected.type === 'parallel_end' ||
+                    evt.selected.type === 'mono_parallel_start' ||
+                    evt.selected.type === 'mono_parallel_end') {
                     for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
                         var item = _a[_i];
                         if (item.type == evt.selected.type && item['key'] == evt.selected.key) {
@@ -2804,8 +2812,30 @@ var Workflow;
                     }
                 }
             });
+            canvas.on(Loira.event.RELATION_PRE_ADD, function (evt) {
+                if ((evt.selected.end.type === 'parallel_start' ||
+                    evt.selected.end.type === 'mono_parallel_start') &&
+                    evt.selected.type === 'returns') {
+                    canvas.emit(Loira.event.ERROR_MESSAGE, { message: 'No es posible retornar a un nodo inicio de paralelismo.' });
+                    return false;
+                }
+                if ((evt.selected.start.type === 'parallel_start' ||
+                    evt.selected.start.type === 'parallel_end' ||
+                    evt.selected.start.type === 'mono_parallel_start' ||
+                    evt.selected.start.type === 'mono_parallel_end') &&
+                    evt.selected.type === 'returns') {
+                    canvas.emit(Loira.event.ERROR_MESSAGE, { message: 'No es posible retornar desde un nodo de paralelismo.' });
+                    return false;
+                }
+                if ((evt.selected.start.type === 'mono_parallel_start') &&
+                    (evt.selected.end.type !== 'process' &&
+                        evt.selected.end.type !== 'decision')) {
+                    canvas.emit(Loira.event.ERROR_MESSAGE, { message: 'El siguiente estado de un nodo de paralelismo monotarea debe ser decisi\u00F3n o proceso.' });
+                    return false;
+                }
+            });
             canvas.on(Loira.event.OBJECT_ADDED, function (evt) {
-                if (evt.selected.type === 'parallel_start' && !evt.selected.label) {
+                if ((evt.selected.type === 'parallel_start' || evt.selected.type === 'mono_parallel_start') && !evt.selected.label) {
                     scope.iteratorKey++;
                     evt.selected.label = scope.iteratorKey;
                 }
@@ -2823,7 +2853,7 @@ var Workflow;
             var data = {};
             for (var _i = 0, _a = this.canvas.items; _i < _a.length; _i++) {
                 var item = _a[_i];
-                if (item.type === 'parallel_start') {
+                if (item.type === 'parallel_start' || item.type === 'mono_parallel_start') {
                     if (!data[item['key']]) {
                         data[item['key']] = item['label'];
                     }
@@ -2831,7 +2861,7 @@ var Workflow;
             }
             for (var _b = 0, _c = this.canvas.items; _b < _c.length; _b++) {
                 var item = _c[_b];
-                if (item.type === 'parallel_end') {
+                if (item.type === 'parallel_end' || item.type === 'mono_parallel_end') {
                     item['label'] = data[item['key']];
                 }
             }
@@ -3180,11 +3210,11 @@ var Workflow;
                     } },
                 { text: 'Borrar', callback: function () {
                         scope._canvas.remove([scope], true);
-                    } },
+                    } } /*,
                 null,
-                { text: 'Propiedades', callback: function () {
-                        scope._canvas.emit(EVT_OPEN_PROPERTY, new ObjectEvent(scope));
-                    } }
+                {text:'Propiedades', callback: function(){
+                    scope._canvas.emit(EVT_OPEN_PROPERTY, new ObjectEvent(scope));
+                }}*/
             ];
             _this.pointMenu = [
                 { text: 'Borrar punto', callback: function () {
@@ -3203,6 +3233,7 @@ var Workflow;
             options.width = options.width ? options.width : 30;
             options.height = options.height ? options.height : 30;
             _this = _super.call(this, options) || this;
+            _this.unDefined = 'No definido';
             _this.resizable = false;
             _this.key = options.key;
             _this.label = options.labelId;
@@ -3274,7 +3305,7 @@ var Workflow;
             ctx.strokeStyle = '#000000';
             ctx.stroke();
             ctx.fillStyle = '#FF0000';
-            ctx.fillText(this.label, x + 25, y + Loira.Config.fontSize - 5);
+            ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
         };
         return ParallelStart;
     }(ParallelBase));
@@ -3303,11 +3334,71 @@ var Workflow;
             ctx.strokeStyle = '#000000';
             ctx.stroke();
             ctx.fillStyle = '#FF0000';
-            ctx.fillText(this.label, x + 25, y + Loira.Config.fontSize - 5);
+            ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
         };
         return ParallelEnd;
     }(ParallelBase));
     Workflow.ParallelEnd = ParallelEnd;
+    var MonoParallelStart = (function (_super) {
+        __extends(MonoParallelStart, _super);
+        function MonoParallelStart(options) {
+            var _this = _super.call(this, options) || this;
+            _this.type = 'mono_parallel_start';
+            _this.key = _this.key || Loira.util.createRandom(5);
+            var scope = _this;
+            _this.maxOutGoingRelation = 1;
+            _this.menu.push(null);
+            _this.menu.push({
+                text: 'Agregar punto de fin', callback: function () {
+                    scope._canvas.add([new Workflow.MonoParallelEnd({ x: scope.x, y: scope.y + 50, key: scope.key, labelId: scope.label })]);
+                }
+            });
+            return _this;
+        }
+        MonoParallelStart.prototype.renderCustom = function (ctx, x, y) {
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.rect(x + 10, y + 10, 10, 10);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
+        };
+        return MonoParallelStart;
+    }(ParallelBase));
+    Workflow.MonoParallelStart = MonoParallelStart;
+    var MonoParallelEnd = (function (_super) {
+        __extends(MonoParallelEnd, _super);
+        function MonoParallelEnd(options) {
+            var _this = _super.call(this, options) || this;
+            _this.type = 'mono_parallel_end';
+            _this.maxOutGoingRelation = 1;
+            var scope = _this;
+            _this.menu.push(null);
+            _this.menu.push({
+                text: 'Agregar punto de inicio', callback: function () {
+                    scope._canvas.add([new Workflow.MonoParallelStart({ x: scope.x, y: scope.y + 50, key: scope.key, labelId: scope.label })]);
+                }
+            });
+            return _this;
+        }
+        MonoParallelEnd.prototype.renderCustom = function (ctx, x, y) {
+            ctx.beginPath();
+            ctx.rect(x + 10, y + 10, 10, 10);
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
+        };
+        return MonoParallelEnd;
+    }(ParallelBase));
+    Workflow.MonoParallelEnd = MonoParallelEnd;
 })(Workflow || (Workflow = {}));
 //# sourceMappingURL=workflow.js.map
 var __extends = (this && this.__extends) || (function () {

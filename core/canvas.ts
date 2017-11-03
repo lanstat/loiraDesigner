@@ -895,6 +895,8 @@ module Loira{
                     _this.emit('object:released', new ObjectEvent(_this._selected));
                     _this._tmp.transform = null;
                     _this._selected.recalculateBorders();
+
+                    _this.save();
                 }
             };
 
@@ -1255,6 +1257,14 @@ module Loira{
                 callback(scope.textEditor.value);
                 scope.fall('mouse:down', listener);
             });
+        }
+
+        private restore(): void {
+
+        }
+
+        private save(step: number = 1): void {
+
         }
     }
 }

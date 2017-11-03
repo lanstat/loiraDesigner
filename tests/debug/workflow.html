@@ -27,6 +27,7 @@
         <button id="part">Partir</button>
         <button id="returns">Retorno</button>
         <button id="multi">MultiParalelp</button>
+        <button id="mono">MonoParalelp</button>
 
         <button id="refactor">Refactor</button>
     </div>
@@ -96,6 +97,11 @@
 
         document.getElementById('multi').addEventListener('click', function(){
             canvas.add(new Workflow.ParallelStart({x: 200, y: 100}));
+            canvas.renderAll();
+        });
+
+        document.getElementById('mono').addEventListener('click', function(){
+            canvas.add(new Workflow.MonoParallelStart({x: 200, y: 100}));
             canvas.renderAll();
         });
 

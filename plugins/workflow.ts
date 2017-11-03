@@ -36,7 +36,10 @@ module Workflow{
                     canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'Existe ya un inicio de flujo'});
                     return false;
                 }*/
-                if (evt.selected.type === 'parallel_start' || evt.selected.type === 'parallel_end'){
+                if (evt.selected.type === 'parallel_start' ||
+                    evt.selected.type === 'parallel_end' ||
+                    evt.selected.type === 'mono_parallel_start' ||
+                    evt.selected.type === 'mono_parallel_end'){
                     for (let item of canvas.items){
                         if (item.type == evt.selected.type && item['key'] == evt.selected.key){
                             canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'Existe un nodo con la misma llave en el diagrama.'});
@@ -46,8 +49,33 @@ module Workflow{
                 }
             });
 
+            canvas.on(Loira.event.RELATION_PRE_ADD, function(evt){
+                if ((evt.selected.end.type === 'parallel_start' ||
+                    evt.selected.end.type === 'mono_parallel_start') &&
+                    evt.selected.type === 'returns'){
+                    canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'No es posible retornar a un nodo inicio de paralelismo.'});
+                    return false;
+                }
+
+                if ((evt.selected.start.type === 'parallel_start' ||
+                    evt.selected.start.type === 'parallel_end' ||
+                    evt.selected.start.type === 'mono_parallel_start' ||
+                    evt.selected.start.type === 'mono_parallel_end') &&
+                    evt.selected.type === 'returns'){
+                    canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'No es posible retornar desde un nodo de paralelismo.'});
+                    return false;
+                }
+
+                if ((evt.selected.start.type === 'mono_parallel_start') &&
+                    (evt.selected.end.type !== 'process' &&
+                     evt.selected.end.type !== 'decision')){
+                    canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'El siguiente estado de un nodo de paralelismo monotarea debe ser decisi\u00F3n o proceso.'});
+                    return false;
+                }
+            });
+
             canvas.on(Loira.event.OBJECT_ADDED, function(evt){
-                if (evt.selected.type === 'parallel_start' && !evt.selected.label){
+                if ((evt.selected.type === 'parallel_start' || evt.selected.type === 'mono_parallel_start') && !evt.selected.label){
                     scope.iteratorKey++;
                     evt.selected.label = scope.iteratorKey;
                 }
@@ -65,7 +93,7 @@ module Workflow{
             let data = {};
 
             for (let item of this.canvas.items){
-                if (item.type === 'parallel_start'){
+                if (item.type === 'parallel_start' || item.type === 'mono_parallel_start'){
                     if (!data[item['key']]){
                         data[item['key']] = item['label'];
                     }
@@ -73,7 +101,7 @@ module Workflow{
             }
 
             for (let item of this.canvas.items){
-                if (item.type === 'parallel_end'){
+                if (item.type === 'parallel_end' || item.type === 'mono_parallel_end'){
                     item['label'] = data[item['key']];
                 }
             }
@@ -481,11 +509,11 @@ module Workflow{
                 }},
                 {text:'Borrar', callback: function(){
                     scope._canvas.remove([scope], true);
-                }},
+                }}/*,
                 null,
                 {text:'Propiedades', callback: function(){
                     scope._canvas.emit(EVT_OPEN_PROPERTY, new ObjectEvent(scope));
-                }}
+                }}*/
             ];
 
             this.pointMenu = [
@@ -499,12 +527,14 @@ module Workflow{
     export abstract class ParallelBase extends Symbol{
         public label: string;
         public key: string;
+        protected unDefined: string;
 
         constructor(options: WorkflowOption){
             options.width = options.width? options.width : 30;
             options.height = options.height? options.height : 30;
             super(options);
 
+            this.unDefined  = 'No definido';
             this.resizable = false;
             this.key = options.key;
             this.label = options.labelId;
@@ -592,7 +622,7 @@ module Workflow{
             ctx.stroke();
 
             ctx.fillStyle = '#FF0000';
-            ctx.fillText(this.label, x + 25, y + Loira.Config.fontSize - 5);
+            ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
         }
     }
 
@@ -622,7 +652,69 @@ module Workflow{
             ctx.stroke();
 
             ctx.fillStyle = '#FF0000';
-            ctx.fillText(this.label, x + 25, y + Loira.Config.fontSize - 5);
+            ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
+        }
+    }
+
+    export class MonoParallelStart extends ParallelBase{
+        constructor(options: WorkflowOption){
+            super(options);
+
+            this.type = 'mono_parallel_start';
+            this.key = this.key || Loira.util.createRandom(5);
+            let scope = this;
+            this.maxOutGoingRelation = 1;
+
+            this.menu.push(null);
+            this.menu.push({
+                text:'Agregar punto de fin', callback: function(){
+                    scope._canvas.add([new Workflow.MonoParallelEnd({x: scope.x, y: scope.y + 50, key: scope.key, labelId: scope.label})]);
+                }}
+            );
+        }
+
+        renderCustom(ctx: CanvasRenderingContext2D, x: number, y: number): void{
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.rect(x + 10, y + 10, 10, 10);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
+        }
+    }
+
+    export class MonoParallelEnd extends ParallelBase{
+        constructor(options: WorkflowOption){
+            super(options);
+
+            this.type = 'mono_parallel_end';
+            this.maxOutGoingRelation = 1;
+            let scope = this;
+
+            this.menu.push(null);
+            this.menu.push({
+                text:'Agregar punto de inicio', callback: function(){
+                    scope._canvas.add([new Workflow.MonoParallelStart({x: scope.x, y: scope.y + 50, key: scope.key, labelId: scope.label})]);
+                }}
+            );
+        }
+
+        renderCustom(ctx: CanvasRenderingContext2D, x: number, y: number): void{
+            ctx.beginPath();
+            ctx.rect(x + 10, y + 10, 10, 10);
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
         }
     }
 }
