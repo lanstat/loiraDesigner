@@ -101,6 +101,12 @@ module Loira{
                 this._buttons = [];
             }
         }
+
+        move(x: number, y: number): void {
+            this.x += x;
+            this.y += y;
+        }
+
         /**
          * Renderiza los iconos de los botones laterales
          *

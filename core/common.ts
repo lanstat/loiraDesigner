@@ -33,6 +33,10 @@ module Common{
             this.typeLine = options.typeLine? options.typeLine: TypeLine.STRAIGHT;
 
             this.baseType = 'relation';
+
+            if (this.start._uid === this.end._uid){
+                this.selfRelated();
+            }
         }
 
         /**
@@ -334,6 +338,28 @@ module Common{
         public getMenu(x: number, y: number): MenuItem[]{
             this.selectedArea = this.getSelectedCorner(x, y);
             return this.selectedArea? this.pointMenu || this.menu : this.menu;
+        }
+
+        move(x: number, y: number): void{
+            if (this.points.length > 2){
+                for (let i=1; i < this.points.length-1; i++){
+                    this.points[i].x += x;
+                    this.points[i].y += y;
+                }
+            }
+        }
+
+        private selfRelated(): void {
+            let widthLeft: number = this.start.x + this.start.width + 30;
+            let heightHalf: number = this.start.y + this.start.height/2;
+
+            this.points = [];
+
+            this.points.push(new Point());
+            this.points.push(new Point(widthLeft, heightHalf));
+            this.points.push(new Point(widthLeft, this.start.y - 30));
+            this.points.push(new Point(this.start.x + this.start.width/2, this.start.y - 30));
+            this.points.push(new Point());
         }
     }
 

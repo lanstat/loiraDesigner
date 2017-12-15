@@ -150,21 +150,8 @@ module Workflow{
                             if (item.baseType !== 'relation' && !item['startPoint']){
                                 if(item.checkCollision(evt.x, evt.y) && !$this.endPoint){
                                     let instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                    let points: Point[] = null;
 
-                                    if ($this._uid == item._uid){
-                                        let widthLeft: number = $this.x + $this.width + 30;
-                                        let heightHalf: number = $this.y + $this.height/2;
-
-                                        points = [];
-                                        points.push(new Point());
-                                        points.push(new Point(widthLeft, heightHalf));
-                                        points.push(new Point(widthLeft, $this.y - 30));
-                                        points.push(new Point($this.x + $this.width/2, $this.y - 30));
-                                        points.push(new Point());
-                                    }
-
-                                    canvas.add(new instance({points: points}).update($this, item));
+                                    canvas.add(new instance({start: $this, end: item}));
                                     break;
                                 }
                             }

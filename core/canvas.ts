@@ -294,6 +294,8 @@ module Loira{
                         ctx.oBackingStorePixelRatio ||
                         ctx.backingStorePixelRatio || 1;
 
+                dpr = dpr < 1? 1: dpr;
+
                 return dpr / bsr;
             })();
 
@@ -834,8 +836,7 @@ module Loira{
                                 _this.renderAll();
                             } else {
                                 if (_this._selected.draggable){
-                                    _this._selected.x += x;
-                                    _this._selected.y += y;
+                                    _this._selected.move(x, y);
                                     /**
                                      * Evento que encapsula el arrastre de un objeto
                                      *
