@@ -72,6 +72,19 @@ module Workflow{
                     canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'El siguiente estado de un nodo de paralelismo monotarea debe ser decisi\u00F3n o proceso.'});
                     return false;
                 }
+
+                if ((evt.selected.start.type === 'fork_parallel') &&
+                    (evt.selected.type === 'workflow_fork_continuity')){
+
+                    let relations: Common.Relation[] = canvas.getRelationsFromObject(evt.selected.start, false, true);
+
+                    for (let relation of relations){
+                        if (relation.type === 'workflow_fork_continuity'){
+                            canvas.emit(Loira.event.ERROR_MESSAGE, {message: 'Ya existe una relaci\u00F3n de continuidad para el nodo de bifurcaci\u00F3n.'});
+                            return false;
+                        }
+                    }
+                }
             });
 
             canvas.on(Loira.event.OBJECT_ADDED, function(evt){
@@ -139,8 +152,9 @@ module Workflow{
             ];
         }
 
-        protected _linkSymbol(): void{
+        protected _linkSymbol(defaultRelation?: string): void{
             let $this = this;
+            const nextRelation: string = defaultRelation? defaultRelation : this._canvas.defaultRelation;
             let  listener = this._canvas.on(
                 'mouse:down', function(evt){
                     let canvas:Loira.Canvas = $this._canvas;
@@ -149,7 +163,7 @@ module Workflow{
                         for (let item of canvas.items) {
                             if (item.baseType !== 'relation' && !item['startPoint']){
                                 if(item.checkCollision(evt.x, evt.y) && !$this.endPoint){
-                                    let instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                                    let instance = Loira.util.stringToFunction(nextRelation);
 
                                     canvas.add(new instance({start: $this, end: item}));
                                     break;
@@ -702,6 +716,47 @@ module Workflow{
 
             ctx.fillStyle = '#FF0000';
             ctx.fillText(this.label || this.unDefined, x + 25, y + Loira.Config.fontSize - 5);
+        }
+    }
+
+    export class Fork extends ParallelBase{
+        constructor(options: WorkflowOption){
+            super(options);
+
+            this.type = 'fork_parallel';
+            this.key = this.key || Loira.util.createRandom(5);
+            let scope = this;
+
+            this.menu.push(null);
+            this.menu.push({
+                text:'Agregar via de continuidad', callback: function(){
+                    scope._linkSymbol('Workflow.ForkContinuity');
+                }}
+            );
+        }
+
+        renderCustom(ctx: CanvasRenderingContext2D, x: number, y: number): void{
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.moveTo(x + 15, y + 8);
+            ctx.lineTo(x + 8, y + 20);
+            ctx.moveTo(x + 15, y + 10);
+            ctx.lineTo(x + 15, y + 20);
+            ctx.moveTo(x + 15, y + 10);
+            ctx.lineTo(x + 22, y + 20);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+        }
+    }
+
+    export class ForkContinuity extends Workflow.Association {
+        constructor(options: RelOption){
+            options.icon = 'arrow';
+            options.isDashed = true;
+
+            super(options);
+            this.type = 'workflow_fork_continuity';
         }
     }
 }

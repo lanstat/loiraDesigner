@@ -28,6 +28,7 @@
         <button id="returns">Retorno</button>
         <button id="multi">MultiParalelp</button>
         <button id="mono">MonoParalelp</button>
+        <button id="fork">FOrk</button>
 
         <button id="refactor">Refactor</button>
     </div>
@@ -51,7 +52,7 @@
 
         var data1 = new Workflow.Process({x:332, y:288, text:'Meu lugar'}),
             data2 = new Workflow.Decision({x:400, y:10, text:' ', width: 300}),
-            parallelStart = new Workflow.ParallelStart({x: 200, y: 100});
+            parallelStart = new Workflow.Fork({x: 200, y: 100});
 
         var rel =new Workflow.Association({start:data1, end: data2, text: 'Proof of concept', points: [{x:332, y:288}, {x:100, y:100}, {x:400,y:10}]});
 
@@ -102,6 +103,11 @@
 
         document.getElementById('mono').addEventListener('click', function(){
             canvas.add(new Workflow.MonoParallelStart({x: 200, y: 100}));
+            canvas.renderAll();
+        });
+
+        document.getElementById('fork').addEventListener('click', function(){
+            canvas.add(new Workflow.Fork({x: 300, y: 100}));
             canvas.renderAll();
         });
 
