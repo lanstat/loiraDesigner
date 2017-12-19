@@ -411,6 +411,7 @@ var Loira;
                     ctx.msBackingStorePixelRatio ||
                     ctx.oBackingStorePixelRatio ||
                     ctx.backingStorePixelRatio || 1;
+                dpr = dpr < 1 ? 1 : dpr;
                 return dpr / bsr;
             })();
             if (!ratio) {
@@ -918,8 +919,7 @@ var Loira;
                             }
                             else {
                                 if (_this._selected.draggable) {
-                                    _this._selected.x += x;
-                                    _this._selected.y += y;
+                                    _this._selected.move(x, y);
                                     /**
                                      * Evento que encapsula el arrastre de un objeto
                                      *
@@ -1543,6 +1543,10 @@ var Loira;
                 this._buttons = [];
             }
         };
+        Element.prototype.move = function (x, y) {
+            this.x += x;
+            this.y += y;
+        };
         /**
          * Renderiza los iconos de los botones laterales
          *
@@ -1738,6 +1742,9 @@ var Common;
             _this.icon = options.icon ? options.icon : '';
             _this.typeLine = options.typeLine ? options.typeLine : TypeLine.STRAIGHT;
             _this.baseType = 'relation';
+            if (_this.start._uid === _this.end._uid) {
+                _this.selfRelated();
+            }
             return _this;
         }
         /**
@@ -1968,6 +1975,24 @@ var Common;
         Relation.prototype.getMenu = function (x, y) {
             this.selectedArea = this.getSelectedCorner(x, y);
             return this.selectedArea ? this.pointMenu || this.menu : this.menu;
+        };
+        Relation.prototype.move = function (x, y) {
+            if (this.points.length > 2) {
+                for (var i = 1; i < this.points.length - 1; i++) {
+                    this.points[i].x += x;
+                    this.points[i].y += y;
+                }
+            }
+        };
+        Relation.prototype.selfRelated = function () {
+            var widthLeft = this.start.x + this.start.width + 30;
+            var heightHalf = this.start.y + this.start.height / 2;
+            this.points = [];
+            this.points.push(new Point());
+            this.points.push(new Point(widthLeft, heightHalf));
+            this.points.push(new Point(widthLeft, this.start.y - 30));
+            this.points.push(new Point(this.start.x + this.start.width / 2, this.start.y - 30));
+            this.points.push(new Point());
         };
         return Relation;
     }(Loira.Element));
@@ -2771,7 +2796,6 @@ var __extends = (this && this.__extends) || (function () {
 var Workflow;
 (function (Workflow) {
     var BaseOption = Loira.util.BaseOption;
-    var Point = Loira.util.Point;
     var Line = Loira.util.Line;
     var BaseController = Loira.BaseController;
     var EVT_OPEN_PROPERTY = 'workflow:open-property';
@@ -2833,6 +2857,17 @@ var Workflow;
                     canvas.emit(Loira.event.ERROR_MESSAGE, { message: 'El siguiente estado de un nodo de paralelismo monotarea debe ser decisi\u00F3n o proceso.' });
                     return false;
                 }
+                if ((evt.selected.start.type === 'fork_parallel') &&
+                    (evt.selected.type === 'workflow_fork_continuity')) {
+                    var relations = canvas.getRelationsFromObject(evt.selected.start, false, true);
+                    for (var _i = 0, relations_1 = relations; _i < relations_1.length; _i++) {
+                        var relation = relations_1[_i];
+                        if (relation.type === 'workflow_fork_continuity') {
+                            canvas.emit(Loira.event.ERROR_MESSAGE, { message: 'Ya existe una relaci\u00F3n de continuidad para el nodo de bifurcaci\u00F3n.' });
+                            return false;
+                        }
+                    }
+                }
             });
             canvas.on(Loira.event.OBJECT_ADDED, function (evt) {
                 if ((evt.selected.type === 'parallel_start' || evt.selected.type === 'mono_parallel_start') && !evt.selected.label) {
@@ -2886,8 +2921,9 @@ var Workflow;
             ];
             return _this;
         }
-        Symbol.prototype._linkSymbol = function () {
+        Symbol.prototype._linkSymbol = function (defaultRelation) {
             var $this = this;
+            var nextRelation = defaultRelation ? defaultRelation : this._canvas.defaultRelation;
             var listener = this._canvas.on('mouse:down', function (evt) {
                 var canvas = $this._canvas;
                 if (!$this.maxOutGoingRelation || (canvas.getRelationsFromObject($this, false, true).length < $this.maxOutGoingRelation)) {
@@ -2895,19 +2931,8 @@ var Workflow;
                         var item = _a[_i];
                         if (item.baseType !== 'relation' && !item['startPoint']) {
                             if (item.checkCollision(evt.x, evt.y) && !$this.endPoint) {
-                                var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                var points = null;
-                                if ($this._uid == item._uid) {
-                                    var widthLeft = $this.x + $this.width + 30;
-                                    var heightHalf = $this.y + $this.height / 2;
-                                    points = [];
-                                    points.push(new Point());
-                                    points.push(new Point(widthLeft, heightHalf));
-                                    points.push(new Point(widthLeft, $this.y - 30));
-                                    points.push(new Point($this.x + $this.width / 2, $this.y - 30));
-                                    points.push(new Point());
-                                }
-                                canvas.add(new instance({ points: points }).update($this, item));
+                                var instance = Loira.util.stringToFunction(nextRelation);
+                                canvas.add(new instance({ start: $this, end: item }));
                                 break;
                             }
                         }
@@ -3058,6 +3083,57 @@ var Workflow;
         return EndTerminator;
     }(Terminator));
     Workflow.EndTerminator = EndTerminator;
+    /**
+     * Base symbol for terminators of workflow
+     *
+     * @class
+     * @memberof Workflow
+     * @augments Common.Symbol
+     */
+    var ThreadTerminator = (function (_super) {
+        __extends(ThreadTerminator, _super);
+        function ThreadTerminator(options) {
+            var _this = _super.call(this, options) || this;
+            _this.width = 70;
+            _this.height = 30;
+            _this.text = 'FIN';
+            _this.endPoint = true;
+            _this.type = 'end_thread_terminator';
+            _this.resizable = false;
+            return _this;
+        }
+        ThreadTerminator.prototype.obtainBorderPos = function (points, ctx) {
+            var xm = points.x2 - points.x1, ym = points.y2 - points.y1;
+            var a = this.width / 2;
+            var b = this.height / 2;
+            var ee = a * b / Math.sqrt(a * a * ym * ym + b * b * xm * xm);
+            return Math.sqrt(Math.pow(ee * ym, 2) + Math.pow(ee * xm, 2));
+        };
+        ThreadTerminator.prototype.render = function (ctx, vX, vY) {
+            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+            var x = this.x - vX;
+            var y = this.y - vY;
+            var xw = x + this.width - 20;
+            var yh = y + this.height;
+            x += 20;
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.moveTo(x, y);
+            ctx.lineTo(xw, y);
+            ctx.bezierCurveTo(xw + 30, y, xw + 30, yh, xw, yh);
+            ctx.lineTo(x, yh);
+            ctx.bezierCurveTo(x - 30, yh, x - 30, y, x, y);
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.fillStyle = "#fcf5d9";
+            ctx.fill();
+            ctx.fillStyle = "#000000";
+            this.drawText(ctx, this.text);
+        };
+        ThreadTerminator.prototype.recalculateBorders = function () { };
+        return ThreadTerminator;
+    }(Symbol));
+    Workflow.ThreadTerminator = ThreadTerminator;
     /**
      * Data symbol
      *
@@ -3399,6 +3475,50 @@ var Workflow;
         return MonoParallelEnd;
     }(ParallelBase));
     Workflow.MonoParallelEnd = MonoParallelEnd;
+    var Fork = (function (_super) {
+        __extends(Fork, _super);
+        function Fork(options) {
+            var _this = _super.call(this, options) || this;
+            _this.type = 'fork_parallel';
+            _this.key = _this.key || Loira.util.createRandom(5);
+            var scope = _this;
+            _this.menu.push(null);
+            _this.menu.push({
+                text: 'Agregar via de continuidad', callback: function () {
+                    scope._linkSymbol('Workflow.ForkContinuity');
+                }
+            });
+            return _this;
+        }
+        Fork.prototype.renderCustom = function (ctx, x, y) {
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.moveTo(x + 15, y + 8);
+            ctx.lineTo(x + 8, y + 20);
+            ctx.moveTo(x + 15, y + 10);
+            ctx.lineTo(x + 15, y + 20);
+            ctx.moveTo(x + 15, y + 10);
+            ctx.lineTo(x + 22, y + 20);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+        };
+        return Fork;
+    }(ParallelBase));
+    Workflow.Fork = Fork;
+    var ForkContinuity = (function (_super) {
+        __extends(ForkContinuity, _super);
+        function ForkContinuity(options) {
+            var _this = this;
+            options.icon = 'arrow';
+            options.isDashed = true;
+            _this = _super.call(this, options) || this;
+            _this.type = 'workflow_fork_continuity';
+            return _this;
+        }
+        return ForkContinuity;
+    }(Workflow.Association));
+    Workflow.ForkContinuity = ForkContinuity;
 })(Workflow || (Workflow = {}));
 //# sourceMappingURL=workflow.js.map
 var __extends = (this && this.__extends) || (function () {

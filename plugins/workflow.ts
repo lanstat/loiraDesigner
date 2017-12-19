@@ -340,6 +340,71 @@ module Workflow{
     }
 
     /**
+     * Base symbol for terminators of workflow
+     *
+     * @class
+     * @memberof Workflow
+     * @augments Common.Symbol
+     */
+    export class ThreadTerminator extends Symbol{
+        constructor(options: WorkflowOption){
+            super(options);
+            this.width = 70;
+            this.height = 30;
+            this.text = 'FIN';
+            this.endPoint = true;
+            this.type = 'end_thread_terminator';
+            this.resizable = false;
+        }
+
+        obtainBorderPos(points: Loira.util.Line, ctx: CanvasRenderingContext2D): number {
+            let xm: number = points.x2 - points.x1,
+                ym: number = points.y2 - points.y1;
+
+            let a = this.width/2;
+            let b = this.height/2;
+            let ee = a*b / Math.sqrt(a*a*ym*ym + b*b*xm*xm);
+
+            return Math.sqrt(Math.pow(ee*ym, 2) + Math.pow(ee*xm, 2));
+        }
+
+        render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
+            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+
+            let x = this.x - vX;
+            let y = this.y - vY;
+            let xw = x + this.width - 20;
+            let yh = y + this.height;
+
+            x += 20;
+
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+
+            ctx.moveTo(x, y);
+
+            ctx.lineTo(xw, y);
+
+            ctx.bezierCurveTo(xw + 30, y, xw + 30, yh, xw, yh);
+
+            ctx.lineTo(x, yh);
+
+            ctx.bezierCurveTo(x - 30, yh, x -30, y, x, y);
+            ctx.setLineDash([5, 5]);
+
+            ctx.stroke();
+            ctx.fillStyle = "#fcf5d9";
+            ctx.fill();
+            ctx.fillStyle = "#000000";
+
+            this.drawText(ctx, this.text);
+        }
+
+        recalculateBorders() {}
+
+    }
+
+    /**
      * Data symbol
      *
      * @class
