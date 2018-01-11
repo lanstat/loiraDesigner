@@ -433,10 +433,10 @@ module Common{
             return lines;
         }
 
-        protected drawText(ctx: CanvasRenderingContext2D, line: string) {
+        protected drawText(ctx: CanvasRenderingContext2D, line: string, vX: number, vY: number) {
             let y,
-                xm = (this.x - this._canvas.virtualCanvas.x) + this.width / 2,
-                ym = (this.y - this._canvas.virtualCanvas.y) + this.height / 2,
+                xm = (this.x - vX) + this.width / 2,
+                ym = (this.y - vY) + this.height / 2,
                 lines: string[];
 
             lines = this.splitText(ctx, line);

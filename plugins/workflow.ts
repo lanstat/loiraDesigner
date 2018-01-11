@@ -241,7 +241,7 @@ module Workflow{
             ctx.fill();
             ctx.fillStyle = "#000000";
 
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         }
 
         recalculateBorders() {
@@ -302,7 +302,7 @@ module Workflow{
             ctx.fill();
             ctx.fillStyle = "#000000";
 
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         }
 
         recalculateBorders() {}
@@ -397,7 +397,7 @@ module Workflow{
             ctx.fill();
             ctx.fillStyle = "#000000";
 
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         }
 
         recalculateBorders() {}
@@ -456,7 +456,7 @@ module Workflow{
             ctx.fill();
             ctx.fillStyle = "#000000";
 
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         }
 
         recalculateBorders() {
@@ -520,7 +520,7 @@ module Workflow{
             Loira.shape.drawDiamond(ctx, x, y, this.width, this.height);
             ctx.fillStyle = "#000000";
 
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         }
 
         recalculateBorders() {

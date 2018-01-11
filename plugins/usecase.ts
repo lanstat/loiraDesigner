@@ -60,7 +60,7 @@ module UseCase{
                 ctx.fill();
                 ctx.fillStyle = "#000000";
 
-                this.drawText(ctx, this.text);
+                this.drawText(ctx, this.text, vX, vY);
             }
         }
 

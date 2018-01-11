@@ -1199,10 +1199,11 @@ var Loira;
             if (padding === void 0) { padding = 0; }
             var maxX, maxY, minX, minY, dX, dY;
             var offSetX, offSetY;
+            var localItems = this.items.slice(0);
             maxX = maxY = Number.MIN_VALUE;
             minX = minY = Number.MAX_VALUE;
-            for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-                var element = _a[_i];
+            for (var _i = 0, localItems_1 = localItems; _i < localItems_1.length; _i++) {
+                var element = localItems_1[_i];
                 if (element.baseType !== 'relation') {
                     if (element.x < minX) {
                         minX = element.x;
@@ -1226,23 +1227,9 @@ var Loira;
             ctx.fillRect(0, 0, dX, dY);
             offSetY = (minY - padding) - 5;
             offSetX = (minX - padding) - 5;
-            for (var i = 0; i < this.items.length; i++) {
-                if (this.items[i].baseType !== 'relation') {
-                    this.items[i].x -= offSetX;
-                    this.items[i].y -= offSetY;
-                }
-            }
-            var x = this.virtualCanvas.x, y = this.virtualCanvas.y;
-            for (var i = 0; i < this.items.length; i++) {
+            for (var i = 0; i < localItems.length; i++) {
                 ctx.save();
-                if (this.items[i].baseType !== 'relation') {
-                    this.items[i].render(ctx, x, y);
-                    this.items[i].x += offSetX;
-                    this.items[i].y += offSetY;
-                }
-                else {
-                    this.items[i].render(ctx, x, y);
-                }
+                localItems[i].render(ctx, offSetX, offSetY);
                 ctx.restore();
             }
             return virtual.toDataURL("image/png");
@@ -2052,8 +2039,8 @@ var Common;
             lines.push(buff);
             return lines;
         };
-        Symbol.prototype.drawText = function (ctx, line) {
-            var y, xm = (this.x - this._canvas.virtualCanvas.x) + this.width / 2, ym = (this.y - this._canvas.virtualCanvas.y) + this.height / 2, lines;
+        Symbol.prototype.drawText = function (ctx, line, vX, vY) {
+            var y, xm = (this.x - vX) + this.width / 2, ym = (this.y - vY) + this.height / 2, lines;
             lines = this.splitText(ctx, line);
             y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
             for (var i = 0; i < lines.length; i++) {
@@ -2653,7 +2640,7 @@ var UseCase;
                 ctx.fillStyle = "#fcf5d9";
                 ctx.fill();
                 ctx.fillStyle = "#000000";
-                this.drawText(ctx, this.text);
+                this.drawText(ctx, this.text, vX, vY);
             }
         };
         UseCase.prototype.recalculateBorders = function () {
@@ -2996,7 +2983,7 @@ var Workflow;
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
             ctx.fillStyle = "#000000";
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         };
         Process.prototype.recalculateBorders = function () {
             var xm = Math.round(this.width / 2), ym = Math.round(this.height / 2);
@@ -3045,7 +3032,7 @@ var Workflow;
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
             ctx.fillStyle = "#000000";
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         };
         Terminator.prototype.recalculateBorders = function () { };
         return Terminator;
@@ -3128,7 +3115,7 @@ var Workflow;
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
             ctx.fillStyle = "#000000";
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         };
         ThreadTerminator.prototype.recalculateBorders = function () { };
         return ThreadTerminator;
@@ -3177,7 +3164,7 @@ var Workflow;
             ctx.fillStyle = "#fcf5d9";
             ctx.fill();
             ctx.fillStyle = "#000000";
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         };
         Data.prototype.recalculateBorders = function () {
         };
@@ -3230,7 +3217,7 @@ var Workflow;
             var y = this.y - vY;
             Loira.shape.drawDiamond(ctx, x, y, this.width, this.height);
             ctx.fillStyle = "#000000";
-            this.drawText(ctx, this.text);
+            this.drawText(ctx, this.text, vX, vY);
         };
         Decision.prototype.recalculateBorders = function () {
         };

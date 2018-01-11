@@ -31,6 +31,7 @@
         <button id="fork">FOrk</button>
 
         <button id="refactor">Refactor</button>
+        <button id="exportImage">Exportar</button>
     </div>
     <div style="width: 85%; float: left">
         <div id="_canvas"></div>
@@ -126,6 +127,12 @@
 
         canvas.on('error:message', function(evt){
            console.log(evt);
+        });
+
+        document.getElementById('exportImage').addEventListener('click', function(){
+            var d= canvas.getImage(10);
+            var w=window.open('about:blank','image from canvas');
+            w.document.write("<img src='"+d+"' alt='from canvas'/>");
         });
     }
 </script>

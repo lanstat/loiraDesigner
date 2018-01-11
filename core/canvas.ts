@@ -1155,11 +1155,12 @@ module Loira{
         getImage(padding: number = 0): string{
             let maxX, maxY, minX, minY, dX, dY: number;
             let offSetX, offSetY: number;
+            let localItems: Loira.Element[] = this.items.slice(0);
 
             maxX = maxY = Number.MIN_VALUE;
             minX = minY = Number.MAX_VALUE;
 
-            for (let element of this.items){
+            for (let element of localItems){
                 if (element.baseType !== 'relation'){
                     if (element.x < minX){
                         minX = element.x;
@@ -1190,26 +1191,11 @@ module Loira{
             offSetY = (minY - padding) - 5;
             offSetX = (minX - padding) - 5;
 
-            for (let i:number = 0; i < this.items.length; i++) {
-                if (this.items[i].baseType !== 'relation') {
-                    this.items[i].x -= offSetX;
-                    this.items[i].y -= offSetY;
-                }
-            }
-
-            let x: number = this.virtualCanvas.x,
-                y: number = this.virtualCanvas.y;
-
-            for (let i:number = 0; i < this.items.length; i++) {
+            for (let i:number = 0; i < localItems.length; i++) {
                 ctx.save();
 
-                if (this.items[i].baseType !== 'relation') {
-                    this.items[i].render(ctx, x, y);
-                    this.items[i].x += offSetX;
-                    this.items[i].y += offSetY;
-                } else {
-                    this.items[i].render(ctx, x, y);
-                }
+                localItems[i].render(ctx, offSetX, offSetY);
+
                 ctx.restore();
             }
             return virtual.toDataURL("image/png");
