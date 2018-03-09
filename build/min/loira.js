@@ -225,6 +225,14 @@ var Loira;
         UserAgent[UserAgent["CHROME"] = 3] = "CHROME";
         UserAgent[UserAgent["UNKNOWN"] = 4] = "UNKNOWN";
     })(UserAgent = Loira.UserAgent || (Loira.UserAgent = {}));
+    var Key;
+    (function (Key) {
+        Key[Key["ENTER"] = 13] = "ENTER";
+        Key[Key["DELETE"] = 46] = "DELETE";
+        Key[Key["CONTROL"] = 17] = "CONTROL";
+        Key[Key["ALT"] = 18] = "ALT";
+        Key[Key["SHIFT"] = 16] = "SHIFT";
+    })(Key = Loira.Key || (Loira.Key = {}));
     var FpsCounter = (function () {
         function FpsCounter(fps) {
             if (fps === void 0) { fps = 32; }
@@ -286,7 +294,7 @@ var Loira;
             /**
              * @property {Object}  _selected - Objeto que se encuentra seleccionado
              */
-            this._selected = null;
+            this._selected = [];
             /**
              * @property {Boolean}  _isDragged - Determina si el usuario esta arrastrando un objeto
              */
@@ -358,6 +366,53 @@ var Loira;
             this.userAgent = checkUserAgent();
             this.bindResizeWindow();
         }
+        Canvas.prototype.iterateSelected = function (callback) {
+            if (this._selected.length > 0) {
+                for (var _i = 0, _a = this._selected; _i < _a.length; _i++) {
+                    var selected = _a[_i];
+                    callback(selected);
+                }
+            }
+        };
+        Canvas.prototype.clearSelected = function (element) {
+            if (element === void 0) { element = null; }
+            if (element) {
+                for (var iter = 0; iter < this._selected.length; iter++) {
+                    if (this._selected[iter]._uid === element._uid) {
+                        this._selected[iter].isSelected = false;
+                        this._selected.splice(iter, 1);
+                        break;
+                    }
+                }
+            }
+            else {
+                for (var _i = 0, _a = this._selected; _i < _a.length; _i++) {
+                    var item = _a[_i];
+                    item.isSelected = false;
+                }
+                this._selected = [];
+            }
+        };
+        Canvas.prototype.appendSelected = function (args, replace) {
+            if (replace === void 0) { replace = false; }
+            var argument = null;
+            if (Object.prototype.toString.call(args) !== '[object Array]') {
+                argument = [args];
+            }
+            else {
+                argument = args;
+            }
+            if (replace) {
+                this.clearSelected();
+            }
+            for (var _i = 0, argument_1 = argument; _i < argument_1.length; _i++) {
+                var item = argument_1[_i];
+                if (!item.isSelected) {
+                    item.isSelected = true;
+                    this._selected.push(item);
+                }
+            }
+        };
         Canvas.prototype.refreshScreen = function () {
             this.destroy();
             this.container.style.width = this.container.style.maxWidth = this.viewportWidth + 'px';
@@ -432,26 +487,31 @@ var Loira;
         Canvas.prototype.renderAll = function (forceRender) {
             if (forceRender === void 0) { forceRender = false; }
             Loira.util.logger(Loira.LogLevel.INFO, 'Draw');
+            var _this = this;
+            var showResizable = this._selected.length == 1;
             if (this._fps.passed() || forceRender) {
-                var ctx = this._canvas.getContext('2d');
-                ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+                var ctx_1 = this._canvas.getContext('2d');
+                ctx_1.clearRect(0, 0, this._canvas.width, this._canvas.height);
                 for (var i = 0; i < this.items.length; i++) {
                     if (this.items[i].isVisible(this.virtualCanvas)) {
-                        ctx.save();
-                        this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
-                        ctx.restore();
+                        ctx_1.save();
+                        this.items[i].render(ctx_1, this.virtualCanvas.x, this.virtualCanvas.y);
+                        ctx_1.restore();
                     }
                 }
-                if (this._selected && this._selected.selectable) {
+                this.iterateSelected(function (selected) {
+                    if (!selected.selectable) {
+                        return;
+                    }
                     Loira.util.logger(Loira.LogLevel.INFO, 'Selected');
-                    ctx.save();
-                    this._selected.drawSelected(ctx);
-                    ctx.restore();
-                    this._selected.renderButtons(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
-                }
-                this._scrollBar.render(ctx);
+                    ctx_1.save();
+                    selected.drawSelected(ctx_1, showResizable);
+                    ctx_1.restore();
+                    selected.renderButtons(ctx_1, _this.virtualCanvas.x, _this.virtualCanvas.y);
+                });
+                this._scrollBar.render(ctx_1);
                 if (Loira.Config.showBanner) {
-                    Loira.Canvas.drawBanner(ctx);
+                    Loira.Canvas.drawBanner(ctx_1);
                 }
             }
         };
@@ -478,8 +538,8 @@ var Loira;
             else {
                 argument = args;
             }
-            for (var _i = 0, argument_1 = argument; _i < argument_1.length; _i++) {
-                var item = argument_1[_i];
+            for (var _i = 0, argument_2 = argument; _i < argument_2.length; _i++) {
+                var item = argument_2[_i];
                 item.attach(_this);
                 if (item.baseType === 'relation') {
                     relation = item;
@@ -545,9 +605,6 @@ var Loira;
             for (var _i = 0, args_1 = args; _i < args_1.length; _i++) {
                 var item = args_1[_i];
                 var toDelete = [];
-                if (item == this._selected) {
-                    this._selected = null;
-                }
                 toDelete.push(_items.indexOf(item));
                 for (var i = 0; i < _items.length; i++) {
                     if (_items[i].baseType === 'relation') {
@@ -575,8 +632,8 @@ var Loira;
                  */
                 _this.emit(Loira.event.OBJECT_REMOVED, new ObjectEvent(item), fireEvent);
             }
+            this.clearSelected();
             this.renderAll(true);
-            this._selected = null;
         };
         /**
          * Elimina todos los objetos del canvas
@@ -588,7 +645,7 @@ var Loira;
                 this.items[i].destroy();
             }
             this.items = [];
-            this._selected = null;
+            this.clearSelected();
         };
         /**
          * Destruye el componente
@@ -674,17 +731,17 @@ var Loira;
             this.textEditor.className = 'loira-text-editor';
             document.getElementsByTagName('body')[0].appendChild(this.textEditor);
             var onKeyDown = function (evt, isGlobal) {
-                if (evt.keyCode == 18) {
+                if (evt.keyCode == Key.ALT) {
                     return;
                 }
                 _this._tmp.lastKey = evt.keyCode;
                 if (!isGlobal) {
-                    if (_this._tmp.lastKey === 46) {
+                    if (_this._tmp.lastKey === Key.DELETE) {
                         if (_this.readOnly) {
                             return;
                         }
                         if (_this._selected) {
-                            _this.remove([_this._selected]);
+                            _this.remove(_this._selected);
                         }
                     }
                 }
@@ -705,11 +762,11 @@ var Loira;
                 _this._tmp.lastKey = null;
             });
             _this._canvas.onmousewheel = function (evt) {
-                if (_this._tmp.lastKey == 17) {
+                if (_this._tmp.lastKey == Key.CONTROL) {
                     _this._zoom.update(evt.deltaY);
                 }
                 else {
-                    _this._scrollBar.addMovementWheel(_this._tmp.lastKey === 16 ? 'H' : 'V', (evt.deltaY / Math.abs(evt.deltaY)));
+                    _this._scrollBar.addMovementWheel(_this._tmp.lastKey === Key.SHIFT ? 'H' : 'V', (evt.deltaY / Math.abs(evt.deltaY)));
                 }
                 _this.renderAll();
                 return false;
@@ -750,9 +807,10 @@ var Loira;
                     _this._isDragged = true;
                     return;
                 }
-                if (_this._selected && !_this.readOnly) {
-                    _this._tmp.transform = _this._selected.getSelectedCorner(real.x, real.y);
-                    if (_this._tmp.transform || _this._selected.callCustomButton(real.x, real.y)) {
+                if (_this._selected.length == 1 && !_this.readOnly) {
+                    var selected = _this._selected[0];
+                    _this._tmp.transform = selected.getSelectedCorner(real.x, real.y);
+                    if (_this._tmp.transform || selected.callCustomButton(real.x, real.y)) {
                         switch (_this._tmp.transform) {
                             case 'tc':
                             case 'bc':
@@ -766,15 +824,26 @@ var Loira;
                         return;
                     }
                     else {
-                        _this._selected = null;
-                        _this.emit('object:unselected', new MouseEvent(real.x, real.y));
+                        if (_this._tmp.lastKey !== Key.SHIFT) {
+                            _this.clearSelected();
+                            _this.emit('object:unselected', new MouseEvent(real.x, real.y));
+                        }
                     }
                 }
                 var item;
+                var atLeastOneSelected = false;
                 for (var i = _this.items.length - 1; i >= 0; i--) {
                     item = _this.items[i];
                     if (item.checkCollision(real.x, real.y)) {
-                        _this._selected = item;
+                        atLeastOneSelected = true;
+                        if (item.isSelected) {
+                            if (_this._tmp.lastKey === Key.SHIFT) {
+                                _this.clearSelected(item);
+                                _this.emit('object:unselected', new ObjectEvent(item));
+                            }
+                            break;
+                        }
+                        _this.appendSelected(item, _this._tmp.lastKey !== Key.SHIFT);
                         if (item.baseType !== 'relation') {
                             if (isDoubleClick) {
                                 /**
@@ -828,6 +897,10 @@ var Loira;
                         }
                     }
                 }
+                if (!atLeastOneSelected) {
+                    _this.clearSelected();
+                    _this.emit('object:unselected', new ObjectEvent(null));
+                }
                 _this.renderAll();
             };
             _this._canvas.onmousedown = function (evt) {
@@ -872,14 +945,14 @@ var Loira;
                 return false;
             };
             _this._canvas.onmousemove = function (evt) {
-                if (_this.readOnly && !_this._scrollBar.isSelected()) {
+                if (_this.readOnly && !_this._scrollBar.isSelectable()) {
                     return;
                 }
                 if (_this._isDragged) {
                     var real = _this._getMouse(evt);
-                    var x = real.x - _this._tmp.pointer.x;
-                    var y = real.y - _this._tmp.pointer.y;
-                    if (!_this._scrollBar.isSelected()) {
+                    var x_1 = real.x - _this._tmp.pointer.x;
+                    var y_1 = real.y - _this._tmp.pointer.y;
+                    if (!_this._scrollBar.isSelectable()) {
                         /**
                          * Evento que encapsula el movimiento del mouse sobre el canvas
                          *
@@ -892,45 +965,47 @@ var Loira;
                         _this.emit('mouse:move', new MouseEvent(real.x, real.y));
                         if (_this._selected) {
                             if (_this._tmp.transform) {
-                                if (_this._selected.baseType !== 'relation') {
-                                    x = Math.floor(x);
-                                    y = Math.floor(y);
+                                if (_this._selected[0].baseType !== 'relation') {
+                                    x_1 = Math.floor(x_1);
+                                    y_1 = Math.floor(y_1);
                                     switch (_this._tmp.transform) {
                                         case 'tc':
-                                            _this._selected.y += y;
-                                            _this._selected.height -= y;
+                                            _this._selected[0].y += y_1;
+                                            _this._selected[0].height -= y_1;
                                             break;
                                         case 'bc':
-                                            _this._selected.height += y;
+                                            _this._selected[0].height += y_1;
                                             break;
                                         case 'ml':
-                                            _this._selected.x += x;
-                                            _this._selected.width -= x;
+                                            _this._selected[0].x += x_1;
+                                            _this._selected[0].width -= x_1;
                                             break;
                                         case 'mr':
-                                            _this._selected.width += x;
+                                            _this._selected[0].width += x_1;
                                             break;
                                     }
                                 }
                                 else {
-                                    _this._selected.movePoint(parseInt(_this._tmp.transform), x, y);
+                                    _this._selected[0].movePoint(parseInt(_this._tmp.transform), x_1, y_1);
                                 }
                                 _this.renderAll();
                             }
                             else {
-                                if (_this._selected.draggable) {
-                                    _this._selected.move(x, y);
-                                    /**
-                                     * Evento que encapsula el arrastre de un objeto
-                                     *
-                                     * @event object:dragging
-                                     * @type { object }
-                                     * @property {object} selected - Objeto seleccionado
-                                     * @property {string} type - Tipo de evento
-                                     */
-                                    _this.emit('object:dragging', new ObjectEvent(_this._selected));
-                                    _this.renderAll();
-                                }
+                                _this.iterateSelected(function (selected) {
+                                    if (selected.draggable) {
+                                        selected.move(x_1, y_1);
+                                        /**
+                                         * Evento que encapsula el arrastre de un objeto
+                                         *
+                                         * @event object:dragging
+                                         * @type { object }
+                                         * @property {object} selected - Objeto seleccionado
+                                         * @property {string} type - Tipo de evento
+                                         */
+                                        _this.emit('object:dragging', new ObjectEvent(selected));
+                                        _this.renderAll();
+                                    }
+                                });
                             }
                         }
                         else {
@@ -966,7 +1041,7 @@ var Loira;
                  * @property {string} type - Tipo de evento
                  */
                 _this.emit('mouse:up', new MouseEvent(real.x, real.y));
-                if (_this._selected) {
+                _this.iterateSelected(function (selected) {
                     /**
                      * Evento que encapsula la liberacion de un objeto
                      *
@@ -975,11 +1050,11 @@ var Loira;
                      * @property {object} selected - Objeto seleccionado
                      * @property {string} type - Tipo de evento
                      */
-                    _this.emit('object:released', new ObjectEvent(_this._selected));
+                    _this.emit('object:released', new ObjectEvent(selected));
                     _this._tmp.transform = null;
-                    _this._selected.recalculateBorders();
+                    selected.recalculateBorders();
                     _this.save();
-                }
+                });
             };
             _this._canvas.onmouseenter = function () {
                 _this.renderAll();
@@ -995,7 +1070,7 @@ var Loira;
              * Capture the global mouse move event for
              */
             document.addEventListener('mousemove', function (evt) {
-                if (_this._scrollBar.isSelected()) {
+                if (_this._scrollBar.isSelectable()) {
                     _this._scrollBar.dragScroll(evt.pageX - _this._tmp.globalPointer.x, evt.pageY - _this._tmp.globalPointer.y);
                     _this.renderAll();
                     _this._tmp.globalPointer = { x: evt.pageX, y: evt.pageY };
@@ -1185,7 +1260,7 @@ var Loira;
             this.renderAll(true);
         };
         Canvas.prototype.setSelectedElement = function (element) {
-            this._selected = element;
+            this.appendSelected(element, true);
         };
         /**
          * Get context from the current canvas
@@ -1275,6 +1350,9 @@ var Loira;
         };
         Canvas.prototype.save = function (step) {
             if (step === void 0) { step = 1; }
+        };
+        Canvas.prototype.getSelected = function () {
+            return this._selected;
         };
         return Canvas;
     }());
@@ -1490,6 +1568,7 @@ var Loira;
             this._canvas = null;
             this.type = '';
             this.baseType = '';
+            this.isSelected = false;
             this.animation = new Animation(this);
         }
         /**
@@ -1583,9 +1662,11 @@ var Loira;
          *
          * @memberof Loira.Object#
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
+         * @param { Boolean } showResizable Determines if should draw resizable boxes
          * @private
          */
-        Element.prototype.drawSelected = function (ctx) {
+        Element.prototype.drawSelected = function (ctx, showResizable) {
+            if (showResizable === void 0) { showResizable = true; }
             var x = this.x - 2, y = this.y - 2, w = this.width, h = this.height;
             x -= this._canvas.virtualCanvas.x;
             y -= this._canvas.virtualCanvas.y;
@@ -1596,7 +1677,7 @@ var Loira;
             ctx.rect(x, y, w + 4, h + 4);
             ctx.stroke();
             ctx.setLineDash([]);
-            if (this.resizable) {
+            if (this.resizable && showResizable) {
                 ctx.fillStyle = Loira.Config.selected.color;
                 ctx.fillRect(x - 4, y - 4, 8, 8);
                 ctx.fillRect(x + w, y + h, 8, 8);
@@ -2252,7 +2333,7 @@ var Common;
                 background.style.marginLeft = '-' + virtual.x + 'px';
             }
         };
-        ScrollBar.prototype.isSelected = function () {
+        ScrollBar.prototype.isSelectable = function () {
             return !!this.selected;
         };
         ScrollBar.prototype.dragScroll = function (x, y) {

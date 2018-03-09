@@ -30,6 +30,7 @@ module Loira{
         public draggable: boolean;
         public menu: MenuItem[];
         protected selectedArea: any;
+        public isSelected: boolean;
 
         /**
          * Inicializa los valores de la clase
@@ -59,6 +60,7 @@ module Loira{
             this._canvas = null;
             this.type = '';
             this.baseType = '';
+            this.isSelected = false;
 
             this.animation = new Animation(this);
         }
@@ -157,9 +159,10 @@ module Loira{
          *
          * @memberof Loira.Object#
          * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
+         * @param { Boolean } showResizable Determines if should draw resizable boxes
          * @private
          */
-        drawSelected(ctx: CanvasRenderingContext2D) {
+        drawSelected(ctx: CanvasRenderingContext2D, showResizable: boolean = true) {
             let x: number = this.x - 2,
                 y: number = this.y - 2,
                 w: number = this.width,
@@ -176,7 +179,7 @@ module Loira{
             ctx.stroke();
             ctx.setLineDash([]);
 
-            if (this.resizable){
+            if (this.resizable && showResizable){
                 ctx.fillStyle = Loira.Config.selected.color;
                 ctx.fillRect(x - 4, y - 4, 8, 8);
                 ctx.fillRect(x + w, y + h, 8, 8);

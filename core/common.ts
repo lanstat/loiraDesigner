@@ -685,7 +685,7 @@ module Common{
             }
         }
 
-        isSelected(): boolean{
+        isSelectable(): boolean{
             return !!this.selected;
         }
 
