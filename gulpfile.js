@@ -9,6 +9,7 @@ var paths = {
         './core/drawable.js',
         './core/shape.js',
         './core/canvas.js',
+        './core/animation.js',
         './core/controller.js',
         './core/utils.js',
         './core/element.js',
@@ -18,7 +19,6 @@ var paths = {
         './plugins/xmiparser.js',
         './plugins/usecase.js',
         './plugins/box.js',
-        './core/animation.js',
         './plugins/workflow.js',
         './plugins/orgchart.js'
 
@@ -86,7 +86,7 @@ gulp.task('copyJs', function(){
         .pipe(gulp.dest(paths.build+'/js'));
 });
 
-gulp.task('build', ['jsmin', 'js', 'copyAssets', 'copyStyles']);
+gulp.task('buildAll', ['jsmin', 'js', 'copyAssets', 'copyStyles']);
 
 /**
  * Ejecuta las pruebas de la aplicacion

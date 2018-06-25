@@ -70,6 +70,14 @@ module Loira.util{
         }
     }
 
+    export enum Key {
+        ENTER = 13,
+        DELETE = 46,
+        CONTROL = 17,
+        ALT = 18,
+        SHIFT = 16
+    }
+
     /**
      * Crea una cadena con caracteres aleatorios
      *

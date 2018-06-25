@@ -58,3 +58,14 @@ typings/
 
 # dotenv environment variables file
 .env
+
+
+core/*.js
+core/*/*.js
+core/*/*.map
+core/*.map
+
+plugins/*.js
+plugins/*/*.js
+plugins/*/*.map
+plugins/*.map

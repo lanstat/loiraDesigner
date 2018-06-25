@@ -4,6 +4,7 @@ module OrgChart{
     import Point = Loira.util.Point;
     import fontSize = Loira.Config.fontSize;
     import Rect = Loira.util.Rect;
+    import Common = Loira.Common;
 
     let levelColor: string[] = ['#124FFD', '#FF4FFD', '#12003D'];
     let levelHeight: number[];
@@ -392,7 +393,6 @@ module OrgChart{
         public parent: OrgChart.Role;
         public title: string;
         public personName: string;
-        private isSelected: boolean;
         public level: number;
         public id: string;
         public isDuplicate: boolean;

@@ -9,6 +9,7 @@ module Loira{
     import MouseEvent = Loira.event.MouseEvent;
     import Point = Loira.util.Point;
     import Region = Loira.util.Region;
+    import Key = Loira.util.Key;
 
     export class VirtualCanvas {
         public x: number = 0;
@@ -38,14 +39,6 @@ module Loira{
         UNKNOWN = 4
     }
 
-    export enum Key {
-        ENTER = 13,
-        DELETE = 46,
-        CONTROL = 17,
-        ALT = 18,
-        SHIFT = 16
-    }
-
     class FpsCounter {
         private _fps: number;
         private _elapsed: number;
@@ -71,7 +64,6 @@ module Loira{
     class TmpData{
         public pointer:Point;
         public transform:string;
-        public lastKey:number;
         public globalPointer: Point;
     }
 
@@ -112,37 +104,40 @@ module Loira{
         /**
          * @property {Object}  _selected - Objeto que se encuentra seleccionado
          */
-        private _selected: Loira.Element[] = [];
-        /**
-         * @property {Boolean}  _isDragged - Determina si el usuario esta arrastrando un objeto
-         */
-        private _isDragged: boolean = false;
+        public _selected: Loira.Element[] = [];
+
         /**
          * @property {Object}  _tmp - Almacena datos temporales
          */
-        private _tmp: TmpData = new TmpData();
+        public _tmp: TmpData = new TmpData();
+        
         /**
          * @property { Loira.Element[] } items - Listado de objetos que posee el canvas
          */
         public items: Loira.Element[] = [];
+
         /**
          * @property {HTMLCanvasElement} _canvas - Puntero al objeto de renderizado de lienzo
          */
-        private _canvas: HTMLCanvasElement = null;
+        public _canvas: HTMLCanvasElement = null;
+
         /**
          * @property {HTMLCanvasElement} _background - Imagen de fondo
          */
         public _background: HTMLCanvasElement = null;
 
-        private _scrollBar: Common.ScrollBar;
+        public _scrollBar: Common.ScrollBar;
+
         /**
          * @property {VirtualCanvas} virtualCanvas - Virtual canvas that contains all information of the size
          */
         public virtualCanvas: VirtualCanvas = null;
+
         /**
          * @property {String}  defaultRelation - Relacion que se usara por defecto cuando se agregue una nueva union
          */
         public defaultRelation: string = null;
+
         /**
          * @property {HTMLDivElement}  container - Canvas container
          */
@@ -156,7 +151,7 @@ module Loira{
 
         private _fps: FpsCounter;
 
-        private _zoom: ZoomData;
+        public _zoom: ZoomData;
 
         public controller: BaseController;
 
@@ -174,9 +169,13 @@ module Loira{
 
         public dragCanvas: boolean;
 
-        private contextMenu: HTMLUListElement;
+        public contextMenu: HTMLUListElement;
 
         private textEditor: HTMLTextAreaElement;
+
+        public keyboard: Keyboard;
+
+        public mouse: Mouse;
 
         /**
          * Create a new instance of canvas
@@ -217,6 +216,9 @@ module Loira{
 
             this.defaultRelation = 'Relation.Association';
 
+            this.keyboard = new Keyboard(this);
+            this.mouse = new Mouse(this);
+
             this.refreshScreen();
 
             let _this = this;
@@ -236,7 +238,7 @@ module Loira{
             this.bindResizeWindow();
         }
 
-        private iterateSelected(callback: (selected: Loira.Element) => void ): void {
+        public iterateSelected(callback: (selected: Loira.Element) => void ): void {
             if (this._selected.length > 0) {
                 for (let selected of this._selected){
                     callback(selected);
@@ -244,7 +246,7 @@ module Loira{
             }
         }
 
-        private clearSelected(element: Loira.Element = null): void {
+        public clearSelected(element: Loira.Element = null): void {
             if (element){
                 for (let iter: number = 0; iter < this._selected.length; iter++){
                     if (this._selected[iter]._uid === element._uid){
@@ -263,7 +265,7 @@ module Loira{
             }
         }
 
-        private appendSelected(args: Loira.Element|Loira.Element[], replace: boolean = false): void {
+        public appendSelected(args: Loira.Element|Loira.Element[], replace: boolean = false): void {
             let argument: Loira.Element[] = null;
             if (Object.prototype.toString.call(args) !== '[object Array]'){
                 argument = <Loira.Element[]>[args];
@@ -534,6 +536,10 @@ module Loira{
             this.renderAll(true);
         }
 
+        removeSelected(fireEvent: boolean = true){
+            this.remove(this._selected, fireEvent);
+        }
+
         /**
          * Elimina todos los objetos del canvas
          *
@@ -640,190 +646,11 @@ module Loira{
             this.textEditor.className = 'loira-text-editor';
             document.getElementsByTagName('body')[0].appendChild(this.textEditor);
 
-            let onKeyDown = function(evt, isGlobal){
-                if (evt.keyCode == Key.ALT){return;}
-                _this._tmp.lastKey = evt.keyCode;
+            this.keyboard.bind();
+            this.mouse.bind();
 
-                if (!isGlobal){
-                    if (_this._tmp.lastKey === Key.DELETE) {
-                        if (_this.readOnly){return;}
-                        if (_this._selected) {
-                            _this.remove(_this._selected);
-                        }
-                    }
-                }
-            };
-
-            _this._canvas.onkeydown = function (evt) {
-                onKeyDown(evt, false);
-            };
-
-            document.addEventListener('keydown', function(evt){
-                onKeyDown(evt, true);
-            });
-
-            _this._canvas.onkeyup = function(){
-                _this._tmp.lastKey = null;
-            };
-
-            document.addEventListener('keyup', function(){
-                if (_this.readOnly){return;}
-                _this._tmp.lastKey = null;
-            });
-
-            _this._canvas.onmousewheel = function(evt){
-                if (_this._tmp.lastKey == Key.CONTROL){
-                    _this._zoom.update(evt.deltaY);
-                }else {
-                    _this._scrollBar.addMovementWheel(_this._tmp.lastKey === Key.SHIFT? 'H': 'V', (evt.deltaY/Math.abs(evt.deltaY)));
-                }
-
-                _this.renderAll();
-
+            _this._canvas.onselectstart = function () {
                 return false;
-            };
-
-            let onDown = function (evt, isDoubleClick) {
-                let real:Point = _this._getMouse(evt);
-                _this._tmp.pointer = real;
-
-                if (isDoubleClick) {
-                    /**
-                     * Evento que encapsula doble click sobre el canvas
-                     *
-                     * @event mouse:dblclick
-                     * @type { object }
-                     * @property {int} x - Posicion x del puntero
-                     * @property {int} y - Posicion y del puntero
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('mouse:dblclick', new MouseEvent(real.x, real.y));
-                } else {
-                    /**
-                     * Evento que encapsula un click sobre el canvas
-                     *
-                     * @event mouse:down
-                     * @type { object }
-                     * @property {int} x - Posicion x del puntero
-                     * @property {int} y - Posicion y del puntero
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('mouse:down', new MouseEvent(real.x, real.y));
-                }
-
-                if (!isDoubleClick && !_this.readOnly) {
-                    _this._isDragged = true;
-                    _this._canvas.style.cursor = 'move';
-                }
-
-                if (_this._scrollBar.checkCollision(real.x, real.y)){
-                    _this._tmp.globalPointer = {x: evt.pageX, y: evt.pageY};
-                    _this._isDragged = true;
-                    return;
-                }
-
-                if (_this._selected.length == 1 && !_this.readOnly) {
-                    let selected = _this._selected[0];
-                    _this._tmp.transform = selected.getSelectedCorner(real.x, real.y);
-                    if (_this._tmp.transform || selected.callCustomButton(real.x, real.y)) {
-                        switch (_this._tmp.transform) {
-                            case 'tc':
-                            case 'bc':
-                                _this._canvas.style.cursor = 'ns-resize';
-                                break;
-                            case 'ml':
-                            case 'mr':
-                                _this._canvas.style.cursor = 'ew-resize';
-                                break;
-                        }
-                        return;
-                    } else {
-                        if (_this._tmp.lastKey !== Key.SHIFT){
-                            _this.clearSelected();
-                            _this.emit('object:unselected', new MouseEvent(real.x, real.y));
-                        }
-                    }
-                }
-
-                let item:Loira.Element;
-                let atLeastOneSelected = false;
-                for (let i:number = _this.items.length - 1; i >= 0; i--) {
-                    item = _this.items[i];
-                    if (item.checkCollision(real.x, real.y)) {
-                        atLeastOneSelected = true;
-                        if (item.isSelected){
-                            if (_this._tmp.lastKey === Key.SHIFT){
-                                _this.clearSelected(item);
-                                _this.emit('object:unselected', new ObjectEvent(item));
-                            }
-                            break;
-                        }
-
-                        _this.appendSelected(item, _this._tmp.lastKey !== Key.SHIFT);
-
-                        if (item.baseType !== 'relation') {
-                            if (isDoubleClick) {
-                                /**
-                                 * Evento que encapsula doble click sobre un objeto
-                                 *
-                                 * @event object:dblclick
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('object:dblclick', new ObjectEvent(item));
-                            } else {
-                                util.logger(LogLevel.INFO, 'down');
-                                /**
-                                 * Evento que encapsula un click sobre un objeto
-                                 *
-                                 * @event object:select
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('object:selected', new ObjectEvent(item));
-                            }
-                            break;
-                        } else {
-                            if (isDoubleClick) {
-                                /**
-                                 * Evento que encapsula doble click sobre una relacion
-                                 *
-                                 * @event relation:dblclick
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionadonpm
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('relation:dblclick', new ObjectEvent(item));
-                            } else {
-                                /**
-                                 * Evento que encapsula un click sobre una relacion
-                                 *
-                                 * @event relation:select
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('relation:selected', new ObjectEvent(item));
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                if (!atLeastOneSelected){
-                    _this.clearSelected();
-                    _this.emit('object:unselected', new ObjectEvent(null));
-                }
-
-                _this.renderAll();
-            };
-
-            _this._canvas.onmousedown = function (evt) {
-                util.logger(LogLevel.INFO,'Mouse');
-                _this.contextMenu.style.display = 'none';
-                onDown(evt, false);
             };
 
             _this._canvas.oncontextmenu = function(evt){
@@ -863,148 +690,6 @@ module Loira{
 
                 return false;
             };
-
-            _this._canvas.onmousemove = function (evt) {
-                if (_this.readOnly && !_this._scrollBar.isSelectable()){return;}
-                if (_this._isDragged) {
-                    let real:Point = _this._getMouse(evt);
-                    let x:number = real.x - _this._tmp.pointer.x;
-                    let y:number = real.y - _this._tmp.pointer.y;
-
-                    if (!_this._scrollBar.isSelectable()){
-                        /**
-                         * Evento que encapsula el movimiento del mouse sobre el canvas
-                         *
-                         * @event mouse:move
-                         * @type { object }
-                         * @property {int} x - Posicion x del puntero
-                         * @property {int} y - Posicion y del puntero
-                         * @property {string} type - Tipo de evento
-                         */
-                        _this.emit('mouse:move', new MouseEvent(real.x, real.y));
-                        if (_this._selected) {
-                            if (_this._tmp.transform) {
-                                if (_this._selected[0].baseType !== 'relation') {
-                                    x = Math.floor(x);
-                                    y = Math.floor(y);
-                                    switch (_this._tmp.transform) {
-                                        case 'tc':
-                                            _this._selected[0].y += y;
-                                            _this._selected[0].height -= y;
-                                            break;
-                                        case 'bc':
-                                            _this._selected[0].height += y;
-                                            break;
-                                        case 'ml':
-                                            _this._selected[0].x += x;
-                                            _this._selected[0].width -= x;
-                                            break;
-                                        case 'mr':
-                                            _this._selected[0].width += x;
-                                            break;
-                                    }
-                                } else {
-                                    (<Common.Relation>_this._selected[0]).movePoint(parseInt(_this._tmp.transform), x, y);
-                                }
-
-                                _this.renderAll();
-                            } else {
-                                _this.iterateSelected(function(selected: Loira.Element){
-                                    if (selected.draggable){
-                                        selected.move(x, y);
-                                        /**
-                                         * Evento que encapsula el arrastre de un objeto
-                                         *
-                                         * @event object:dragging
-                                         * @type { object }
-                                         * @property {object} selected - Objeto seleccionado
-                                         * @property {string} type - Tipo de evento
-                                         */
-                                        _this.emit('object:dragging', new ObjectEvent(selected));
-                                        _this.renderAll();
-                                    }
-                                })
-                            }
-                        } else {
-                            // TODO Verificar cuando se complete el canvas
-                            /*if (_this._config.dragCanvas){
-                             if (_this._canvas && _this._canvasContainer) {
-                             x = x === 0? x : x/Math.abs(x);
-                             y =  y === 0? y : y/Math.abs(y);
-
-                             _this.container.scrollLeft -= _this._zoom.scrollX*x;
-                             _this.container.scrollTop -= _this._zoom.scrollY*y;
-
-                             _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
-                             _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
-                             }
-                             }*/
-                        }
-                        _this._tmp.pointer = real;
-                    }
-                }
-            };
-
-            _this._canvas.onmouseup = function (evt) {
-                let real = _this._getMouse(evt);
-                _this._canvas.style.cursor = 'default';
-                _this._isDragged = false;
-
-                /**
-                 * Evento que encapsula la liberacion del mouse sobre el canvas
-                 *
-                 * @event mouse:up
-                 * @type { object }
-                 * @property {int} x - Posicion x del puntero
-                 * @property {int} y - Posicion y del puntero
-                 * @property {string} type - Tipo de evento
-                 */
-                _this.emit('mouse:up', new MouseEvent(real.x, real.y));
-                _this.iterateSelected(function(selected: Loira.Element){
-                    /**
-                     * Evento que encapsula la liberacion de un objeto
-                     *
-                     * @event object:released
-                     * @type { object }
-                     * @property {object} selected - Objeto seleccionado
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('object:released', new ObjectEvent(selected));
-                    _this._tmp.transform = null;
-                    selected.recalculateBorders();
-
-                    _this.save();
-                });
-            };
-
-            _this._canvas.onmouseenter = function(){
-                _this.renderAll();
-            };
-
-            _this._canvas.onmouseleave =function(){
-                _this._isDragged = false;
-                _this._canvas.style.cursor = 'default';
-            };
-
-            _this._canvas.onselectstart = function () {
-                return false;
-            };
-
-            /**
-             * Capture the global mouse move event for
-             */
-            document.addEventListener('mousemove', function(evt){
-                if (_this._scrollBar.isSelectable()){
-                    _this._scrollBar.dragScroll(evt.pageX - _this._tmp.globalPointer.x, evt.pageY - _this._tmp.globalPointer.y);
-                    _this.renderAll();
-
-                    _this._tmp.globalPointer = {x: evt.pageX, y: evt.pageY};
-                }
-            });
-
-            document.addEventListener('mouseup', function(){
-                _this._scrollBar.selected = null;
-            });
         }
 
         private bindResizeWindow(){
@@ -1049,7 +734,7 @@ module Loira{
          * @param evt Evento de mouse
          * @returns {{x: number, y: number}} Posicion del mouse relativa
          */
-        private _getMouse(evt: any): Point {
+        public _getMouse(evt: any): Point {
             let element: HTMLElement = <HTMLElement> this._canvas,
                 offsetX: number = 0,
                 offsetY: number = 0;

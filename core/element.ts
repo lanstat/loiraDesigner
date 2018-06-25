@@ -2,6 +2,7 @@ module Loira{
     import BaseOption = Loira.util.BaseOption;
     import Region = Loira.util.Region;
     import Point = Loira.util.Point;
+    import Animation = Loira.Animation;
 
     /**
      * Clase base para la creacion de nuevos objetos dibujables

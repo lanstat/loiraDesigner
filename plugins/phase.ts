@@ -5,6 +5,8 @@
  */
 module Phase{
     import BaseOption = Loira.util.BaseOption;
+    import Common = Loira.Common;
+
     /**
      * Crea un nuevo Objeto de Estado
      *

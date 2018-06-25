@@ -5,6 +5,8 @@
  * @license Apache-2.0
  */
 module Relation{
+    import Common = Loira.Common;
+
     /**
      * Contiene las funciones para relacion de asociacion
      *

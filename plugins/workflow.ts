@@ -11,6 +11,7 @@ module Workflow{
     import BaseController = Loira.BaseController;
     import ObjectEvent = Loira.event.ObjectEvent;
     import RelationEvent = Loira.event.RelationEvent;
+    import Common = Loira.Common;
 
     const EVT_OPEN_PROPERTY = 'workflow:open-property';
 

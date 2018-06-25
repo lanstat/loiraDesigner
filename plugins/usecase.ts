@@ -6,6 +6,8 @@
 module UseCase{
     import BaseOption = Loira.util.BaseOption;
     import RelOption = Loira.util.RelOption;
+    import Common = Loira.Common;
+
     /**
      * Simbolo de Caso de uso
      *

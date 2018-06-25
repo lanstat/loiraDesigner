@@ -1,4 +1,4 @@
-module Common{
+module Loira.Common{
     import RelOption = Loira.util.RelOption;
     import Point = Loira.util.Point;
     import Line = Loira.util.Line;
@@ -34,7 +34,8 @@ module Common{
 
             this.baseType = 'relation';
 
-            if (this.start._uid === this.end._uid){
+
+            if (this.start && this.end && this.start._uid === this.end._uid){
                 this.selfRelated();
             }
         }
@@ -194,6 +195,11 @@ module Common{
         update(start, end):Common.Relation{
             this.start = start;
             this.end = end;
+
+            if (this.start && this.end && this.start._uid === this.end._uid){
+                this.selfRelated();
+            }
+
             return this;
         }
 

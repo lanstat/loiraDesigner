@@ -25,7 +25,7 @@ var Loira;
          * @property {object} selected - Objeto seleccionado
          * @property {string} type - Tipo de evento
          */
-        var Event = (function () {
+        var Event = /** @class */ (function () {
             function Event() {
             }
             return Event;
@@ -39,7 +39,7 @@ var Loira;
          * @property {int} y - Posicion y del puntero
          * @property {string} type - Tipo de evento
          */
-        var MouseEvent = (function (_super) {
+        var MouseEvent = /** @class */ (function (_super) {
             __extends(MouseEvent, _super);
             function MouseEvent(x, y) {
                 var _this = _super.call(this) || this;
@@ -57,7 +57,7 @@ var Loira;
          * @property {object} selected - Objeto seleccionado
          * @property {string} type - Tipo de evento
          */
-        var ObjectEvent = (function (_super) {
+        var ObjectEvent = /** @class */ (function (_super) {
             __extends(ObjectEvent, _super);
             function ObjectEvent(selected) {
                 var _this = _super.call(this) || this;
@@ -74,7 +74,7 @@ var Loira;
          * @property {object} selected - Relacion seleccionada
          * @property {string} type - Tipo de evento
          */
-        var RelationEvent = (function (_super) {
+        var RelationEvent = /** @class */ (function (_super) {
             __extends(RelationEvent, _super);
             function RelationEvent(selectedRel) {
                 var _this = _super.call(this) || this;
@@ -84,7 +84,7 @@ var Loira;
             return RelationEvent;
         }(Event));
         event.RelationEvent = RelationEvent;
-        var MessageEvent = (function (_super) {
+        var MessageEvent = /** @class */ (function (_super) {
             __extends(MessageEvent, _super);
             function MessageEvent(message) {
                 var _this = _super.call(this) || this;
@@ -192,7 +192,7 @@ var Loira;
     var RelationEvent = Loira.event.RelationEvent;
     var ObjectEvent = Loira.event.ObjectEvent;
     var MouseEvent = Loira.event.MouseEvent;
-    var VirtualCanvas = (function () {
+    var VirtualCanvas = /** @class */ (function () {
         function VirtualCanvas() {
             this.x = 0;
             this.y = 0;
@@ -205,7 +205,7 @@ var Loira;
         return VirtualCanvas;
     }());
     Loira.VirtualCanvas = VirtualCanvas;
-    var CanvasConfig = (function () {
+    var CanvasConfig = /** @class */ (function () {
         function CanvasConfig() {
             this.width = 0;
             this.height = 0;
@@ -233,7 +233,7 @@ var Loira;
         Key[Key["ALT"] = 18] = "ALT";
         Key[Key["SHIFT"] = 16] = "SHIFT";
     })(Key = Loira.Key || (Loira.Key = {}));
-    var FpsCounter = (function () {
+    var FpsCounter = /** @class */ (function () {
         function FpsCounter(fps) {
             if (fps === void 0) { fps = 32; }
             this._fps = 1000 / fps;
@@ -250,12 +250,12 @@ var Loira;
         };
         return FpsCounter;
     }());
-    var TmpData = (function () {
+    var TmpData = /** @class */ (function () {
         function TmpData() {
         }
         return TmpData;
     }());
-    var ZoomData = (function () {
+    var ZoomData = /** @class */ (function () {
         function ZoomData(canvas) {
             this._canvas = canvas;
             this._scale = 1;
@@ -281,7 +281,7 @@ var Loira;
         Loira.util.logger(Loira.LogLevel.SYSTEM, navigator.userAgent);
         return agent;
     }
-    var Canvas = (function () {
+    var Canvas = /** @class */ (function () {
         /**
          * Create a new instance of canvas
          *
@@ -446,7 +446,7 @@ var Loira;
             }
             this._bind();
             var _this = this;
-            this._scrollBar = new Common.ScrollBar(this);
+            this._scrollBar = new Loira.Common.ScrollBar(this);
             setTimeout(function () {
                 _this.renderAll(true);
             }, 200);
@@ -1200,7 +1200,7 @@ var Loira;
             if (resizeToImage) {
                 this.virtualCanvas.width = image.width;
                 this.virtualCanvas.height = image.height;
-                this._scrollBar = new Common.ScrollBar(this);
+                this._scrollBar = new Loira.Common.ScrollBar(this);
             }
             this.container.insertBefore(this._background, this._canvas);
         };
@@ -1361,7 +1361,7 @@ var Loira;
 //# sourceMappingURL=canvas.js.map
 var Loira;
 (function (Loira) {
-    var BaseController = (function () {
+    var BaseController = /** @class */ (function () {
         function BaseController() {
         }
         return BaseController;
@@ -1389,7 +1389,7 @@ var Loira;
 (function (Loira) {
     var util;
     (function (util) {
-        var BaseOption = (function () {
+        var BaseOption = /** @class */ (function () {
             function BaseOption() {
                 this.x = 0;
                 this.y = 0;
@@ -1406,7 +1406,7 @@ var Loira;
             return BaseOption;
         }());
         util.BaseOption = BaseOption;
-        var RelOption = (function (_super) {
+        var RelOption = /** @class */ (function (_super) {
             __extends(RelOption, _super);
             function RelOption() {
                 return _super !== null && _super.apply(this, arguments) || this;
@@ -1414,7 +1414,7 @@ var Loira;
             return RelOption;
         }(BaseOption));
         util.RelOption = RelOption;
-        var Line = (function () {
+        var Line = /** @class */ (function () {
             function Line(x1, y1, x2, y2) {
                 this.x1 = x1;
                 this.y1 = y1;
@@ -1430,13 +1430,13 @@ var Loira;
             return Line;
         }());
         util.Line = Line;
-        var Region = (function () {
+        var Region = /** @class */ (function () {
             function Region() {
             }
             return Region;
         }());
         util.Region = Region;
-        var Point = (function () {
+        var Point = /** @class */ (function () {
             function Point(x, y) {
                 this.x = x;
                 this.y = y;
@@ -1444,7 +1444,7 @@ var Loira;
             return Point;
         }());
         util.Point = Point;
-        var Rect = (function () {
+        var Rect = /** @class */ (function () {
             function Rect(x, y, width, height) {
                 this.x = x;
                 this.y = y;
@@ -1534,13 +1534,14 @@ var Loira;
 var Loira;
 (function (Loira) {
     var BaseOption = Loira.util.BaseOption;
+    var Animation = Loira.Animation;
     /**
      * Clase base para la creacion de nuevos objetos dibujables
      *
      * @memberof Loira
      * @class Element
      */
-    var Element = (function () {
+    var Element = /** @class */ (function () {
         /**
          * Inicializa los valores de la clase
          *
@@ -1787,562 +1788,565 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var Common;
-(function (Common) {
-    var Point = Loira.util.Point;
-    var Line = Loira.util.Line;
-    var BaseOption = Loira.util.BaseOption;
-    var Rect = Loira.util.Rect;
-    var TypeLine;
-    (function (TypeLine) {
-        TypeLine[TypeLine["STRAIGHT"] = 1] = "STRAIGHT";
-        TypeLine[TypeLine["CURVE"] = 2] = "CURVE";
-        TypeLine[TypeLine["CARTESIAN"] = 3] = "CARTESIAN";
-    })(TypeLine = Common.TypeLine || (Common.TypeLine = {}));
-    var Relation = (function (_super) {
-        __extends(Relation, _super);
-        function Relation(options) {
-            var _this = _super.call(this, options) || this;
-            _this.start = options.start ? options.start : null;
-            _this.end = options.end ? options.end : null;
-            _this.isDashed = options.isDashed ? options.isDashed : false;
-            _this.points = options.points ? options.points : [new Point(), new Point()];
-            _this.icon = options.icon ? options.icon : '';
-            _this.typeLine = options.typeLine ? options.typeLine : TypeLine.STRAIGHT;
-            _this.baseType = 'relation';
-            if (_this.start._uid === _this.end._uid) {
-                _this.selfRelated();
-            }
-            return _this;
-        }
-        /**
-         * Renderiza el objeto
-         *
-         * @memberof Common.Relation#
-         * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
-         * @param { number } vX Virtual x pointer
-         * @param { number } vY Virtual y pointer
-         * @protected
-         */
-        Relation.prototype.render = function (ctx, vX, vY) {
-            var start, end, tmp, init, last, xm, ym, line, delta = [], distance = 0;
-            start = new Rect(this.start.x, this.start.y, this.start.width, this.start.height);
-            end = new Rect(this.end.x, this.end.y, this.end.width, this.end.height);
-            this.points[0] = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
-            this.points[this.points.length - 1] = { x: end.x + end.width / 2, y: end.y + end.height / 2 };
-            init = this.points[0];
-            last = this.points[1];
-            ctx.beginPath();
-            ctx.lineWidth = 1;
-            ctx.moveTo(init.x - vX, init.y - vY);
-            if (this.isDashed) {
-                ctx.setLineDash([5, 5]);
-            }
-            for (var i = 0; i < this.points.length; i++) {
-                ctx.lineTo(this.points[i].x - vX, this.points[i].y - vY);
-                if (i > 0) {
-                    delta[i - 1] = Math.sqrt(Math.pow((this.points[i].x - this.points[i - 1].x), 2) + Math.pow((this.points[i].y - this.points[i - 1].y), 2));
-                    distance += delta[i - 1];
+var Loira;
+(function (Loira) {
+    var Common;
+    (function (Common) {
+        var Point = Loira.util.Point;
+        var Line = Loira.util.Line;
+        var BaseOption = Loira.util.BaseOption;
+        var Rect = Loira.util.Rect;
+        var TypeLine;
+        (function (TypeLine) {
+            TypeLine[TypeLine["STRAIGHT"] = 1] = "STRAIGHT";
+            TypeLine[TypeLine["CURVE"] = 2] = "CURVE";
+            TypeLine[TypeLine["CARTESIAN"] = 3] = "CARTESIAN";
+        })(TypeLine = Common.TypeLine || (Common.TypeLine = {}));
+        var Relation = /** @class */ (function (_super) {
+            __extends(Relation, _super);
+            function Relation(options) {
+                var _this = _super.call(this, options) || this;
+                _this.start = options.start ? options.start : null;
+                _this.end = options.end ? options.end : null;
+                _this.isDashed = options.isDashed ? options.isDashed : false;
+                _this.points = options.points ? options.points : [new Point(), new Point()];
+                _this.icon = options.icon ? options.icon : '';
+                _this.typeLine = options.typeLine ? options.typeLine : TypeLine.STRAIGHT;
+                _this.baseType = 'relation';
+                if (_this.start._uid === _this.end._uid) {
+                    _this.selfRelated();
                 }
+                return _this;
             }
-            ctx.stroke();
-            ctx.setLineDash([]);
-            if (this.icon) {
-                init = this.points[this.points.length - 2];
-                last = this.points[this.points.length - 1];
-                xm = (last.x - init.x);
-                ym = (last.y - init.y);
-                tmp = Math.atan(ym / xm);
-                if (xm < 0) {
-                    tmp += Math.PI;
+            /**
+             * Renderiza el objeto
+             *
+             * @memberof Common.Relation#
+             * @param { CanvasRenderingContext2D } ctx Context 2d de canvas
+             * @param { number } vX Virtual x pointer
+             * @param { number } vY Virtual y pointer
+             * @protected
+             */
+            Relation.prototype.render = function (ctx, vX, vY) {
+                var start, end, tmp, init, last, xm, ym, line, delta = [], distance = 0;
+                start = new Rect(this.start.x, this.start.y, this.start.width, this.start.height);
+                end = new Rect(this.end.x, this.end.y, this.end.width, this.end.height);
+                this.points[0] = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
+                this.points[this.points.length - 1] = { x: end.x + end.width / 2, y: end.y + end.height / 2 };
+                init = this.points[0];
+                last = this.points[1];
+                ctx.beginPath();
+                ctx.lineWidth = 1;
+                ctx.moveTo(init.x - vX, init.y - vY);
+                if (this.isDashed) {
+                    ctx.setLineDash([5, 5]);
                 }
-                ctx.translate(last.x - vX, last.y - vY);
-                ctx.rotate(tmp);
-                line = new Line(init.x, init.y, last.x, last.y);
-                var region = Loira.drawable.get(this.icon);
-                var border = this.end.obtainBorderPos(line, ctx);
-                Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height / 2));
-                ctx.rotate(-tmp);
-                ctx.translate(-last.x - vX, -last.y - vY);
-            }
-            if (this.text || this.text.length > 0) {
-                ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-                var buffE = 0;
-                var buffS = 0;
-                var d = 0;
-                /*
-                 * Primero se obtiene el tamanho de la recta visible y se la divide a la mitad(c1), despues se usa como pivot
-                 * el punto inicial y se usa la distancia cubierta por el elemento y se le suma la distancia visible(c1)
-                 * Luego los puntos inicial y final se los trata como un triangulo rectangulo de catetos (a,b,c) y mediante
-                 * interpolacion se obtiene el punto medio.
-                 */
-                if (this.points.length == 2) {
-                    init = this.points[0];
-                    last = this.points[1];
+                for (var i = 0; i < this.points.length; i++) {
+                    ctx.lineTo(this.points[i].x - vX, this.points[i].y - vY);
+                    if (i > 0) {
+                        delta[i - 1] = Math.sqrt(Math.pow((this.points[i].x - this.points[i - 1].x), 2) + Math.pow((this.points[i].y - this.points[i - 1].y), 2));
+                        distance += delta[i - 1];
+                    }
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+                if (this.icon) {
+                    init = this.points[this.points.length - 2];
+                    last = this.points[this.points.length - 1];
+                    xm = (last.x - init.x);
+                    ym = (last.y - init.y);
+                    tmp = Math.atan(ym / xm);
+                    if (xm < 0) {
+                        tmp += Math.PI;
+                    }
+                    ctx.translate(last.x - vX, last.y - vY);
+                    ctx.rotate(tmp);
                     line = new Line(init.x, init.y, last.x, last.y);
-                    buffE = this.end.obtainBorderPos(line, ctx);
-                    buffS = this.start.obtainBorderPos(line, ctx);
+                    var region = Loira.drawable.get(this.icon);
+                    var border = this.end.obtainBorderPos(line, ctx);
+                    Loira.drawable.render(this.icon, ctx, -(region.width + border), -Math.ceil(region.height / 2));
+                    ctx.rotate(-tmp);
+                    ctx.translate(-last.x - vX, -last.y - vY);
                 }
-                else {
-                    buffS = this.start.obtainBorderPos(new Line(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y), ctx);
-                    buffE = this.end.obtainBorderPos(new Line(this.points[this.points.length - 2].x, this.points[this.points.length - 2].y, this.points[this.points.length - 1].x, this.points[this.points.length - 1].y), ctx);
-                    d = ((distance - buffS - buffE) / 2) + buffS;
-                    var i = 0;
-                    while (d - delta[i] > 0) {
-                        d -= delta[i];
-                        i++;
-                    }
-                    init = this.points[i];
-                    last = this.points[i + 1];
-                    if (i !== 0) {
-                        buffS = 0;
-                    }
-                    if (i !== this.points.length - 2) {
-                        buffE = 0;
-                    }
-                }
-                var a = last.x - init.x;
-                var b = last.y - init.y;
-                var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-                var c1 = ((this.points.length == 2) ? ((c - buffE - buffS) / 2) + buffS : d);
-                var b1 = Math.floor(b / c * c1);
-                var a1 = Math.floor(a / c * c1);
-                tmp = ctx.measureText(this.text).width;
-                ctx.fillStyle = Loira.Config.background;
-                ctx.fillRect(init.x + vX + a1 - tmp / 2, init.y + vY + b1 - 13, tmp, 12);
-                ctx.fillStyle = "#000000";
-                ctx.fillText(this.text, init.x + vX + a1 - tmp / 2, init.y + vY + b1 - 3);
-                ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            }
-        };
-        Relation.prototype.recalculateBorders = function () {
-        };
-        /**
-         * Actualiza los objeto de origen y objetivo de la relacion
-         *
-         * @memberof Common.Relation#
-         * @param { Object } start Objeto origen
-         * @param { Object } end Objeto objetivo
-         * @chainable
-         * @returns {Common.Relation}
-         */
-        Relation.prototype.update = function (start, end) {
-            this.start = start;
-            this.end = end;
-            return this;
-        };
-        /**
-         * Verifica si el punto dado se encuentra dentro de los limites del objeto
-         *
-         * @memberof Common.Relation#
-         * @param x Posicion x del punto
-         * @param y Posicion y del punto
-         * @returns {boolean}
-         */
-        Relation.prototype.checkCollision = function (x, y) {
-            var init = null, last = null;
-            var xd = 0, yd = 0;
-            var point1 = { x: 0, y: 0 };
-            var point2 = { x: 0, y: 0 };
-            var m;
-            var px = 0, py = 0;
-            for (var i = 1; i < this.points.length; i++) {
-                init = this.points[i - 1];
-                last = this.points[i];
-                point1.x = init.x;
-                point1.y = init.y;
-                point2.y = last.y;
-                point2.x = last.x;
-                if (init.x > last.x) {
-                    point1.x = last.x;
-                    point2.x = init.x;
-                }
-                if (init.y > last.y) {
-                    point1.y = last.y;
-                    point2.y = init.y;
-                }
-                if (x > point1.x - 5 && x < point2.x + 5 && y > point1.y - 5 && y < point2.y + 5) {
-                    yd = Math.abs(last.y - init.y);
-                    xd = Math.abs(last.x - init.x);
-                    px = Math.abs(x - init.x);
-                    py = Math.abs(y - init.y);
-                    if (xd > yd) {
-                        m = Math.abs((yd / xd) * px);
-                        if ((m === 0 && (py > point1.y && py < point2.y)) || (m > py - 8 && m < py + 8)) {
-                            return true;
-                        }
+                if (this.text || this.text.length > 0) {
+                    ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+                    var buffE = 0;
+                    var buffS = 0;
+                    var d = 0;
+                    /*
+                     * Primero se obtiene el tamanho de la recta visible y se la divide a la mitad(c1), despues se usa como pivot
+                     * el punto inicial y se usa la distancia cubierta por el elemento y se le suma la distancia visible(c1)
+                     * Luego los puntos inicial y final se los trata como un triangulo rectangulo de catetos (a,b,c) y mediante
+                     * interpolacion se obtiene el punto medio.
+                     */
+                    if (this.points.length == 2) {
+                        init = this.points[0];
+                        last = this.points[1];
+                        line = new Line(init.x, init.y, last.x, last.y);
+                        buffE = this.end.obtainBorderPos(line, ctx);
+                        buffS = this.start.obtainBorderPos(line, ctx);
                     }
                     else {
-                        m = Math.abs((xd / yd) * py);
-                        if ((m === 0 && (px > point1.x && px < point2.x)) || (m > px - 8 && m < px + 8)) {
-                            return true;
+                        buffS = this.start.obtainBorderPos(new Line(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y), ctx);
+                        buffE = this.end.obtainBorderPos(new Line(this.points[this.points.length - 2].x, this.points[this.points.length - 2].y, this.points[this.points.length - 1].x, this.points[this.points.length - 1].y), ctx);
+                        d = ((distance - buffS - buffE) / 2) + buffS;
+                        var i = 0;
+                        while (d - delta[i] > 0) {
+                            d -= delta[i];
+                            i++;
+                        }
+                        init = this.points[i];
+                        last = this.points[i + 1];
+                        if (i !== 0) {
+                            buffS = 0;
+                        }
+                        if (i !== this.points.length - 2) {
+                            buffE = 0;
                         }
                     }
+                    var a = last.x - init.x;
+                    var b = last.y - init.y;
+                    var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+                    var c1 = ((this.points.length == 2) ? ((c - buffE - buffS) / 2) + buffS : d);
+                    var b1 = Math.floor(b / c * c1);
+                    var a1 = Math.floor(a / c * c1);
+                    tmp = ctx.measureText(this.text).width;
+                    ctx.fillStyle = Loira.Config.background;
+                    ctx.fillRect(init.x + vX + a1 - tmp / 2, init.y + vY + b1 - 13, tmp, 12);
+                    ctx.fillStyle = "#000000";
+                    ctx.fillText(this.text, init.x + vX + a1 - tmp / 2, init.y + vY + b1 - 3);
+                    ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
                 }
-            }
-            return false;
-        };
-        /**
-         * Dibuja el cuadro punteado que contornea al objeto
-         *
-         * @memberof Common.Relation#
-         * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
-         * @private
-         */
-        Relation.prototype.drawSelected = function (ctx) {
-            ctx.beginPath();
-            ctx.fillStyle = Loira.Config.selected.color;
-            var x = this._canvas.virtualCanvas.x;
-            var y = this._canvas.virtualCanvas.y;
-            for (var i = 0; i < this.points.length; i++) {
-                ctx.fillRect(this.points[i].x - 4 - x, this.points[i].y - 4 - y, 8, 8);
-            }
-            ctx.strokeStyle = '#000000';
-        };
-        Relation.prototype.addPoint = function () {
-            var last = this.points[1], init = this.points[0];
-            var x = Math.round((last.x - init.x) / 2) + init.x;
-            var y = Math.round((last.y - init.y) / 2) + init.y;
-            this.points.splice(1, 0, { x: x, y: y });
-        };
-        Relation.prototype.removePoint = function (index) {
-            this.points.splice(index, 1);
-        };
-        /**
-         * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
-         *
-         * @memberof Common.Relation#
-         * @param pX Posicion x del punto
-         * @param pY Posicion y del punto
-         * @returns {string}
-         */
-        Relation.prototype.getSelectedCorner = function (pX, pY) {
-            for (var i = 1; i < this.points.length - 1; i++) {
-                var x = this.points[i].x - 4, y = this.points[i].y - 4, w = x + 8, h = y + 8;
-                if (pX > x && pX < w && pY > y && pY < h) {
-                    return i;
-                }
-            }
-            return false;
-        };
-        /**
-         * Mueve un punto de la relacion
-         *
-         * @memberof Common.Relation#
-         * @param point Indice del punto a mover
-         * @param x Delta de x
-         * @param y Delta de y
-         */
-        Relation.prototype.movePoint = function (point, x, y) {
-            this.points[point].x += x;
-            this.points[point].y += y;
-        };
-        Relation.prototype.isVisible = function (virtual) {
-            return true;
-        };
-        Relation.prototype.getMenu = function (x, y) {
-            this.selectedArea = this.getSelectedCorner(x, y);
-            return this.selectedArea ? this.pointMenu || this.menu : this.menu;
-        };
-        Relation.prototype.move = function (x, y) {
-            if (this.points.length > 2) {
-                for (var i = 1; i < this.points.length - 1; i++) {
-                    this.points[i].x += x;
-                    this.points[i].y += y;
-                }
-            }
-        };
-        Relation.prototype.selfRelated = function () {
-            var widthLeft = this.start.x + this.start.width + 30;
-            var heightHalf = this.start.y + this.start.height / 2;
-            this.points = [];
-            this.points.push(new Point());
-            this.points.push(new Point(widthLeft, heightHalf));
-            this.points.push(new Point(widthLeft, this.start.y - 30));
-            this.points.push(new Point(this.start.x + this.start.width / 2, this.start.y - 30));
-            this.points.push(new Point());
-        };
-        return Relation;
-    }(Loira.Element));
-    Common.Relation = Relation;
-    var Symbol = (function (_super) {
-        __extends(Symbol, _super);
-        function Symbol(options) {
-            var _this = _super.call(this, options) || this;
-            var link = _this._linkSymbol;
-            _this.on({
-                icon: 'arrow',
-                click: link
-            });
-            _this.baseType = 'symbol';
-            return _this;
-        }
-        /**
-         * Evento que se ejecuta cuando se realiza una relacion entre simbolos
-         *
-         * @memberof Common.Symbol#
-         * @protected
-         */
-        Symbol.prototype._linkSymbol = function () {
-            var $this = this;
-            var listener = this._canvas.on('mouse:down', function (evt) {
-                var canvas = $this._canvas;
-                var countRel = canvas.getRelationsFromObject($this, false, true).length;
-                if (!$this.maxOutGoingRelation || (countRel < $this.maxOutGoingRelation)) {
-                    for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
-                        var item = _a[_i];
-                        if (item.baseType !== 'relation') {
-                            if (item.checkCollision(evt.x, evt.y)) {
-                                var instance = Loira.util.stringToFunction(canvas.defaultRelation);
-                                canvas.add(new instance({}).update($this, item));
-                                break;
+            };
+            Relation.prototype.recalculateBorders = function () {
+            };
+            /**
+             * Actualiza los objeto de origen y objetivo de la relacion
+             *
+             * @memberof Common.Relation#
+             * @param { Object } start Objeto origen
+             * @param { Object } end Objeto objetivo
+             * @chainable
+             * @returns {Common.Relation}
+             */
+            Relation.prototype.update = function (start, end) {
+                this.start = start;
+                this.end = end;
+                return this;
+            };
+            /**
+             * Verifica si el punto dado se encuentra dentro de los limites del objeto
+             *
+             * @memberof Common.Relation#
+             * @param x Posicion x del punto
+             * @param y Posicion y del punto
+             * @returns {boolean}
+             */
+            Relation.prototype.checkCollision = function (x, y) {
+                var init = null, last = null;
+                var xd = 0, yd = 0;
+                var point1 = { x: 0, y: 0 };
+                var point2 = { x: 0, y: 0 };
+                var m;
+                var px = 0, py = 0;
+                for (var i = 1; i < this.points.length; i++) {
+                    init = this.points[i - 1];
+                    last = this.points[i];
+                    point1.x = init.x;
+                    point1.y = init.y;
+                    point2.y = last.y;
+                    point2.x = last.x;
+                    if (init.x > last.x) {
+                        point1.x = last.x;
+                        point2.x = init.x;
+                    }
+                    if (init.y > last.y) {
+                        point1.y = last.y;
+                        point2.y = init.y;
+                    }
+                    if (x > point1.x - 5 && x < point2.x + 5 && y > point1.y - 5 && y < point2.y + 5) {
+                        yd = Math.abs(last.y - init.y);
+                        xd = Math.abs(last.x - init.x);
+                        px = Math.abs(x - init.x);
+                        py = Math.abs(y - init.y);
+                        if (xd > yd) {
+                            m = Math.abs((yd / xd) * px);
+                            if ((m === 0 && (py > point1.y && py < point2.y)) || (m > py - 8 && m < py + 8)) {
+                                return true;
+                            }
+                        }
+                        else {
+                            m = Math.abs((xd / yd) * py);
+                            if ((m === 0 && (px > point1.x && px < point2.x)) || (m > px - 8 && m < px + 8)) {
+                                return true;
                             }
                         }
                     }
                 }
-                canvas.fall('mouse:down', listener);
-            });
-        };
-        Symbol.prototype.splitText = function (ctx, text, padding) {
-            if (padding === void 0) { padding = 10; }
-            var words = text.split(' ');
-            var buff = '';
-            var lines = [];
-            for (var i = 0; i < words.length; i++) {
-                if (ctx.measureText(buff + words[i]).width > this.width - padding) {
-                    lines.push(buff);
-                    buff = words[i] + ' ';
+                return false;
+            };
+            /**
+             * Dibuja el cuadro punteado que contornea al objeto
+             *
+             * @memberof Common.Relation#
+             * @param { CanvasRenderingContext2D } ctx Contexto 2d del canvas
+             * @private
+             */
+            Relation.prototype.drawSelected = function (ctx) {
+                ctx.beginPath();
+                ctx.fillStyle = Loira.Config.selected.color;
+                var x = this._canvas.virtualCanvas.x;
+                var y = this._canvas.virtualCanvas.y;
+                for (var i = 0; i < this.points.length; i++) {
+                    ctx.fillRect(this.points[i].x - 4 - x, this.points[i].y - 4 - y, 8, 8);
                 }
-                else {
-                    buff = buff + ' ' + words[i];
+                ctx.strokeStyle = '#000000';
+            };
+            Relation.prototype.addPoint = function () {
+                var last = this.points[1], init = this.points[0];
+                var x = Math.round((last.x - init.x) / 2) + init.x;
+                var y = Math.round((last.y - init.y) / 2) + init.y;
+                this.points.splice(1, 0, { x: x, y: y });
+            };
+            Relation.prototype.removePoint = function (index) {
+                this.points.splice(index, 1);
+            };
+            /**
+             * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
+             *
+             * @memberof Common.Relation#
+             * @param pX Posicion x del punto
+             * @param pY Posicion y del punto
+             * @returns {string}
+             */
+            Relation.prototype.getSelectedCorner = function (pX, pY) {
+                for (var i = 1; i < this.points.length - 1; i++) {
+                    var x = this.points[i].x - 4, y = this.points[i].y - 4, w = x + 8, h = y + 8;
+                    if (pX > x && pX < w && pY > y && pY < h) {
+                        return i;
+                    }
                 }
-            }
-            lines.push(buff);
-            return lines;
-        };
-        Symbol.prototype.drawText = function (ctx, line, vX, vY) {
-            var y, xm = (this.x - vX) + this.width / 2, ym = (this.y - vY) + this.height / 2, lines;
-            lines = this.splitText(ctx, line);
-            y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
-            for (var i = 0; i < lines.length; i++) {
-                var textW = ctx.measureText(lines[i]).width;
-                ctx.fillText(lines[i], xm - textW / 2, y + 3);
-                y = y + Loira.Config.fontSize + 3;
-            }
-        };
-        return Symbol;
-    }(Loira.Element));
-    Common.Symbol = Symbol;
-    var Actor = (function (_super) {
-        __extends(Actor, _super);
-        function Actor(options) {
-            var _this = _super.call(this, options) || this;
-            _this.text = options.text ? options.text : 'Actor1';
-            _this.width = 30;
-            _this.height = 85;
-            _this.type = 'actor';
-            return _this;
-        }
-        Actor.prototype.obtainBorderPos = function (points, ctx) {
-            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            var textW = ctx.measureText(this.text).width, xm = points.x2 - points.x1, ym = points.y2 - points.y1;
-            if (textW > this.width) {
-                this.x = this.x + this.width / 2 - textW / 2;
-                this.width = textW;
-            }
-            var angle = Math.atan(ym / xm);
-            if (xm < 0) {
-                angle += Math.PI;
-            }
-            var result = null;
-            if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)) {
-                result = Loira.util.intersectPointLine(points, new Line(this.x, -100, this.x, 100));
-            }
-            else {
-                result = Loira.util.intersectPointLine(points, new Line(-100, this.y, 100, this.y));
-            }
-            return Math.sqrt(Math.pow((result.x - (this.x + this.width / 2)), 2) + Math.pow((result.y - (this.y + this.height / 2)), 2));
-        };
-        Actor.prototype.render = function (ctx, vX, vY) {
-            var textW = ctx.measureText(this.text).width;
-            if (textW > this.width) {
-                this.x = this.x + this.width / 2 - textW / 2;
-                this.width = textW;
-            }
-            var x = this.x - vX;
-            var y = this.y - vY;
-            ctx.fillStyle = Loira.Config.background;
-            ctx.fillRect(x, y, this.width, this.height);
-            ctx.fillStyle = "#000000";
-            Loira.drawable.render('actor', ctx, x + this.width / 2 - 15, y);
-            ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
-            ctx.fillStyle = "#000000";
-            ctx.fillText(this.text, x, y + 80);
-        };
-        Actor.prototype.recalculateBorders = function () {
-        };
-        return Actor;
-    }(Common.Symbol));
-    Common.Actor = Actor;
-    var ScrollBar = (function (_super) {
-        __extends(ScrollBar, _super);
-        function ScrollBar(canvas) {
-            var _this = _super.call(this, new BaseOption()) || this;
-            _this.type = 'scrollBar';
-            _this.width = canvas.virtualCanvas.viewportWidth;
-            _this.height = canvas.virtualCanvas.viewportHeight;
-            _this._horPos = canvas.virtualCanvas.x;
-            _this._verPos = canvas.virtualCanvas.y;
-            _this._horSize = Math.floor(_this.width * (_this.width / canvas.virtualCanvas.width));
-            _this._verSize = Math.floor(_this.height * (_this.height / canvas.virtualCanvas.height));
-            _this._virtual = canvas.virtualCanvas;
-            _this._canvas = canvas;
-            return _this;
-        }
-        ScrollBar.prototype.render = function (ctx) {
-            var config = Loira.Config.scrollBar;
-            if (this._virtual.width > this._virtual.viewportWidth) {
-                ctx.fillStyle = config.background;
-                ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
-                ctx.fillStyle = config.color;
-                ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
-            }
-            if (this._virtual.height > this._virtual.viewportHeight) {
-                ctx.fillStyle = config.background;
-                ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
-                ctx.fillStyle = config.color;
-                ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
-            }
-            ctx.fillStyle = "#000000";
-        };
-        ScrollBar.prototype.recalculateBorders = function () {
-        };
-        /**
-         * Verifica si el punto dado se encuentra dentro de los limites del objeto
-         *
-         * @memberof Loira.Object#
-         * @param x Posicion x del punto
-         * @param y Posicion y del punto
-         * @returns {boolean}
-         */
-        ScrollBar.prototype.checkCollision = function (x, y) {
-            var virtual = this._virtual;
-            var _x = x - virtual.x, _y = y - virtual.y;
-            if (_x > this._horPos && _x < (this._horPos + this._horSize)
-                && _y > (virtual.viewportHeight - Loira.Config.scrollBar.size) && _y < virtual.viewportHeight) {
-                this.selected = 'H';
+                return false;
+            };
+            /**
+             * Mueve un punto de la relacion
+             *
+             * @memberof Common.Relation#
+             * @param point Indice del punto a mover
+             * @param x Delta de x
+             * @param y Delta de y
+             */
+            Relation.prototype.movePoint = function (point, x, y) {
+                this.points[point].x += x;
+                this.points[point].y += y;
+            };
+            Relation.prototype.isVisible = function (virtual) {
                 return true;
-            }
-            if (_x > (virtual.viewportWidth - Loira.Config.scrollBar.size) && _x < virtual.viewportWidth
-                && _y > this._verPos && _y < (this._verPos + this._verSize)) {
-                this.selected = 'V';
-                return true;
-            }
-            this.selected = null;
-            return false;
-        };
-        ScrollBar.prototype.addMovement = function (dir, delta, inc) {
-            if (inc === void 0) { inc = 30; }
-            var tmp;
-            var virtual = this._virtual;
-            var background = this._canvas._background;
-            if (dir === 'H') {
-                tmp = this._horPos + delta * inc;
-                if (tmp < 0) {
-                    this._horPos = 0;
+            };
+            Relation.prototype.getMenu = function (x, y) {
+                this.selectedArea = this.getSelectedCorner(x, y);
+                return this.selectedArea ? this.pointMenu || this.menu : this.menu;
+            };
+            Relation.prototype.move = function (x, y) {
+                if (this.points.length > 2) {
+                    for (var i = 1; i < this.points.length - 1; i++) {
+                        this.points[i].x += x;
+                        this.points[i].y += y;
+                    }
                 }
-                else if (tmp + this._horSize > virtual.viewportWidth) {
-                    this._horPos = virtual.viewportWidth - this._horSize;
+            };
+            Relation.prototype.selfRelated = function () {
+                var widthLeft = this.start.x + this.start.width + 30;
+                var heightHalf = this.start.y + this.start.height / 2;
+                this.points = [];
+                this.points.push(new Point());
+                this.points.push(new Point(widthLeft, heightHalf));
+                this.points.push(new Point(widthLeft, this.start.y - 30));
+                this.points.push(new Point(this.start.x + this.start.width / 2, this.start.y - 30));
+                this.points.push(new Point());
+            };
+            return Relation;
+        }(Loira.Element));
+        Common.Relation = Relation;
+        var Symbol = /** @class */ (function (_super) {
+            __extends(Symbol, _super);
+            function Symbol(options) {
+                var _this = _super.call(this, options) || this;
+                var link = _this._linkSymbol;
+                _this.on({
+                    icon: 'arrow',
+                    click: link
+                });
+                _this.baseType = 'symbol';
+                return _this;
+            }
+            /**
+             * Evento que se ejecuta cuando se realiza una relacion entre simbolos
+             *
+             * @memberof Common.Symbol#
+             * @protected
+             */
+            Symbol.prototype._linkSymbol = function () {
+                var $this = this;
+                var listener = this._canvas.on('mouse:down', function (evt) {
+                    var canvas = $this._canvas;
+                    var countRel = canvas.getRelationsFromObject($this, false, true).length;
+                    if (!$this.maxOutGoingRelation || (countRel < $this.maxOutGoingRelation)) {
+                        for (var _i = 0, _a = canvas.items; _i < _a.length; _i++) {
+                            var item = _a[_i];
+                            if (item.baseType !== 'relation') {
+                                if (item.checkCollision(evt.x, evt.y)) {
+                                    var instance = Loira.util.stringToFunction(canvas.defaultRelation);
+                                    canvas.add(new instance({}).update($this, item));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    canvas.fall('mouse:down', listener);
+                });
+            };
+            Symbol.prototype.splitText = function (ctx, text, padding) {
+                if (padding === void 0) { padding = 10; }
+                var words = text.split(' ');
+                var buff = '';
+                var lines = [];
+                for (var i = 0; i < words.length; i++) {
+                    if (ctx.measureText(buff + words[i]).width > this.width - padding) {
+                        lines.push(buff);
+                        buff = words[i] + ' ';
+                    }
+                    else {
+                        buff = buff + ' ' + words[i];
+                    }
+                }
+                lines.push(buff);
+                return lines;
+            };
+            Symbol.prototype.drawText = function (ctx, line, vX, vY) {
+                var y, xm = (this.x - vX) + this.width / 2, ym = (this.y - vY) + this.height / 2, lines;
+                lines = this.splitText(ctx, line);
+                y = ym + 3 - ((6 * lines.length + 3 * lines.length) / 2);
+                for (var i = 0; i < lines.length; i++) {
+                    var textW = ctx.measureText(lines[i]).width;
+                    ctx.fillText(lines[i], xm - textW / 2, y + 3);
+                    y = y + Loira.Config.fontSize + 3;
+                }
+            };
+            return Symbol;
+        }(Loira.Element));
+        Common.Symbol = Symbol;
+        var Actor = /** @class */ (function (_super) {
+            __extends(Actor, _super);
+            function Actor(options) {
+                var _this = _super.call(this, options) || this;
+                _this.text = options.text ? options.text : 'Actor1';
+                _this.width = 30;
+                _this.height = 85;
+                _this.type = 'actor';
+                return _this;
+            }
+            Actor.prototype.obtainBorderPos = function (points, ctx) {
+                ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+                var textW = ctx.measureText(this.text).width, xm = points.x2 - points.x1, ym = points.y2 - points.y1;
+                if (textW > this.width) {
+                    this.x = this.x + this.width / 2 - textW / 2;
+                    this.width = textW;
+                }
+                var angle = Math.atan(ym / xm);
+                if (xm < 0) {
+                    angle += Math.PI;
+                }
+                var result = null;
+                if ((angle > -0.80 && angle < 0.68) || (angle > 2.46 && angle < 4)) {
+                    result = Loira.util.intersectPointLine(points, new Line(this.x, -100, this.x, 100));
                 }
                 else {
-                    this._horPos = tmp;
+                    result = Loira.util.intersectPointLine(points, new Line(-100, this.y, 100, this.y));
                 }
-                virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
-                if (background) {
-                    background.style.marginLeft = '-' + virtual.x + 'px';
+                return Math.sqrt(Math.pow((result.x - (this.x + this.width / 2)), 2) + Math.pow((result.y - (this.y + this.height / 2)), 2));
+            };
+            Actor.prototype.render = function (ctx, vX, vY) {
+                var textW = ctx.measureText(this.text).width;
+                if (textW > this.width) {
+                    this.x = this.x + this.width / 2 - textW / 2;
+                    this.width = textW;
                 }
+                var x = this.x - vX;
+                var y = this.y - vY;
+                ctx.fillStyle = Loira.Config.background;
+                ctx.fillRect(x, y, this.width, this.height);
+                ctx.fillStyle = "#000000";
+                Loira.drawable.render('actor', ctx, x + this.width / 2 - 15, y);
+                ctx.font = Loira.Config.fontSize + "px " + Loira.Config.fontType;
+                ctx.fillStyle = "#000000";
+                ctx.fillText(this.text, x, y + 80);
+            };
+            Actor.prototype.recalculateBorders = function () {
+            };
+            return Actor;
+        }(Common.Symbol));
+        Common.Actor = Actor;
+        var ScrollBar = /** @class */ (function (_super) {
+            __extends(ScrollBar, _super);
+            function ScrollBar(canvas) {
+                var _this = _super.call(this, new BaseOption()) || this;
+                _this.type = 'scrollBar';
+                _this.width = canvas.virtualCanvas.viewportWidth;
+                _this.height = canvas.virtualCanvas.viewportHeight;
+                _this._horPos = canvas.virtualCanvas.x;
+                _this._verPos = canvas.virtualCanvas.y;
+                _this._horSize = Math.floor(_this.width * (_this.width / canvas.virtualCanvas.width));
+                _this._verSize = Math.floor(_this.height * (_this.height / canvas.virtualCanvas.height));
+                _this._virtual = canvas.virtualCanvas;
+                _this._canvas = canvas;
+                return _this;
             }
-            else if (dir === 'V') {
-                tmp = this._verPos + delta * inc;
-                if (tmp < 0) {
-                    this._verPos = 0;
+            ScrollBar.prototype.render = function (ctx) {
+                var config = Loira.Config.scrollBar;
+                if (this._virtual.width > this._virtual.viewportWidth) {
+                    ctx.fillStyle = config.background;
+                    ctx.fillRect(0, this.height - config.size, this._virtual.viewportWidth, config.size);
+                    ctx.fillStyle = config.color;
+                    ctx.fillRect(this._horPos, this.height - config.size, this._horSize, config.size);
                 }
-                else if (tmp + this._verSize > virtual.viewportHeight) {
-                    this._verPos = virtual.viewportHeight - this._verSize;
+                if (this._virtual.height > this._virtual.viewportHeight) {
+                    ctx.fillStyle = config.background;
+                    ctx.fillRect(this.width - config.size, 0, config.size, this._virtual.viewportHeight);
+                    ctx.fillStyle = config.color;
+                    ctx.fillRect(this.width - config.size, this._verPos, config.size, this._verSize);
                 }
-                else {
-                    this._verPos = tmp;
+                ctx.fillStyle = "#000000";
+            };
+            ScrollBar.prototype.recalculateBorders = function () {
+            };
+            /**
+             * Verifica si el punto dado se encuentra dentro de los limites del objeto
+             *
+             * @memberof Loira.Object#
+             * @param x Posicion x del punto
+             * @param y Posicion y del punto
+             * @returns {boolean}
+             */
+            ScrollBar.prototype.checkCollision = function (x, y) {
+                var virtual = this._virtual;
+                var _x = x - virtual.x, _y = y - virtual.y;
+                if (_x > this._horPos && _x < (this._horPos + this._horSize)
+                    && _y > (virtual.viewportHeight - Loira.Config.scrollBar.size) && _y < virtual.viewportHeight) {
+                    this.selected = 'H';
+                    return true;
                 }
-                virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
+                if (_x > (virtual.viewportWidth - Loira.Config.scrollBar.size) && _x < virtual.viewportWidth
+                    && _y > this._verPos && _y < (this._verPos + this._verSize)) {
+                    this.selected = 'V';
+                    return true;
+                }
+                this.selected = null;
+                return false;
+            };
+            ScrollBar.prototype.addMovement = function (dir, delta, inc) {
+                if (inc === void 0) { inc = 30; }
+                var tmp;
+                var virtual = this._virtual;
+                var background = this._canvas._background;
+                if (dir === 'H') {
+                    tmp = this._horPos + delta * inc;
+                    if (tmp < 0) {
+                        this._horPos = 0;
+                    }
+                    else if (tmp + this._horSize > virtual.viewportWidth) {
+                        this._horPos = virtual.viewportWidth - this._horSize;
+                    }
+                    else {
+                        this._horPos = tmp;
+                    }
+                    virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
+                    if (background) {
+                        background.style.marginLeft = '-' + virtual.x + 'px';
+                    }
+                }
+                else if (dir === 'V') {
+                    tmp = this._verPos + delta * inc;
+                    if (tmp < 0) {
+                        this._verPos = 0;
+                    }
+                    else if (tmp + this._verSize > virtual.viewportHeight) {
+                        this._verPos = virtual.viewportHeight - this._verSize;
+                    }
+                    else {
+                        this._verPos = tmp;
+                    }
+                    virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
+                    if (background) {
+                        background.style.marginTop = '-' + virtual.y + 'px';
+                    }
+                }
+            };
+            ScrollBar.prototype.addMovementWheel = function (dir, delta, inc) {
+                if (inc === void 0) { inc = 30; }
+                var tmp;
+                var virtual = this._virtual;
+                var background = this._canvas._background;
+                var realTmp = 1;
+                if (dir === 'H') {
+                    //realTmp =
+                    tmp = this._horPos + Math.round(delta * virtual.viewportWidth * (inc / virtual.width));
+                    if (tmp < 0) {
+                        this._horPos = 0;
+                    }
+                    else if (tmp + this._horSize > virtual.viewportWidth) {
+                        this._horPos = virtual.viewportWidth - this._horSize;
+                    }
+                    else {
+                        this._horPos = tmp;
+                    }
+                    virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
+                    if (background) {
+                        background.style.marginLeft = '-' + virtual.x + 'px';
+                    }
+                }
+                else if (dir === 'V') {
+                    tmp = this._verPos + Math.round(delta * virtual.viewportHeight * (inc / virtual.height));
+                    if (tmp < 0) {
+                        this._verPos = 0;
+                    }
+                    else if (tmp + this._verSize > virtual.viewportHeight) {
+                        this._verPos = virtual.viewportHeight - this._verSize;
+                    }
+                    else {
+                        this._verPos = tmp;
+                    }
+                    virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
+                    if (background) {
+                        background.style.marginTop = '-' + virtual.y + 'px';
+                    }
+                }
+            };
+            ScrollBar.prototype.setPosition = function (x, y) {
+                var virtual = this._virtual;
+                var background = this._canvas._background;
+                x = x < 0 ? 0 : x;
+                y = y < 0 ? 0 : y;
+                virtual.x = x;
+                virtual.y = y;
+                this._horPos = Math.floor((virtual.x * virtual.viewportWidth) / virtual.width);
+                this._verPos = Math.floor((virtual.y * virtual.viewportHeight) / virtual.height);
                 if (background) {
                     background.style.marginTop = '-' + virtual.y + 'px';
-                }
-            }
-        };
-        ScrollBar.prototype.addMovementWheel = function (dir, delta, inc) {
-            if (inc === void 0) { inc = 30; }
-            var tmp;
-            var virtual = this._virtual;
-            var background = this._canvas._background;
-            var realTmp = 1;
-            if (dir === 'H') {
-                //realTmp =
-                tmp = this._horPos + Math.round(delta * virtual.viewportWidth * (inc / virtual.width));
-                if (tmp < 0) {
-                    this._horPos = 0;
-                }
-                else if (tmp + this._horSize > virtual.viewportWidth) {
-                    this._horPos = virtual.viewportWidth - this._horSize;
-                }
-                else {
-                    this._horPos = tmp;
-                }
-                virtual.x = Math.floor(virtual.width * (this._horPos / virtual.viewportWidth));
-                if (background) {
                     background.style.marginLeft = '-' + virtual.x + 'px';
                 }
-            }
-            else if (dir === 'V') {
-                tmp = this._verPos + Math.round(delta * virtual.viewportHeight * (inc / virtual.height));
-                if (tmp < 0) {
-                    this._verPos = 0;
-                }
-                else if (tmp + this._verSize > virtual.viewportHeight) {
-                    this._verPos = virtual.viewportHeight - this._verSize;
-                }
-                else {
-                    this._verPos = tmp;
-                }
-                virtual.y = Math.floor(virtual.height * (this._verPos / virtual.viewportHeight));
-                if (background) {
-                    background.style.marginTop = '-' + virtual.y + 'px';
-                }
-            }
-        };
-        ScrollBar.prototype.setPosition = function (x, y) {
-            var virtual = this._virtual;
-            var background = this._canvas._background;
-            x = x < 0 ? 0 : x;
-            y = y < 0 ? 0 : y;
-            virtual.x = x;
-            virtual.y = y;
-            this._horPos = Math.floor((virtual.x * virtual.viewportWidth) / virtual.width);
-            this._verPos = Math.floor((virtual.y * virtual.viewportHeight) / virtual.height);
-            if (background) {
-                background.style.marginTop = '-' + virtual.y + 'px';
-                background.style.marginLeft = '-' + virtual.x + 'px';
-            }
-        };
-        ScrollBar.prototype.isSelectable = function () {
-            return !!this.selected;
-        };
-        ScrollBar.prototype.dragScroll = function (x, y) {
-            this.addMovement(this.selected, this.selected === 'H' ? x : y, 1);
-        };
-        return ScrollBar;
-    }(Loira.Element));
-    Common.ScrollBar = ScrollBar;
-})(Common || (Common = {}));
+            };
+            ScrollBar.prototype.isSelectable = function () {
+                return !!this.selected;
+            };
+            ScrollBar.prototype.dragScroll = function (x, y) {
+                this.addMovement(this.selected, this.selected === 'H' ? x : y, 1);
+            };
+            return ScrollBar;
+        }(Loira.Element));
+        Common.ScrollBar = ScrollBar;
+    })(Common = Loira.Common || (Loira.Common = {}));
+})(Loira || (Loira = {}));
 //# sourceMappingURL=common.js.map
 var Loira;
 (function (Loira) {
@@ -2423,6 +2427,7 @@ var __extends = (this && this.__extends) || (function () {
  */
 var Relation;
 (function (Relation) {
+    var Common = Loira.Common;
     /**
      * Contiene las funciones para relacion de asociacion
      *
@@ -2430,7 +2435,7 @@ var Relation;
      * @memberof Relation
      * @augments Common.Relation
      */
-    var Association = (function (_super) {
+    var Association = /** @class */ (function (_super) {
         __extends(Association, _super);
         function Association(options) {
             var _this = _super.call(this, options) || this;
@@ -2447,7 +2452,7 @@ var Relation;
      * @memberof Relation
      * @augments Common.Relation
      */
-    var DirectAssociation = (function (_super) {
+    var DirectAssociation = /** @class */ (function (_super) {
         __extends(DirectAssociation, _super);
         function DirectAssociation(options) {
             var _this = this;
@@ -2466,7 +2471,7 @@ var Relation;
      * @memberof Relation
      * @augments Common.Relation
      */
-    var Generalization = (function (_super) {
+    var Generalization = /** @class */ (function (_super) {
         __extends(Generalization, _super);
         function Generalization(options) {
             var _this = this;
@@ -2485,7 +2490,7 @@ var Relation;
      * @memberof Relation
      * @augments Common.Relation
      */
-    var Realization = (function (_super) {
+    var Realization = /** @class */ (function (_super) {
         __extends(Realization, _super);
         function Realization(options) {
             var _this = this;
@@ -2505,7 +2510,7 @@ var Relation;
      * @memberof Relation
      * @augments Common.Relation
      */
-    var Dependency = (function (_super) {
+    var Dependency = /** @class */ (function (_super) {
         __extends(Dependency, _super);
         function Dependency(options) {
             var _this = this;
@@ -2683,6 +2688,7 @@ var __extends = (this && this.__extends) || (function () {
  */
 var UseCase;
 (function (UseCase_1) {
+    var Common = Loira.Common;
     /**
      * Simbolo de Caso de uso
      *
@@ -2690,7 +2696,7 @@ var UseCase;
      * @memberof UseCase
      * @augments Common.Symbol
      */
-    var UseCase = (function (_super) {
+    var UseCase = /** @class */ (function (_super) {
         __extends(UseCase, _super);
         function UseCase(options) {
             var _this = _super.call(this, options) || this;
@@ -2736,7 +2742,7 @@ var UseCase;
      * @memberof UseCase
      * @augments Common.Relation
      */
-    var Extends = (function (_super) {
+    var Extends = /** @class */ (function (_super) {
         __extends(Extends, _super);
         function Extends(options) {
             var _this = this;
@@ -2757,7 +2763,7 @@ var UseCase;
      * @memberof UseCase
      * @augments Common.Relation
      */
-    var Include = (function (_super) {
+    var Include = /** @class */ (function (_super) {
         __extends(Include, _super);
         function Include(options) {
             var _this = this;
@@ -2785,7 +2791,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 var Box;
 (function (Box_1) {
-    var ColorOption = (function (_super) {
+    var ColorOption = /** @class */ (function (_super) {
         __extends(ColorOption, _super);
         function ColorOption() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -2800,7 +2806,7 @@ var Box;
      * @class Box
      * @augments Loira.Element
      */
-    var Box = (function (_super) {
+    var Box = /** @class */ (function (_super) {
         __extends(Box, _super);
         function Box(options) {
             var _this = _super.call(this, options) || this;
@@ -2823,28 +2829,32 @@ var Box;
     Box_1.Box = Box;
 })(Box || (Box = {}));
 //# sourceMappingURL=box.js.map
-var Animation = (function () {
-    function Animation(element) {
-        this._registers = [];
-        this._element = element;
-    }
-    Animation.prototype.moveTo = function (x, y, seconds) {
-        if (seconds === void 0) { seconds = 1; }
-        var times = this._fps * seconds;
-        this._isRunning = true;
-    };
-    Animation.prototype.setFps = function (fps) {
-        this._fps = fps;
-    };
-    Animation.prototype.proccess = function () {
-        if (this._isRunning) {
-            if (this._registers.length == 0) {
-                this._isRunning = false;
-            }
+var Loira;
+(function (Loira) {
+    var Animation = /** @class */ (function () {
+        function Animation(element) {
+            this._registers = [];
+            this._element = element;
         }
-    };
-    return Animation;
-}());
+        Animation.prototype.moveTo = function (x, y, seconds) {
+            if (seconds === void 0) { seconds = 1; }
+            var times = this._fps * seconds;
+            this._isRunning = true;
+        };
+        Animation.prototype.setFps = function (fps) {
+            this._fps = fps;
+        };
+        Animation.prototype.proccess = function () {
+            if (this._isRunning) {
+                if (this._registers.length == 0) {
+                    this._isRunning = false;
+                }
+            }
+        };
+        return Animation;
+    }());
+    Loira.Animation = Animation;
+})(Loira || (Loira = {}));
 //# sourceMappingURL=animation.js.map
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -2866,8 +2876,9 @@ var Workflow;
     var BaseOption = Loira.util.BaseOption;
     var Line = Loira.util.Line;
     var BaseController = Loira.BaseController;
+    var Common = Loira.Common;
     var EVT_OPEN_PROPERTY = 'workflow:open-property';
-    var WorkflowOption = (function (_super) {
+    var WorkflowOption = /** @class */ (function (_super) {
         __extends(WorkflowOption, _super);
         function WorkflowOption() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -2875,7 +2886,7 @@ var Workflow;
         return WorkflowOption;
     }(BaseOption));
     Workflow.WorkflowOption = WorkflowOption;
-    var Controller = (function (_super) {
+    var Controller = /** @class */ (function (_super) {
         __extends(Controller, _super);
         function Controller() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -2972,7 +2983,7 @@ var Workflow;
         return Controller;
     }(BaseController));
     Workflow.Controller = Controller;
-    var Symbol = (function (_super) {
+    var Symbol = /** @class */ (function (_super) {
         __extends(Symbol, _super);
         function Symbol(options) {
             var _this = _super.call(this, options) || this;
@@ -3019,7 +3030,7 @@ var Workflow;
      * @memberof Workflow
      * @augments Common.Symbol
      */
-    var Process = (function (_super) {
+    var Process = /** @class */ (function (_super) {
         __extends(Process, _super);
         function Process(options) {
             var _this = this;
@@ -3083,7 +3094,7 @@ var Workflow;
      * @memberof Workflow
      * @augments Common.Symbol
      */
-    var Terminator = (function (_super) {
+    var Terminator = /** @class */ (function (_super) {
         __extends(Terminator, _super);
         function Terminator() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -3119,7 +3130,7 @@ var Workflow;
         return Terminator;
     }(Symbol));
     Workflow.Terminator = Terminator;
-    var StartTerminator = (function (_super) {
+    var StartTerminator = /** @class */ (function (_super) {
         __extends(StartTerminator, _super);
         function StartTerminator(options) {
             var _this = this;
@@ -3136,7 +3147,7 @@ var Workflow;
         return StartTerminator;
     }(Terminator));
     Workflow.StartTerminator = StartTerminator;
-    var EndTerminator = (function (_super) {
+    var EndTerminator = /** @class */ (function (_super) {
         __extends(EndTerminator, _super);
         function EndTerminator(options) {
             var _this = _super.call(this, options) || this;
@@ -3158,7 +3169,7 @@ var Workflow;
      * @memberof Workflow
      * @augments Common.Symbol
      */
-    var ThreadTerminator = (function (_super) {
+    var ThreadTerminator = /** @class */ (function (_super) {
         __extends(ThreadTerminator, _super);
         function ThreadTerminator(options) {
             var _this = _super.call(this, options) || this;
@@ -3209,7 +3220,7 @@ var Workflow;
      * @memberof Workflow
      * @augments Common.Symbol
      */
-    var Data = (function (_super) {
+    var Data = /** @class */ (function (_super) {
         __extends(Data, _super);
         function Data(options) {
             var _this = this;
@@ -3252,7 +3263,7 @@ var Workflow;
         return Data;
     }(Symbol));
     Workflow.Data = Data;
-    var Decision = (function (_super) {
+    var Decision = /** @class */ (function (_super) {
         __extends(Decision, _super);
         function Decision(options) {
             var _this = this;
@@ -3312,7 +3323,7 @@ var Workflow;
      * @memberof UseCase
      * @augments Common.Relation
      */
-    var Returns = (function (_super) {
+    var Returns = /** @class */ (function (_super) {
         __extends(Returns, _super);
         function Returns(options) {
             var _this = this;
@@ -3340,7 +3351,7 @@ var Workflow;
         return Returns;
     }(Common.Relation));
     Workflow.Returns = Returns;
-    var Association = (function (_super) {
+    var Association = /** @class */ (function (_super) {
         __extends(Association, _super);
         function Association(options) {
             var _this = this;
@@ -3370,7 +3381,7 @@ var Workflow;
         return Association;
     }(Common.Relation));
     Workflow.Association = Association;
-    var ParallelBase = (function (_super) {
+    var ParallelBase = /** @class */ (function (_super) {
         __extends(ParallelBase, _super);
         function ParallelBase(options) {
             var _this = this;
@@ -3424,7 +3435,7 @@ var Workflow;
         return ParallelBase;
     }(Symbol));
     Workflow.ParallelBase = ParallelBase;
-    var ParallelStart = (function (_super) {
+    var ParallelStart = /** @class */ (function (_super) {
         __extends(ParallelStart, _super);
         function ParallelStart(options) {
             var _this = _super.call(this, options) || this;
@@ -3454,7 +3465,7 @@ var Workflow;
         return ParallelStart;
     }(ParallelBase));
     Workflow.ParallelStart = ParallelStart;
-    var ParallelEnd = (function (_super) {
+    var ParallelEnd = /** @class */ (function (_super) {
         __extends(ParallelEnd, _super);
         function ParallelEnd(options) {
             var _this = _super.call(this, options) || this;
@@ -3483,7 +3494,7 @@ var Workflow;
         return ParallelEnd;
     }(ParallelBase));
     Workflow.ParallelEnd = ParallelEnd;
-    var MonoParallelStart = (function (_super) {
+    var MonoParallelStart = /** @class */ (function (_super) {
         __extends(MonoParallelStart, _super);
         function MonoParallelStart(options) {
             var _this = _super.call(this, options) || this;
@@ -3514,7 +3525,7 @@ var Workflow;
         return MonoParallelStart;
     }(ParallelBase));
     Workflow.MonoParallelStart = MonoParallelStart;
-    var MonoParallelEnd = (function (_super) {
+    var MonoParallelEnd = /** @class */ (function (_super) {
         __extends(MonoParallelEnd, _super);
         function MonoParallelEnd(options) {
             var _this = _super.call(this, options) || this;
@@ -3543,7 +3554,7 @@ var Workflow;
         return MonoParallelEnd;
     }(ParallelBase));
     Workflow.MonoParallelEnd = MonoParallelEnd;
-    var Fork = (function (_super) {
+    var Fork = /** @class */ (function (_super) {
         __extends(Fork, _super);
         function Fork(options) {
             var _this = _super.call(this, options) || this;
@@ -3574,7 +3585,7 @@ var Workflow;
         return Fork;
     }(ParallelBase));
     Workflow.Fork = Fork;
-    var ForkContinuity = (function (_super) {
+    var ForkContinuity = /** @class */ (function (_super) {
         __extends(ForkContinuity, _super);
         function ForkContinuity(options) {
             var _this = this;
@@ -3604,9 +3615,10 @@ var OrgChart;
     var BaseController = Loira.BaseController;
     var RelOption = Loira.util.RelOption;
     var Rect = Loira.util.Rect;
+    var Common = Loira.Common;
     var levelColor = ['#124FFD', '#FF4FFD', '#12003D'];
     var levelHeight;
-    var RoleOption = (function (_super) {
+    var RoleOption = /** @class */ (function (_super) {
         __extends(RoleOption, _super);
         function RoleOption() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -3614,7 +3626,7 @@ var OrgChart;
         return RoleOption;
     }(Loira.util.BaseOption));
     OrgChart.RoleOption = RoleOption;
-    var Group = (function () {
+    var Group = /** @class */ (function () {
         function Group(role) {
             this.children = [];
             this.role = role;
@@ -3674,7 +3686,7 @@ var OrgChart;
     /**
      * Controller that manage the events for the organization chart
      */
-    var Controller = (function (_super) {
+    var Controller = /** @class */ (function (_super) {
         __extends(Controller, _super);
         function Controller(colors, autoRefresh) {
             if (colors === void 0) { colors = null; }
@@ -3735,7 +3747,7 @@ var OrgChart;
                 var item = $this.getGroup(evt.selected.start, $this.elements).item;
                 if (index >= 0) {
                     $this.roots.splice(index, 1);
-                    if (item.parent == child) {
+                    if (item.parent == child) { //If new parent was a child from the new child
                         $this.roots.push(item);
                     }
                 }
@@ -3927,7 +3939,7 @@ var OrgChart;
      * @class Role
      * @augments Loira.Element
      */
-    var Role = (function (_super) {
+    var Role = /** @class */ (function (_super) {
         __extends(Role, _super);
         function Role(options) {
             var _this = _super.call(this, options) || this;
@@ -4071,7 +4083,7 @@ var OrgChart;
      * @class Relation
      * @augments Common.Relation
      */
-    var Relation = (function (_super) {
+    var Relation = /** @class */ (function (_super) {
         __extends(Relation, _super);
         function Relation(options) {
             var _this = _super.call(this, options) || this;
