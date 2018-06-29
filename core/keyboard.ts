@@ -4,6 +4,10 @@ module Loira{
     export class Keyboard{
         public lastKey: number;
 
+        /**
+         * Class's constructor
+         * @param canvas Canvas selected
+         */
         constructor(private canvas: Canvas){}
 
         bind(){

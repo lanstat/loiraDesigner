@@ -91,8 +91,8 @@ module Loira{
                 return;
             }
 
-            if (canvas._selected.length == 1 && !canvas.readOnly) {
-                let selected = canvas._selected[0];
+            if (canvas.selected.length == 1 && !canvas.readOnly) {
+                let selected = canvas.selected[0];
                 canvas._tmp.transform = selected.getSelectedCorner(real.x, real.y);
                 if (canvas._tmp.transform || selected.callCustomButton(real.x, real.y)) {
                     switch (canvas._tmp.transform) {
@@ -215,36 +215,38 @@ module Loira{
                      * @property {string} type - Tipo de evento
                      */
                     canvas.emit('mouse:move', new MouseEvent(real.x, real.y));
-                    if (canvas._selected) {
+                    if (canvas.selected) {
                         if (canvas._tmp.transform) {
-                            if (canvas._selected[0].baseType !== 'relation') {
+                            if (canvas.selected[0].baseType !== 'relation') {
                                 x = Math.floor(x);
                                 y = Math.floor(y);
                                 switch (canvas._tmp.transform) {
                                     case 'tc':
-                                        canvas._selected[0].y += y;
-                                        canvas._selected[0].height -= y;
+                                        canvas.selected[0].y += y;
+                                        canvas.selected[0].height -= y;
                                         break;
                                     case 'bc':
-                                        canvas._selected[0].height += y;
+                                        canvas.selected[0].height += y;
                                         break;
                                     case 'ml':
-                                        canvas._selected[0].x += x;
-                                        canvas._selected[0].width -= x;
+                                        canvas.selected[0].x += x;
+                                        canvas.selected[0].width -= x;
                                         break;
                                     case 'mr':
-                                        canvas._selected[0].width += x;
+                                        canvas.selected[0].width += x;
                                         break;
                                 }
                             } else {
-                                (<Common.Relation>canvas._selected[0]).movePoint(parseInt(canvas._tmp.transform), x, y);
+                                (<Common.Relation>canvas.selected[0]).movePoint(parseInt(canvas._tmp.transform), x, y);
                             }
 
                             canvas.renderAll();
                         } else {
                             canvas.iterateSelected(function(selected: Loira.Element){
                                 if (selected.draggable){
-                                    selected.move(x, y);
+                                    selected.x += x;
+                                    selected.y += y;
+
                                     /**
                                      * Evento que encapsula el arrastre de un objeto
                                      *

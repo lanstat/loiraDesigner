@@ -6,10 +6,8 @@
 module Loira{
     import RelationEvent = Loira.event.RelationEvent;
     import ObjectEvent = Loira.event.ObjectEvent;
-    import MouseEvent = Loira.event.MouseEvent;
     import Point = Loira.util.Point;
     import Region = Loira.util.Region;
-    import Key = Loira.util.Key;
 
     export class VirtualCanvas {
         public x: number = 0;
@@ -26,7 +24,6 @@ module Loira{
         public height: number = 0;
         public viewportWidth: number = 0;
         public viewportHeight: number = 0;
-        public fps: number;
         public dragCanvas: boolean = false;
         public controller: Loira.BaseController = null;
         public readOnly: boolean = false;
@@ -37,28 +34,6 @@ module Loira{
         IE = 2,
         CHROME = 3,
         UNKNOWN = 4
-    }
-
-    class FpsCounter {
-        private _fps: number;
-        private _elapsed: number;
-
-        constructor(fps: number = 32){
-            this._fps = 1000 / fps;
-            this._elapsed = new Date().getTime();
-        }
-
-        passed(): boolean {
-            let response: boolean = false;
-            let time: number = new Date().getTime();
-
-            if (time >= this._elapsed){
-                this._elapsed = time + this._fps;
-                response = true;
-            }
-
-            return response;
-        }
     }
 
     class TmpData{
@@ -104,7 +79,10 @@ module Loira{
         /**
          * @property {Object}  _selected - Objeto que se encuentra seleccionado
          */
-        public _selected: Loira.Element[] = [];
+        private _selected: Loira.Element[] = [];
+        public get selected(): Loira.Element[] {
+            return this._selected;
+        }
 
         /**
          * @property {Object}  _tmp - Almacena datos temporales
@@ -149,8 +127,6 @@ module Loira{
 
         private _border: any;
 
-        private _fps: FpsCounter;
-
         public _zoom: ZoomData;
 
         public controller: BaseController;
@@ -165,8 +141,6 @@ module Loira{
 
         public viewportHeight: number;
 
-        public fps: number;
-
         public dragCanvas: boolean;
 
         public contextMenu: HTMLUListElement;
@@ -176,6 +150,8 @@ module Loira{
         public keyboard: Keyboard;
 
         public mouse: Mouse;
+
+        private _animationFrame: any;
 
         /**
          * Create a new instance of canvas
@@ -212,7 +188,6 @@ module Loira{
             this.viewportHeight = config.viewportHeight;
             this.viewportWidth = config.viewportWidth;
             this.dragCanvas = config.dragCanvas;
-            this.fps = config.fps;
 
             this.defaultRelation = 'Relation.Association';
 
@@ -226,7 +201,6 @@ module Loira{
                 _this.renderAll();
             });
 
-            this._fps = new FpsCounter(config.fps);
             this._zoom = new ZoomData(this);
 
             this.controller = config.controller || null;
@@ -236,6 +210,8 @@ module Loira{
 
             this.userAgent = checkUserAgent();
             this.bindResizeWindow();
+
+            this.initializeRefresher();
         }
 
         public iterateSelected(callback: (selected: Loira.Element) => void ): void {
@@ -345,11 +321,11 @@ module Loira{
             let PIXEL_RATIO: number = (function(): number{
                 let ctx: CanvasRenderingContext2D = document.createElement("canvas").getContext("2d"),
                     dpr = window.devicePixelRatio || 1,
-                    bsr = ctx.webkitBackingStorePixelRatio ||
-                        ctx.mozBackingStorePixelRatio ||
-                        ctx.msBackingStorePixelRatio ||
-                        ctx.oBackingStorePixelRatio ||
-                        ctx.backingStorePixelRatio || 1;
+                    bsr = ctx['webkitBackingStorePixelRatio'] ||
+                        ctx['mozBackingStorePixelRatio'] ||
+                        ctx['msBackingStorePixelRatio'] ||
+                        ctx['oBackingStorePixelRatio'] ||
+                        ctx['backingStorePixelRatio'] || 1;
 
                 dpr = dpr < 1? 1: dpr;
 
@@ -368,45 +344,47 @@ module Loira{
             return canvas;
         }
 
+        updater(): void{
+            util.logger(LogLevel.INFO, 'Draw');
+            let _this = this;
+            let showResizable: boolean = this._selected.length == 1;
+
+            let ctx: CanvasRenderingContext2D = this._canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+
+            for (let i:number = 0; i < this.items.length; i++) {
+                if (this.items[i].isVisible(this.virtualCanvas)){
+                    ctx.save();
+                    this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
+                    ctx.restore();
+                }
+            }
+
+            this.iterateSelected(function (selected: Loira.Element) {
+                if (!selected.selectable) { return }
+
+
+                util.logger(LogLevel.INFO, 'Selected');
+                ctx.save();
+                selected.drawSelected(ctx, showResizable);
+                ctx.restore();
+                selected.renderButtons(ctx, _this.virtualCanvas.x, _this.virtualCanvas.y);
+            });
+
+            this._scrollBar.render(ctx);
+
+            if (Loira.Config.showBanner){
+                Loira.Canvas.drawBanner(ctx);
+            }
+        }
+
         /**
          * Dibuja las relaciones y simbolos dentro del canvas
          * @memberof Loira.Canvas#
          */
         renderAll(forceRender:boolean = false) {
-            util.logger(LogLevel.INFO, 'Draw');
-            let _this = this;
-            let showResizable: boolean = this._selected.length == 1;
-
-            if (this._fps.passed() || forceRender){
-                let ctx: CanvasRenderingContext2D = this._canvas.getContext('2d');
-
-                ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-
-                for (let i:number = 0; i < this.items.length; i++) {
-                    if (this.items[i].isVisible(this.virtualCanvas)){
-                        ctx.save();
-                        this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
-                        ctx.restore();
-                    }
-                }
-
-                this.iterateSelected(function (selected: Loira.Element) {
-                    if (!selected.selectable) { return }
-
-
-                    util.logger(LogLevel.INFO, 'Selected');
-                    ctx.save();
-                    selected.drawSelected(ctx, showResizable);
-                    ctx.restore();
-                    selected.renderButtons(ctx, _this.virtualCanvas.x, _this.virtualCanvas.y);
-                });
-
-                this._scrollBar.render(ctx);
-
-                if (Loira.Config.showBanner){
-                    Loira.Canvas.drawBanner(ctx);
-                }
-            }
+            
         }
 
         /**
@@ -1018,6 +996,29 @@ module Loira{
 
         public getSelected(): Loira.Element[] {
             return this._selected;
+        }
+
+        /**
+         * Initialize the refresh screen loop
+         */
+        private initializeRefresher(): void {
+            let animationFrame = (function(){
+                return window.requestAnimationFrame ||
+                        window.webkitRequestAnimationFrame ||
+                        window['mozRequestAnimationFrame'] ||
+                        function(callback){
+                            window.setTimeout(callback, 1000/60);
+                        };
+            })();
+
+            let _this = this;
+
+            let start = function(){
+                _this.updater();
+                animationFrame(start);
+            }
+
+            start();
         }
     }
 }

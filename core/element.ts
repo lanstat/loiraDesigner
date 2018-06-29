@@ -25,13 +25,13 @@ module Loira{
         public baseType: string;
         public extras: any;
         public text: string;
-        private animation: Animation;
         public selectable: boolean;
         public resizable: boolean;
         public draggable: boolean;
         public menu: MenuItem[];
         protected selectedArea: any;
         public isSelected: boolean;
+        private destinationPoint: Point;
 
         /**
          * Inicializa los valores de la clase
@@ -62,8 +62,6 @@ module Loira{
             this.type = '';
             this.baseType = '';
             this.isSelected = false;
-
-            this.animation = new Animation(this);
         }
 
         /**
@@ -76,7 +74,6 @@ module Loira{
          * @protected
          */
         render(ctx: CanvasRenderingContext2D, vX: number, vY: number): void {
-            this.animation.proccess();
         }
 
         /**
@@ -105,9 +102,20 @@ module Loira{
             }
         }
 
-        move(x: number, y: number): void {
-            this.x += x;
-            this.y += y;
+        /**
+         * Move the object to a position by animating the movement
+         * @param x x pointer
+         * @param y y pointer
+         */
+        moveTo(x: number, y: number, absolute: boolean = false): void {
+            if (absolute){
+                this.destinationPoint.x = x;
+                this.destinationPoint.y = y;
+            } else {
+                this.destinationPoint.x = this.x + x;
+                this.x += x;
+                this.y += y;
+            }
         }
 
         /**
@@ -132,6 +140,7 @@ module Loira{
                 });
             }
         }
+
         /**
          * Ejecuta el escuchador de algun icono lateral encontrado por el punto
          *
@@ -155,6 +164,7 @@ module Loira{
             }
             return false;
         }
+
         /**
          * Dibuja el cuadro punteado que contornea al objeto
          *
@@ -195,6 +205,7 @@ module Loira{
             ctx.strokeStyle = '#000000';
             ctx.fillStyle = '#000000';
         }
+
         /**
          * Verifica si el punto se encuentra en alguno de los cuadrados de redimension
          *
@@ -229,6 +240,7 @@ module Loira{
                 return 'mr';
             return '';
         }
+
         /**
          * Muestra el objeto si el canvas se encuentra en un contenedor
          *
@@ -237,6 +249,7 @@ module Loira{
         show(): void {
             this._canvas.centerToPoint((this.x + this.width / 2), (this.y + this.height / 2));
         }
+
         /**
          * Recalcula los bordes del objeto
          *
@@ -247,7 +260,6 @@ module Loira{
 
         attach(canvas: Loira.Canvas): void {
             this._canvas = canvas;
-            this.animation.setFps(canvas.fps);
         }
 
         isVisible(virtual: VirtualCanvas): boolean{
@@ -281,15 +293,11 @@ module Loira{
             return false;
         }
 
-        animateTo(point: Point, seconds: number = 1): void {
-            let time: number = this._canvas.fps * seconds;
-        }
-
         destroy(): void {
             this._canvas = null;
         }
 
-        public getMenu(x: number, y: number): MenuItem[]{
+        getMenu(x: number, y: number): MenuItem[]{
             return this.menu;
         }
     }
