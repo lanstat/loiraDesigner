@@ -23,7 +23,8 @@ var classes = [
 
 var styles = [
 	'../../styles/context-menu.css',
-    '../../styles/text-editor.css'
+	'../../styles/text-editor.css',
+	'../../styles/tooltip.css'
 ];
 
 

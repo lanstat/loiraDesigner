@@ -34,6 +34,22 @@ module Loira.Common{
 
             this.baseType = 'relation';
 
+            let scope = this;
+
+            this.menu = [
+                {text:'Partir', callback: function(){
+                    scope.addPoint();
+                }},
+                {text:'Borrar', callback: function(){
+                    scope._canvas.remove([scope]);
+                }}
+            ];
+
+            this.pointMenu = [
+                {text:'Borrar punto', callback: function(){
+                    scope.removePoint(scope.selectedArea);
+                }}
+            ];
 
             if (this.start && this.end && this.start._uid === this.end._uid){
                 this.selfRelated();
@@ -380,6 +396,17 @@ module Loira.Common{
                 click: link
             });
             this.baseType = 'symbol';
+
+            let scope = this;
+
+            this.menu = [
+                {text: Loira.Config.workflow.menu.joinTo, callback: function(){
+                    scope._linkSymbol();
+                }},
+                {text: Loira.Config.workflow.menu.deleteBtn, callback: function(){
+                    scope._canvas.remove([scope]);
+                }}
+            ];
         }
 
         /**
@@ -635,13 +662,13 @@ module Loira.Common{
             }
         }
 
-        addMovementWheel(dir: string, delta: number, inc: number = 30): void{
+        addMovementWheel(dir: boolean, delta: number, inc: number = 30): void{
             let tmp: number;
             let virtual: Loira.VirtualCanvas = this._virtual;
             let background = this._canvas._background;
             let realTmp: number = 1;
 
-            if (dir === 'H'){
+            if (dir){
                 //realTmp =
                 tmp = this._horPos + Math.round(delta * virtual.viewportWidth * (inc / virtual.width));
                 if (tmp < 0) {
@@ -657,7 +684,7 @@ module Loira.Common{
                 if(background){
                     background.style.marginLeft = '-'+virtual.x+'px';
                 }
-            } else if(dir === 'V') {
+            } else {
                 tmp = this._verPos + Math.round(delta * virtual.viewportHeight * (inc / virtual.height));
                 if (tmp < 0) {
                     this._verPos = 0;

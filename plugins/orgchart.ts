@@ -212,7 +212,6 @@ module OrgChart{
 
                 if ($this.autoRefresh){
                     $this.reorderElements();
-                    canvas.renderAll(true);
                 }
             });
 

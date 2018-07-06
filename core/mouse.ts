@@ -10,12 +10,15 @@ module Loira{
          */
         public isDragged: boolean = false;
 
+        private stopTimeout: any;
+
         constructor(private canvas: Canvas){}
 
         bind(){
             let _this = this;
 
             this.canvas._canvas.onmousewheel = function(evt){
+                _this.canvas.tooltip.style.display = 'none';
                 _this.onWheel(evt);
             };
 
@@ -31,18 +34,20 @@ module Loira{
                 _this.onUp(evt);
             };
 
-            this.canvas._canvas.onmouseenter = function(evt){
-                _this.onEnter();
-            };
-
             this.canvas._canvas.onmouseleave = function(evt){
                 _this.onLeave();
             };
+
+            this.canvas._canvas.oncontextmenu = function(evt){
+                _this.onContextMenu(evt);
+                return false;
+            }
 
             /**
              * Capture the global mouse move event for
              */
             document.addEventListener('mousemove', function(evt){
+                _this.canvas.tooltip.style.display = 'none';
                 _this.onMoveGlobal(evt);
             });
 
@@ -185,8 +190,6 @@ module Loira{
                 canvas.clearSelected();
                 canvas.emit('object:unselected', new ObjectEvent(null));
             }
-
-            canvas.renderAll();
         };
 
         private onDown(evt){
@@ -197,6 +200,12 @@ module Loira{
 
         private onMove(evt){
             let canvas = this.canvas;
+            let _this = this;
+
+            clearTimeout(this.stopTimeout);
+            this.stopTimeout = setTimeout(function(){
+                _this.onStop(evt);
+            }, 500);
 
             if (this.canvas.readOnly && !this.canvas._scrollBar.isSelectable()){return;}
             if (this.isDragged) {
@@ -239,8 +248,6 @@ module Loira{
                             } else {
                                 (<Common.Relation>canvas.selected[0]).movePoint(parseInt(canvas._tmp.transform), x, y);
                             }
-
-                            canvas.renderAll();
                         } else {
                             canvas.iterateSelected(function(selected: Loira.Element){
                                 if (selected.draggable){
@@ -256,7 +263,6 @@ module Loira{
                                      * @property {string} type - Tipo de evento
                                      */
                                     canvas.emit('object:dragging', new ObjectEvent(selected));
-                                    canvas.renderAll();
                                 }
                             })
                         }
@@ -313,23 +319,17 @@ module Loira{
             });
         };
 
-        private onEnter(){
-            this.canvas.renderAll();
-        }
-
         private onLeave(){
             this.isDragged = false;
             this.canvas._canvas.style.cursor = 'default';
         }
 
         private onWheel(evt){
-            if (this.canvas.keyboard.lastKey === Key.CONTROL){
+            if (evt.ctrlKey){
                 this.canvas._zoom.update(evt.deltaY);
             }else {
-                this.canvas._scrollBar.addMovementWheel(this.canvas.keyboard.lastKey === Key.SHIFT? 'H': 'V', (evt.deltaY/Math.abs(evt.deltaY)));
+                this.canvas._scrollBar.addMovementWheel(evt.shiftKey, (evt.deltaY/Math.abs(evt.deltaY)));
             }
-
-            this.canvas.renderAll();
 
             return false;
         }
@@ -337,7 +337,6 @@ module Loira{
         private onMoveGlobal(evt){
             if (this.canvas._scrollBar.isSelectable()){
                 this.canvas._scrollBar.dragScroll(evt.pageX - this.canvas._tmp.globalPointer.x, evt.pageY - this.canvas._tmp.globalPointer.y);
-                this.canvas.renderAll();
 
                 this.canvas._tmp.globalPointer = {x: evt.pageX, y: evt.pageY};
             }
@@ -345,6 +344,66 @@ module Loira{
 
         private onUpGlobal(){
             this.canvas._scrollBar.selected = null;
+        }
+
+        private onStop(evt){
+            let point: Point = this.canvas._getMouse(evt);
+            let element = this.canvas.getElementByPosition(point.x, point.y);
+            let canvas = this.canvas;
+            
+            if (element){
+                let tmp = element.getTooltip(point.x, point.y);
+
+                if (typeof tmp === 'string'){
+                    canvas.tooltip.innerHTML = tmp;
+                } else {
+                    canvas.tooltip.appendChild(tmp);
+                }
+
+                canvas.tooltip.style.top = (evt.clientY + 30) + 'px';
+                canvas.tooltip.style.left = evt.clientX + 'px';
+                canvas.tooltip.style.display = 'block';
+
+                canvas.tooltip.style.opacity = '1';
+            }
+        }
+
+        private onContextMenu(evt){
+            let canvas = this.canvas;
+
+            canvas.contextMenu.style.display = 'none';
+            let point: Point = canvas._getMouse(evt);
+            let element: Element = canvas.getElementByPosition(point.x, point.y);
+
+            if (element){
+                let menu: MenuItem[] = element.getMenu(point.x, point.y);
+                if (!menu){
+                    return false;
+                }
+                let menuItem;
+                canvas.contextMenu.innerHTML = '';
+
+                for (let item of menu){
+                    menuItem = document.createElement('li');
+                    if (item){
+                        menuItem.innerHTML = item.text;
+                        menuItem.onclick = function(){
+                            item.callback(this, element);
+                            canvas.contextMenu.style.display = 'none';
+                        };
+                    } else {
+                        menuItem.className = 'null-line';
+                    }
+
+                    canvas.contextMenu.appendChild(menuItem);
+                }
+
+                canvas.contextMenu.style.top = evt.clientY + 'px';
+                canvas.contextMenu.style.left = evt.clientX + 'px';
+                canvas.contextMenu.style.display = 'block';
+
+                canvas.contextMenu.style.opacity = '1';
+            }
         }
     }
 }

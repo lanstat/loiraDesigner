@@ -300,5 +300,9 @@ module Loira{
         getMenu(x: number, y: number): MenuItem[]{
             return this.menu;
         }
+
+        getTooltip(x: number, y: number): HTMLElement|string{
+            return 'Tipo: <b>'+this.type+'</b>';
+        }
     }
 }

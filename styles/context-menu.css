@@ -3,36 +3,44 @@
     z-index: 1000;
     position: absolute;
     overflow: hidden;
-    border: 1px solid #595959;
     white-space: nowrap;
     font-family: sans-serif;
     font-size: 12px;
-    border-radius: 2px;
+    border-radius: 6px;
     padding: 0;
     opacity: 0;
     -webkit-transition: opacity 200ms;
     -moz-transition: opacity 200ms;
     -o-transition: opacity 200ms;
     -ms-transition: opacity 200ms;
-    background: black;
-    color: white;
-    box-shadow: 0 0 15px black;
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 0 15px #595959;
+    list-style: none;
 }
 
 .loira-context-menu li{
-    padding: 5px 8px;
+    padding: 5px 16px;
     cursor: pointer;
 }
 
+.loira-context-menu li:first-child{
+    padding-top: 10px;
+}
+
+.loira-context-menu li:last-child{
+    padding-bottom: 10px;
+}
+
 .loira-context-menu li:hover {
-    background-color: #284160;
+    background-color: #dddddd;
 }
 
 .loira-context-menu li.null-line{
     padding: 0;
     cursor: default;
     margin: 0;
-    border-bottom: white 1px solid;
+    border-bottom: #595959 1px solid;
     height: 1px;
 }
 

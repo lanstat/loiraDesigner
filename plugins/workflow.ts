@@ -543,22 +543,6 @@ module Workflow{
 
             super(options);
             this.type = 'returns';
-            let scope = this;
-
-            this.menu = [
-                {text:'Partir', callback: function(){
-                    scope.addPoint();
-                }},
-                {text:'Borrar', callback: function(){
-                    scope._canvas.remove([scope]);
-                }}
-            ];
-
-            this.pointMenu = [
-                {text:'Borrar punto', callback: function(){
-                    scope.removePoint(scope.selectedArea);
-                }}
-            ];
         }
     }
 
@@ -568,26 +552,6 @@ module Workflow{
 
             super(options);
             this.type = 'workflow_association';
-            let scope = this;
-
-            this.menu = [
-                {text:'Partir', callback: function(){
-                    scope.addPoint();
-                }},
-                {text:'Borrar', callback: function(){
-                    scope._canvas.remove([scope], true);
-                }}/*,
-                null,
-                {text:'Propiedades', callback: function(){
-                    scope._canvas.emit(EVT_OPEN_PROPERTY, new ObjectEvent(scope));
-                }}*/
-            ];
-
-            this.pointMenu = [
-                {text:'Borrar punto', callback: function(){
-                    scope.removePoint(scope.selectedArea);
-                }}
-            ]
         }
     }
 

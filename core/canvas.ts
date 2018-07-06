@@ -145,13 +145,13 @@ module Loira{
 
         public contextMenu: HTMLUListElement;
 
+        public tooltip: HTMLDivElement;
+
         private textEditor: HTMLTextAreaElement;
 
         public keyboard: Keyboard;
 
         public mouse: Mouse;
-
-        private _animationFrame: any;
 
         /**
          * Create a new instance of canvas
@@ -196,9 +196,7 @@ module Loira{
 
             this.refreshScreen();
 
-            let _this = this;
             drawable.registerMap(Config.assetsPath, Config.regions, function(){
-                _this.renderAll();
             });
 
             this._zoom = new ZoomData(this);
@@ -212,6 +210,7 @@ module Loira{
             this.bindResizeWindow();
 
             this.initializeRefresher();
+            this.createHtmlElements();
         }
 
         public iterateSelected(callback: (selected: Loira.Element) => void ): void {
@@ -298,15 +297,9 @@ module Loira{
                 }
             }
 
-            this._bind();
-
-            let _this = this;
+            this.bind();
 
             this._scrollBar = new Common.ScrollBar(this);
-
-            setTimeout(function(){
-                _this.renderAll(true);
-            }, 200);
         }
 
         /**
@@ -511,7 +504,6 @@ module Loira{
             }
 
             this.clearSelected();
-            this.renderAll(true);
         }
 
         removeSelected(fireEvent: boolean = true){
@@ -606,15 +598,7 @@ module Loira{
             }
         }
 
-        /**
-         * Enlaza los eventos del canvas al canvas propio del diseñador
-         *
-         * @memberof Loira.Canvas#
-         * @private
-         */
-        _bind() {
-            let _this = this;
-
+        private createHtmlElements(){
             this.contextMenu = document.createElement('ul');
             this.contextMenu.className = 'loira-context-menu';
             this.contextMenu.oncontextmenu = function(){return false;};
@@ -624,48 +608,22 @@ module Loira{
             this.textEditor.className = 'loira-text-editor';
             document.getElementsByTagName('body')[0].appendChild(this.textEditor);
 
+            this.tooltip = document.createElement('div');
+            this.tooltip.className = 'loira-tooltip';
+            document.getElementsByTagName('body')[0].appendChild(this.tooltip);
+        }
+
+        /**
+         * Enlaza los eventos del canvas al canvas propio del diseñador
+         *
+         * @memberof Loira.Canvas#
+         * @private
+         */
+        private bind() {
             this.keyboard.bind();
             this.mouse.bind();
 
-            _this._canvas.onselectstart = function () {
-                return false;
-            };
-
-            _this._canvas.oncontextmenu = function(evt){
-                _this.contextMenu.style.display = 'none';
-                let point: Point = _this._getMouse(evt);
-                let element: Element = _this.getElementByPosition(point.x, point.y);
-
-                if (element){
-                    let menu: MenuItem[] = element.getMenu(point.x, point.y);
-                    if (!menu){
-                        return false;
-                    }
-                    let menuItem;
-                    _this.contextMenu.innerHTML = '';
-
-                    for (let item of menu){
-                        menuItem = document.createElement('li');
-                        if (item){
-                            menuItem.innerHTML = item.text;
-                            menuItem.onclick = function(){
-                                item.callback(this, element);
-                                _this.contextMenu.style.display = 'none';
-                            };
-                        } else {
-                            menuItem.className = 'null-line';
-                        }
-
-                        _this.contextMenu.appendChild(menuItem);
-                    }
-
-                    _this.contextMenu.style.top = evt.clientY + 'px';
-                    _this.contextMenu.style.left = evt.clientX + 'px';
-                    _this.contextMenu.style.display = 'block';
-
-                    _this.contextMenu.style.opacity = '1';
-                }
-
+            this._canvas.onselectstart = function () {
                 return false;
             };
         }
@@ -875,8 +833,6 @@ module Loira{
             y = y - (this.virtualCanvas.viewportHeight / 2);
 
             this._scrollBar.setPosition(x, y);
-
-            this.renderAll(true);
         }
 
         setSelectedElement(element: Element){

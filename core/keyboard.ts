@@ -15,11 +15,11 @@ module Loira{
             let element = this.canvas._canvas;
 
             element.onkeydown = function(evt){
-                _this.onKeyDownPrivate(evt);
+                _this.onKeyDown(evt, false);
             };
 
             document.addEventListener('keydown', function(evt){
-                _this.onKeyDownGlobal(evt);
+                _this.onKeyDown(evt, true);
             });
 
             element.onkeyup = function(evt){
@@ -31,7 +31,7 @@ module Loira{
             });
         }
 
-        private onKeyDown(evt, isGlobal){
+        private onKeyDown(evt, isGlobal: boolean){
             if (evt.keyCode === Key.ALT){return;}
 
             this.lastKey = evt.keyCode;
@@ -42,14 +42,6 @@ module Loira{
                     this.canvas.removeSelected(false);
                 }
             }
-        };
-
-        private onKeyDownPrivate = function (evt) {
-            this.onKeyDown(evt, false);
-        };
-
-        private onKeyDownGlobal = function (evt) {
-            this.onKeyDown(evt, true);
         };
 
         private onKeyUp = function(evt){
