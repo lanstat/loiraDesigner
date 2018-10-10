@@ -191,7 +191,6 @@ var Loira;
 (function (Loira) {
     var RelationEvent = Loira.event.RelationEvent;
     var ObjectEvent = Loira.event.ObjectEvent;
-    var MouseEvent = Loira.event.MouseEvent;
     var VirtualCanvas = /** @class */ (function () {
         function VirtualCanvas() {
             this.x = 0;
@@ -225,31 +224,6 @@ var Loira;
         UserAgent[UserAgent["CHROME"] = 3] = "CHROME";
         UserAgent[UserAgent["UNKNOWN"] = 4] = "UNKNOWN";
     })(UserAgent = Loira.UserAgent || (Loira.UserAgent = {}));
-    var Key;
-    (function (Key) {
-        Key[Key["ENTER"] = 13] = "ENTER";
-        Key[Key["DELETE"] = 46] = "DELETE";
-        Key[Key["CONTROL"] = 17] = "CONTROL";
-        Key[Key["ALT"] = 18] = "ALT";
-        Key[Key["SHIFT"] = 16] = "SHIFT";
-    })(Key = Loira.Key || (Loira.Key = {}));
-    var FpsCounter = /** @class */ (function () {
-        function FpsCounter(fps) {
-            if (fps === void 0) { fps = 32; }
-            this._fps = 1000 / fps;
-            this._elapsed = new Date().getTime();
-        }
-        FpsCounter.prototype.passed = function () {
-            var response = false;
-            var time = new Date().getTime();
-            if (time >= this._elapsed) {
-                this._elapsed = time + this._fps;
-                response = true;
-            }
-            return response;
-        };
-        return FpsCounter;
-    }());
     var TmpData = /** @class */ (function () {
         function TmpData() {
         }
@@ -295,10 +269,6 @@ var Loira;
              * @property {Object}  _selected - Objeto que se encuentra seleccionado
              */
             this._selected = [];
-            /**
-             * @property {Boolean}  _isDragged - Determina si el usuario esta arrastrando un objeto
-             */
-            this._isDragged = false;
             /**
              * @property {Object}  _tmp - Almacena datos temporales
              */
@@ -350,14 +320,12 @@ var Loira;
             this.viewportHeight = config.viewportHeight;
             this.viewportWidth = config.viewportWidth;
             this.dragCanvas = config.dragCanvas;
-            this.fps = config.fps;
             this.defaultRelation = 'Relation.Association';
+            this.keyboard = new Loira.Keyboard(this);
+            this.mouse = new Loira.Mouse(this);
             this.refreshScreen();
-            var _this = this;
             Loira.drawable.registerMap(Loira.Config.assetsPath, Loira.Config.regions, function () {
-                _this.renderAll();
             });
-            this._fps = new FpsCounter(config.fps);
             this._zoom = new ZoomData(this);
             this.controller = config.controller || null;
             if (this.controller) {
@@ -365,7 +333,16 @@ var Loira;
             }
             this.userAgent = checkUserAgent();
             this.bindResizeWindow();
+            this.initializeRefresher();
+            this.createHtmlElements();
         }
+        Object.defineProperty(Canvas.prototype, "selected", {
+            get: function () {
+                return this._selected;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Canvas.prototype.iterateSelected = function (callback) {
             if (this._selected.length > 0) {
                 for (var _i = 0, _a = this._selected; _i < _a.length; _i++) {
@@ -444,12 +421,8 @@ var Loira;
                     borderTop: parseInt(document.defaultView.getComputedStyle(this._canvas, null)['borderTopWidth'], 10) || 0
                 };
             }
-            this._bind();
-            var _this = this;
+            this.bind();
             this._scrollBar = new Loira.Common.ScrollBar(this);
-            setTimeout(function () {
-                _this.renderAll(true);
-            }, 200);
         };
         /**
          * Create a canvas with specific dpi for the screen
@@ -461,11 +434,11 @@ var Loira;
          */
         Canvas.prototype.createHiDPICanvas = function (width, height, ratio) {
             var PIXEL_RATIO = (function () {
-                var ctx = document.createElement("canvas").getContext("2d"), dpr = window.devicePixelRatio || 1, bsr = ctx.webkitBackingStorePixelRatio ||
-                    ctx.mozBackingStorePixelRatio ||
-                    ctx.msBackingStorePixelRatio ||
-                    ctx.oBackingStorePixelRatio ||
-                    ctx.backingStorePixelRatio || 1;
+                var ctx = document.createElement("canvas").getContext("2d"), dpr = window.devicePixelRatio || 1, bsr = ctx['webkitBackingStorePixelRatio'] ||
+                    ctx['mozBackingStorePixelRatio'] ||
+                    ctx['msBackingStorePixelRatio'] ||
+                    ctx['oBackingStorePixelRatio'] ||
+                    ctx['backingStorePixelRatio'] || 1;
                 dpr = dpr < 1 ? 1 : dpr;
                 return dpr / bsr;
             })();
@@ -480,40 +453,40 @@ var Loira;
             canvas.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
             return canvas;
         };
+        Canvas.prototype.updater = function () {
+            Loira.util.logger(Loira.LogLevel.INFO, 'Draw');
+            var _this = this;
+            var showResizable = this._selected.length == 1;
+            var ctx = this._canvas.getContext('2d');
+            ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+            for (var i = 0; i < this.items.length; i++) {
+                if (this.items[i].isVisible(this.virtualCanvas)) {
+                    ctx.save();
+                    this.items[i].render(ctx, this.virtualCanvas.x, this.virtualCanvas.y);
+                    ctx.restore();
+                }
+            }
+            this.iterateSelected(function (selected) {
+                if (!selected.selectable) {
+                    return;
+                }
+                Loira.util.logger(Loira.LogLevel.INFO, 'Selected');
+                ctx.save();
+                selected.drawSelected(ctx, showResizable);
+                ctx.restore();
+                selected.renderButtons(ctx, _this.virtualCanvas.x, _this.virtualCanvas.y);
+            });
+            this._scrollBar.render(ctx);
+            if (Loira.Config.showBanner) {
+                Loira.Canvas.drawBanner(ctx);
+            }
+        };
         /**
          * Dibuja las relaciones y simbolos dentro del canvas
          * @memberof Loira.Canvas#
          */
         Canvas.prototype.renderAll = function (forceRender) {
             if (forceRender === void 0) { forceRender = false; }
-            Loira.util.logger(Loira.LogLevel.INFO, 'Draw');
-            var _this = this;
-            var showResizable = this._selected.length == 1;
-            if (this._fps.passed() || forceRender) {
-                var ctx_1 = this._canvas.getContext('2d');
-                ctx_1.clearRect(0, 0, this._canvas.width, this._canvas.height);
-                for (var i = 0; i < this.items.length; i++) {
-                    if (this.items[i].isVisible(this.virtualCanvas)) {
-                        ctx_1.save();
-                        this.items[i].render(ctx_1, this.virtualCanvas.x, this.virtualCanvas.y);
-                        ctx_1.restore();
-                    }
-                }
-                this.iterateSelected(function (selected) {
-                    if (!selected.selectable) {
-                        return;
-                    }
-                    Loira.util.logger(Loira.LogLevel.INFO, 'Selected');
-                    ctx_1.save();
-                    selected.drawSelected(ctx_1, showResizable);
-                    ctx_1.restore();
-                    selected.renderButtons(ctx_1, _this.virtualCanvas.x, _this.virtualCanvas.y);
-                });
-                this._scrollBar.render(ctx_1);
-                if (Loira.Config.showBanner) {
-                    Loira.Canvas.drawBanner(ctx_1);
-                }
-            }
         };
         /**
          * Agrega uno o varios elementos al listado de objetos
@@ -633,7 +606,10 @@ var Loira;
                 _this.emit(Loira.event.OBJECT_REMOVED, new ObjectEvent(item), fireEvent);
             }
             this.clearSelected();
-            this.renderAll(true);
+        };
+        Canvas.prototype.removeSelected = function (fireEvent) {
+            if (fireEvent === void 0) { fireEvent = true; }
+            this.remove(this._selected, fireEvent);
         };
         /**
          * Elimina todos los objetos del canvas
@@ -715,14 +691,7 @@ var Loira;
                 this._callbacks[evt].splice(index, 1);
             }
         };
-        /**
-         * Enlaza los eventos del canvas al canvas propio del diseñador
-         *
-         * @memberof Loira.Canvas#
-         * @private
-         */
-        Canvas.prototype._bind = function () {
-            var _this = this;
+        Canvas.prototype.createHtmlElements = function () {
             this.contextMenu = document.createElement('ul');
             this.contextMenu.className = 'loira-context-menu';
             this.contextMenu.oncontextmenu = function () { return false; };
@@ -730,355 +699,22 @@ var Loira;
             this.textEditor = document.createElement('textarea');
             this.textEditor.className = 'loira-text-editor';
             document.getElementsByTagName('body')[0].appendChild(this.textEditor);
-            var onKeyDown = function (evt, isGlobal) {
-                if (evt.keyCode == Key.ALT) {
-                    return;
-                }
-                _this._tmp.lastKey = evt.keyCode;
-                if (!isGlobal) {
-                    if (_this._tmp.lastKey === Key.DELETE) {
-                        if (_this.readOnly) {
-                            return;
-                        }
-                        if (_this._selected) {
-                            _this.remove(_this._selected);
-                        }
-                    }
-                }
-            };
-            _this._canvas.onkeydown = function (evt) {
-                onKeyDown(evt, false);
-            };
-            document.addEventListener('keydown', function (evt) {
-                onKeyDown(evt, true);
-            });
-            _this._canvas.onkeyup = function () {
-                _this._tmp.lastKey = null;
-            };
-            document.addEventListener('keyup', function () {
-                if (_this.readOnly) {
-                    return;
-                }
-                _this._tmp.lastKey = null;
-            });
-            _this._canvas.onmousewheel = function (evt) {
-                if (_this._tmp.lastKey == Key.CONTROL) {
-                    _this._zoom.update(evt.deltaY);
-                }
-                else {
-                    _this._scrollBar.addMovementWheel(_this._tmp.lastKey === Key.SHIFT ? 'H' : 'V', (evt.deltaY / Math.abs(evt.deltaY)));
-                }
-                _this.renderAll();
+            this.tooltip = document.createElement('div');
+            this.tooltip.className = 'loira-tooltip';
+            document.getElementsByTagName('body')[0].appendChild(this.tooltip);
+        };
+        /**
+         * Enlaza los eventos del canvas al canvas propio del diseñador
+         *
+         * @memberof Loira.Canvas#
+         * @private
+         */
+        Canvas.prototype.bind = function () {
+            this.keyboard.bind();
+            this.mouse.bind();
+            this._canvas.onselectstart = function () {
                 return false;
             };
-            var onDown = function (evt, isDoubleClick) {
-                var real = _this._getMouse(evt);
-                _this._tmp.pointer = real;
-                if (isDoubleClick) {
-                    /**
-                     * Evento que encapsula doble click sobre el canvas
-                     *
-                     * @event mouse:dblclick
-                     * @type { object }
-                     * @property {int} x - Posicion x del puntero
-                     * @property {int} y - Posicion y del puntero
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('mouse:dblclick', new MouseEvent(real.x, real.y));
-                }
-                else {
-                    /**
-                     * Evento que encapsula un click sobre el canvas
-                     *
-                     * @event mouse:down
-                     * @type { object }
-                     * @property {int} x - Posicion x del puntero
-                     * @property {int} y - Posicion y del puntero
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('mouse:down', new MouseEvent(real.x, real.y));
-                }
-                if (!isDoubleClick && !_this.readOnly) {
-                    _this._isDragged = true;
-                    _this._canvas.style.cursor = 'move';
-                }
-                if (_this._scrollBar.checkCollision(real.x, real.y)) {
-                    _this._tmp.globalPointer = { x: evt.pageX, y: evt.pageY };
-                    _this._isDragged = true;
-                    return;
-                }
-                if (_this._selected.length == 1 && !_this.readOnly) {
-                    var selected = _this._selected[0];
-                    _this._tmp.transform = selected.getSelectedCorner(real.x, real.y);
-                    if (_this._tmp.transform || selected.callCustomButton(real.x, real.y)) {
-                        switch (_this._tmp.transform) {
-                            case 'tc':
-                            case 'bc':
-                                _this._canvas.style.cursor = 'ns-resize';
-                                break;
-                            case 'ml':
-                            case 'mr':
-                                _this._canvas.style.cursor = 'ew-resize';
-                                break;
-                        }
-                        return;
-                    }
-                    else {
-                        if (_this._tmp.lastKey !== Key.SHIFT) {
-                            _this.clearSelected();
-                            _this.emit('object:unselected', new MouseEvent(real.x, real.y));
-                        }
-                    }
-                }
-                var item;
-                var atLeastOneSelected = false;
-                for (var i = _this.items.length - 1; i >= 0; i--) {
-                    item = _this.items[i];
-                    if (item.checkCollision(real.x, real.y)) {
-                        atLeastOneSelected = true;
-                        if (item.isSelected) {
-                            if (_this._tmp.lastKey === Key.SHIFT) {
-                                _this.clearSelected(item);
-                                _this.emit('object:unselected', new ObjectEvent(item));
-                            }
-                            break;
-                        }
-                        _this.appendSelected(item, _this._tmp.lastKey !== Key.SHIFT);
-                        if (item.baseType !== 'relation') {
-                            if (isDoubleClick) {
-                                /**
-                                 * Evento que encapsula doble click sobre un objeto
-                                 *
-                                 * @event object:dblclick
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('object:dblclick', new ObjectEvent(item));
-                            }
-                            else {
-                                Loira.util.logger(Loira.LogLevel.INFO, 'down');
-                                /**
-                                 * Evento que encapsula un click sobre un objeto
-                                 *
-                                 * @event object:select
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('object:selected', new ObjectEvent(item));
-                            }
-                            break;
-                        }
-                        else {
-                            if (isDoubleClick) {
-                                /**
-                                 * Evento que encapsula doble click sobre una relacion
-                                 *
-                                 * @event relation:dblclick
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionadonpm
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('relation:dblclick', new ObjectEvent(item));
-                            }
-                            else {
-                                /**
-                                 * Evento que encapsula un click sobre una relacion
-                                 *
-                                 * @event relation:select
-                                 * @type { object }
-                                 * @property {object} selected - Objeto seleccionado
-                                 * @property {string} type - Tipo de evento
-                                 */
-                                _this.emit('relation:selected', new ObjectEvent(item));
-                            }
-                            break;
-                        }
-                    }
-                }
-                if (!atLeastOneSelected) {
-                    _this.clearSelected();
-                    _this.emit('object:unselected', new ObjectEvent(null));
-                }
-                _this.renderAll();
-            };
-            _this._canvas.onmousedown = function (evt) {
-                Loira.util.logger(Loira.LogLevel.INFO, 'Mouse');
-                _this.contextMenu.style.display = 'none';
-                onDown(evt, false);
-            };
-            _this._canvas.oncontextmenu = function (evt) {
-                _this.contextMenu.style.display = 'none';
-                var point = _this._getMouse(evt);
-                var element = _this.getElementByPosition(point.x, point.y);
-                if (element) {
-                    var menu = element.getMenu(point.x, point.y);
-                    if (!menu) {
-                        return false;
-                    }
-                    var menuItem = void 0;
-                    _this.contextMenu.innerHTML = '';
-                    var _loop_1 = function (item) {
-                        menuItem = document.createElement('li');
-                        if (item) {
-                            menuItem.innerHTML = item.text;
-                            menuItem.onclick = function () {
-                                item.callback(this, element);
-                                _this.contextMenu.style.display = 'none';
-                            };
-                        }
-                        else {
-                            menuItem.className = 'null-line';
-                        }
-                        _this.contextMenu.appendChild(menuItem);
-                    };
-                    for (var _i = 0, menu_1 = menu; _i < menu_1.length; _i++) {
-                        var item = menu_1[_i];
-                        _loop_1(item);
-                    }
-                    _this.contextMenu.style.top = evt.clientY + 'px';
-                    _this.contextMenu.style.left = evt.clientX + 'px';
-                    _this.contextMenu.style.display = 'block';
-                    _this.contextMenu.style.opacity = '1';
-                }
-                return false;
-            };
-            _this._canvas.onmousemove = function (evt) {
-                if (_this.readOnly && !_this._scrollBar.isSelectable()) {
-                    return;
-                }
-                if (_this._isDragged) {
-                    var real = _this._getMouse(evt);
-                    var x_1 = real.x - _this._tmp.pointer.x;
-                    var y_1 = real.y - _this._tmp.pointer.y;
-                    if (!_this._scrollBar.isSelectable()) {
-                        /**
-                         * Evento que encapsula el movimiento del mouse sobre el canvas
-                         *
-                         * @event mouse:move
-                         * @type { object }
-                         * @property {int} x - Posicion x del puntero
-                         * @property {int} y - Posicion y del puntero
-                         * @property {string} type - Tipo de evento
-                         */
-                        _this.emit('mouse:move', new MouseEvent(real.x, real.y));
-                        if (_this._selected) {
-                            if (_this._tmp.transform) {
-                                if (_this._selected[0].baseType !== 'relation') {
-                                    x_1 = Math.floor(x_1);
-                                    y_1 = Math.floor(y_1);
-                                    switch (_this._tmp.transform) {
-                                        case 'tc':
-                                            _this._selected[0].y += y_1;
-                                            _this._selected[0].height -= y_1;
-                                            break;
-                                        case 'bc':
-                                            _this._selected[0].height += y_1;
-                                            break;
-                                        case 'ml':
-                                            _this._selected[0].x += x_1;
-                                            _this._selected[0].width -= x_1;
-                                            break;
-                                        case 'mr':
-                                            _this._selected[0].width += x_1;
-                                            break;
-                                    }
-                                }
-                                else {
-                                    _this._selected[0].movePoint(parseInt(_this._tmp.transform), x_1, y_1);
-                                }
-                                _this.renderAll();
-                            }
-                            else {
-                                _this.iterateSelected(function (selected) {
-                                    if (selected.draggable) {
-                                        selected.move(x_1, y_1);
-                                        /**
-                                         * Evento que encapsula el arrastre de un objeto
-                                         *
-                                         * @event object:dragging
-                                         * @type { object }
-                                         * @property {object} selected - Objeto seleccionado
-                                         * @property {string} type - Tipo de evento
-                                         */
-                                        _this.emit('object:dragging', new ObjectEvent(selected));
-                                        _this.renderAll();
-                                    }
-                                });
-                            }
-                        }
-                        else {
-                            // TODO Verificar cuando se complete el canvas
-                            /*if (_this._config.dragCanvas){
-                             if (_this._canvas && _this._canvasContainer) {
-                             x = x === 0? x : x/Math.abs(x);
-                             y =  y === 0? y : y/Math.abs(y);
-
-                             _this.container.scrollLeft -= _this._zoom.scrollX*x;
-                             _this.container.scrollTop -= _this._zoom.scrollY*y;
-
-                             _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
-                             _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
-                             }
-                             }*/
-                        }
-                        _this._tmp.pointer = real;
-                    }
-                }
-            };
-            _this._canvas.onmouseup = function (evt) {
-                var real = _this._getMouse(evt);
-                _this._canvas.style.cursor = 'default';
-                _this._isDragged = false;
-                /**
-                 * Evento que encapsula la liberacion del mouse sobre el canvas
-                 *
-                 * @event mouse:up
-                 * @type { object }
-                 * @property {int} x - Posicion x del puntero
-                 * @property {int} y - Posicion y del puntero
-                 * @property {string} type - Tipo de evento
-                 */
-                _this.emit('mouse:up', new MouseEvent(real.x, real.y));
-                _this.iterateSelected(function (selected) {
-                    /**
-                     * Evento que encapsula la liberacion de un objeto
-                     *
-                     * @event object:released
-                     * @type { object }
-                     * @property {object} selected - Objeto seleccionado
-                     * @property {string} type - Tipo de evento
-                     */
-                    _this.emit('object:released', new ObjectEvent(selected));
-                    _this._tmp.transform = null;
-                    selected.recalculateBorders();
-                    _this.save();
-                });
-            };
-            _this._canvas.onmouseenter = function () {
-                _this.renderAll();
-            };
-            _this._canvas.onmouseleave = function () {
-                _this._isDragged = false;
-                _this._canvas.style.cursor = 'default';
-            };
-            _this._canvas.onselectstart = function () {
-                return false;
-            };
-            /**
-             * Capture the global mouse move event for
-             */
-            document.addEventListener('mousemove', function (evt) {
-                if (_this._scrollBar.isSelectable()) {
-                    _this._scrollBar.dragScroll(evt.pageX - _this._tmp.globalPointer.x, evt.pageY - _this._tmp.globalPointer.y);
-                    _this.renderAll();
-                    _this._tmp.globalPointer = { x: evt.pageX, y: evt.pageY };
-                }
-            });
-            document.addEventListener('mouseup', function () {
-                _this._scrollBar.selected = null;
-            });
         };
         Canvas.prototype.bindResizeWindow = function () {
             var resizeID = -1;
@@ -1257,7 +893,6 @@ var Loira;
             x = x - (this.virtualCanvas.viewportWidth / 2);
             y = y - (this.virtualCanvas.viewportHeight / 2);
             this._scrollBar.setPosition(x, y);
-            this.renderAll(true);
         };
         Canvas.prototype.setSelectedElement = function (element) {
             this.appendSelected(element, true);
@@ -1354,11 +989,57 @@ var Loira;
         Canvas.prototype.getSelected = function () {
             return this._selected;
         };
+        /**
+         * Initialize the refresh screen loop
+         */
+        Canvas.prototype.initializeRefresher = function () {
+            var animationFrame = (function () {
+                return window.requestAnimationFrame ||
+                    window.webkitRequestAnimationFrame ||
+                    window['mozRequestAnimationFrame'] ||
+                    function (callback) {
+                        window.setTimeout(callback, 1000 / 60);
+                    };
+            })();
+            var _this = this;
+            var start = function () {
+                _this.updater();
+                animationFrame(start);
+            };
+            start();
+        };
         return Canvas;
     }());
     Loira.Canvas = Canvas;
 })(Loira || (Loira = {}));
 //# sourceMappingURL=canvas.js.map
+var Loira;
+(function (Loira) {
+    var Animation = /** @class */ (function () {
+        function Animation(element) {
+            this._registers = [];
+            this._element = element;
+        }
+        Animation.prototype.moveTo = function (x, y, seconds) {
+            if (seconds === void 0) { seconds = 1; }
+            var times = this._fps * seconds;
+            this._isRunning = true;
+        };
+        Animation.prototype.setFps = function (fps) {
+            this._fps = fps;
+        };
+        Animation.prototype.proccess = function () {
+            if (this._isRunning) {
+                if (this._registers.length == 0) {
+                    this._isRunning = false;
+                }
+            }
+        };
+        return Animation;
+    }());
+    Loira.Animation = Animation;
+})(Loira || (Loira = {}));
+//# sourceMappingURL=animation.js.map
 var Loira;
 (function (Loira) {
     var BaseController = /** @class */ (function () {
@@ -1454,6 +1135,14 @@ var Loira;
             return Rect;
         }());
         util.Rect = Rect;
+        var Key;
+        (function (Key) {
+            Key[Key["ENTER"] = 13] = "ENTER";
+            Key[Key["DELETE"] = 46] = "DELETE";
+            Key[Key["CONTROL"] = 17] = "CONTROL";
+            Key[Key["ALT"] = 18] = "ALT";
+            Key[Key["SHIFT"] = 16] = "SHIFT";
+        })(Key = util.Key || (util.Key = {}));
         /**
          * Crea una cadena con caracteres aleatorios
          *
@@ -1534,7 +1223,6 @@ var Loira;
 var Loira;
 (function (Loira) {
     var BaseOption = Loira.util.BaseOption;
-    var Animation = Loira.Animation;
     /**
      * Clase base para la creacion de nuevos objetos dibujables
      *
@@ -1570,7 +1258,6 @@ var Loira;
             this.type = '';
             this.baseType = '';
             this.isSelected = false;
-            this.animation = new Animation(this);
         }
         /**
          * Renderiza el objeto
@@ -1582,7 +1269,6 @@ var Loira;
          * @protected
          */
         Element.prototype.render = function (ctx, vX, vY) {
-            this.animation.proccess();
         };
         /**
          * Verifica si el punto dado se encuentra dentro de los limites del objeto
@@ -1610,9 +1296,22 @@ var Loira;
                 this._buttons = [];
             }
         };
-        Element.prototype.move = function (x, y) {
-            this.x += x;
-            this.y += y;
+        /**
+         * Move the object to a position by animating the movement
+         * @param x x pointer
+         * @param y y pointer
+         */
+        Element.prototype.moveTo = function (x, y, absolute) {
+            if (absolute === void 0) { absolute = false; }
+            if (absolute) {
+                this.destinationPoint.x = x;
+                this.destinationPoint.y = y;
+            }
+            else {
+                this.destinationPoint.x = this.x + x;
+                this.x += x;
+                this.y += y;
+            }
         };
         /**
          * Renderiza los iconos de los botones laterales
@@ -1733,7 +1432,6 @@ var Loira;
         };
         Element.prototype.attach = function (canvas) {
             this._canvas = canvas;
-            this.animation.setFps(canvas.fps);
         };
         Element.prototype.isVisible = function (virtual) {
             var p1 = null, p2 = null, a1 = null, a2 = null;
@@ -1763,15 +1461,14 @@ var Loira;
             }
             return false;
         };
-        Element.prototype.animateTo = function (point, seconds) {
-            if (seconds === void 0) { seconds = 1; }
-            var time = this._canvas.fps * seconds;
-        };
         Element.prototype.destroy = function () {
             this._canvas = null;
         };
         Element.prototype.getMenu = function (x, y) {
             return this.menu;
+        };
+        Element.prototype.getTooltip = function (x, y) {
+            return 'Tipo: <b>' + this.type + '</b>';
         };
         return Element;
     }());
@@ -1813,7 +1510,21 @@ var Loira;
                 _this.icon = options.icon ? options.icon : '';
                 _this.typeLine = options.typeLine ? options.typeLine : TypeLine.STRAIGHT;
                 _this.baseType = 'relation';
-                if (_this.start._uid === _this.end._uid) {
+                var scope = _this;
+                _this.menu = [
+                    { text: 'Partir', callback: function () {
+                            scope.addPoint();
+                        } },
+                    { text: 'Borrar', callback: function () {
+                            scope._canvas.remove([scope]);
+                        } }
+                ];
+                _this.pointMenu = [
+                    { text: 'Borrar punto', callback: function () {
+                            scope.removePoint(scope.selectedArea);
+                        } }
+                ];
+                if (_this.start && _this.end && _this.start._uid === _this.end._uid) {
                     _this.selfRelated();
                 }
                 return _this;
@@ -1932,6 +1643,9 @@ var Loira;
             Relation.prototype.update = function (start, end) {
                 this.start = start;
                 this.end = end;
+                if (this.start && this.end && this.start._uid === this.end._uid) {
+                    this.selfRelated();
+                }
                 return this;
             };
             /**
@@ -2078,6 +1792,15 @@ var Loira;
                     click: link
                 });
                 _this.baseType = 'symbol';
+                var scope = _this;
+                _this.menu = [
+                    { text: Loira.Config.workflow.menu.joinTo, callback: function () {
+                            scope._linkSymbol();
+                        } },
+                    { text: Loira.Config.workflow.menu.deleteBtn, callback: function () {
+                            scope._canvas.remove([scope]);
+                        } }
+                ];
                 return _this;
             }
             /**
@@ -2288,7 +2011,7 @@ var Loira;
                 var virtual = this._virtual;
                 var background = this._canvas._background;
                 var realTmp = 1;
-                if (dir === 'H') {
+                if (dir) {
                     //realTmp =
                     tmp = this._horPos + Math.round(delta * virtual.viewportWidth * (inc / virtual.width));
                     if (tmp < 0) {
@@ -2305,7 +2028,7 @@ var Loira;
                         background.style.marginLeft = '-' + virtual.x + 'px';
                     }
                 }
-                else if (dir === 'V') {
+                else {
                     tmp = this._verPos + Math.round(delta * virtual.viewportHeight * (inc / virtual.height));
                     if (tmp < 0) {
                         this._verPos = 0;
@@ -2829,33 +2552,6 @@ var Box;
     Box_1.Box = Box;
 })(Box || (Box = {}));
 //# sourceMappingURL=box.js.map
-var Loira;
-(function (Loira) {
-    var Animation = /** @class */ (function () {
-        function Animation(element) {
-            this._registers = [];
-            this._element = element;
-        }
-        Animation.prototype.moveTo = function (x, y, seconds) {
-            if (seconds === void 0) { seconds = 1; }
-            var times = this._fps * seconds;
-            this._isRunning = true;
-        };
-        Animation.prototype.setFps = function (fps) {
-            this._fps = fps;
-        };
-        Animation.prototype.proccess = function () {
-            if (this._isRunning) {
-                if (this._registers.length == 0) {
-                    this._isRunning = false;
-                }
-            }
-        };
-        return Animation;
-    }());
-    Loira.Animation = Animation;
-})(Loira || (Loira = {}));
-//# sourceMappingURL=animation.js.map
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3332,20 +3028,6 @@ var Workflow;
             options.isDashed = true;
             _this = _super.call(this, options) || this;
             _this.type = 'returns';
-            var scope = _this;
-            _this.menu = [
-                { text: 'Partir', callback: function () {
-                        scope.addPoint();
-                    } },
-                { text: 'Borrar', callback: function () {
-                        scope._canvas.remove([scope]);
-                    } }
-            ];
-            _this.pointMenu = [
-                { text: 'Borrar punto', callback: function () {
-                        scope.removePoint(scope.selectedArea);
-                    } }
-            ];
             return _this;
         }
         return Returns;
@@ -3358,24 +3040,6 @@ var Workflow;
             options.icon = 'spear';
             _this = _super.call(this, options) || this;
             _this.type = 'workflow_association';
-            var scope = _this;
-            _this.menu = [
-                { text: 'Partir', callback: function () {
-                        scope.addPoint();
-                    } },
-                { text: 'Borrar', callback: function () {
-                        scope._canvas.remove([scope], true);
-                    } } /*,
-                null,
-                {text:'Propiedades', callback: function(){
-                    scope._canvas.emit(EVT_OPEN_PROPERTY, new ObjectEvent(scope));
-                }}*/
-            ];
-            _this.pointMenu = [
-                { text: 'Borrar punto', callback: function () {
-                        scope.removePoint(scope.selectedArea);
-                    } }
-            ];
             return _this;
         }
         return Association;
@@ -3785,7 +3449,6 @@ var OrgChart;
                 item.children.push(child);
                 if ($this.autoRefresh) {
                     $this.reorderElements();
-                    canvas.renderAll(true);
                 }
             });
             canvas.on('object:removed', function (evt) {
