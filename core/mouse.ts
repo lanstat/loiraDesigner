@@ -1,4 +1,11 @@
-module Loira{
+/// <reference path="utils.ts" />
+/// <reference path="events.ts" />
+/// <reference path="element.ts" />
+/// <reference path="canvas.ts" />
+/// <reference path="config.ts" />
+/// <reference path="common.ts" />
+
+namespace Loira{
     import Key = Loira.util.Key;
     import MouseEvent = Loira.event.MouseEvent;
     import ObjectEvent = Loira.event.ObjectEvent;
@@ -17,7 +24,7 @@ module Loira{
         bind(){
             let _this = this;
 
-            this.canvas._canvas.onmousewheel = function(evt){
+            this.canvas._canvas['onmousewheel'] = function(evt){
                 _this.canvas.tooltip.style.display = 'none';
                 _this.onWheel(evt);
             };

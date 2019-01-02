@@ -1,6 +1,7 @@
 <html>
 	<head>
-		<script type="text/javascript" src="../../LoiraDesigner.js"></script>
+		<link href="../../build/styles/loira.min.css" rel="stylesheet">
+		<script type="text/javascript" src="../../build/scripts/loira.js"></script>
         <style>
         </style>
 	</head>
@@ -19,7 +20,7 @@
 
 				var case1 = new UseCase.UseCase({x:100,y:200, text:'Registrar usuario'});
 				var case2 = new UseCase.UseCase({x:500,y:200, text:'Iniciar sesion'});
-                var actor = new Loira.Common.Actor({x:20, y:10, text:'Administrador'});
+                var actor = new Loira.Common.Actor({x:60, y:10, text:'Administrador'});
                 
                 canvas.on('relation:selected', function(event){
                    console.log(event.selected) 

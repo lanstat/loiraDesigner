@@ -1,4 +1,4 @@
-module Loira.event{
+namespace Loira.event{
     export const ERROR_MESSAGE = 'error:message';
     export const OBJECT_ADDED = 'object:added';
     export const OBJECT_PRE_ADD = 'object:pre-add';

@@ -1,9 +1,11 @@
+/// <reference path="mouse.ts" />
+
 /**
  * Plugin para diseño de diagramas
  * @namespace
  * @license Apache-2.0
  */
-module Loira{
+namespace Loira{
     import RelationEvent = Loira.event.RelationEvent;
     import ObjectEvent = Loira.event.ObjectEvent;
     import Point = Loira.util.Point;
@@ -209,8 +211,7 @@ module Loira{
             this.userAgent = checkUserAgent();
             this.bindResizeWindow();
 
-            this.initializeRefresher();
-            this.createHtmlElements();
+            this.initializeRefresher();            
         }
 
         public iterateSelected(callback: (selected: Loira.Element) => void ): void {
@@ -298,6 +299,7 @@ module Loira{
             }
 
             this.bind();
+            this.createHtmlElements();
 
             this._scrollBar = new Common.ScrollBar(this);
         }
@@ -535,7 +537,7 @@ module Loira{
                 this._canvas.onmousedown = null;
                 this._canvas.onmouseup = null;
                 this._canvas.ondblclick = null;
-                this._canvas.onselectstart = null;
+                this._canvas['onselectstart'] = null;
             }
 
             if (this.contextMenu){
@@ -623,7 +625,7 @@ module Loira{
             this.keyboard.bind();
             this.mouse.bind();
 
-            this._canvas.onselectstart = function () {
+            this._canvas['onselectstart'] = function () {
                 return false;
             };
         }

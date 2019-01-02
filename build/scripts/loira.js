@@ -1,7 +1,10 @@
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -96,10 +99,7 @@ var Loira;
         event.MessageEvent = MessageEvent;
     })(event = Loira.event || (Loira.event = {}));
 })(Loira || (Loira = {}));
-//# sourceMappingURL=events.js.map
-/**
- * Created by juan.garson on 27/03/2017.
- */
+
 var Loira;
 (function (Loira) {
     var drawable;
@@ -129,7 +129,7 @@ var Loira;
         drawable.get = get;
     })(drawable = Loira.drawable || (Loira.drawable = {}));
 })(Loira || (Loira = {}));
-//# sourceMappingURL=drawable.js.map
+
 var Loira;
 (function (Loira) {
     var shape;
@@ -181,7 +181,8 @@ var Loira;
         shape.drawText = drawText;
     })(shape = Loira.shape || (Loira.shape = {}));
 })(Loira || (Loira = {}));
-//# sourceMappingURL=shape.js.map
+
+/// <reference path="mouse.ts" />
 /**
  * Plugin para diseño de diagramas
  * @namespace
@@ -334,7 +335,6 @@ var Loira;
             this.userAgent = checkUserAgent();
             this.bindResizeWindow();
             this.initializeRefresher();
-            this.createHtmlElements();
         }
         Object.defineProperty(Canvas.prototype, "selected", {
             get: function () {
@@ -422,6 +422,7 @@ var Loira;
                 };
             }
             this.bind();
+            this.createHtmlElements();
             this._scrollBar = new Loira.Common.ScrollBar(this);
         };
         /**
@@ -635,7 +636,7 @@ var Loira;
                 this._canvas.onmousedown = null;
                 this._canvas.onmouseup = null;
                 this._canvas.ondblclick = null;
-                this._canvas.onselectstart = null;
+                this._canvas['onselectstart'] = null;
             }
             if (this.contextMenu) {
                 this.contextMenu.remove();
@@ -712,7 +713,7 @@ var Loira;
         Canvas.prototype.bind = function () {
             this.keyboard.bind();
             this.mouse.bind();
-            this._canvas.onselectstart = function () {
+            this._canvas['onselectstart'] = function () {
                 return false;
             };
         };
@@ -1012,7 +1013,7 @@ var Loira;
     }());
     Loira.Canvas = Canvas;
 })(Loira || (Loira = {}));
-//# sourceMappingURL=canvas.js.map
+
 var Loira;
 (function (Loira) {
     var Animation = /** @class */ (function () {
@@ -1039,7 +1040,7 @@ var Loira;
     }());
     Loira.Animation = Animation;
 })(Loira || (Loira = {}));
-//# sourceMappingURL=animation.js.map
+
 var Loira;
 (function (Loira) {
     var BaseController = /** @class */ (function () {
@@ -1049,11 +1050,15 @@ var Loira;
     }());
     Loira.BaseController = BaseController;
 })(Loira || (Loira = {}));
-//# sourceMappingURL=controller.js.map
+
+/// <reference path="common.ts" />
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -1219,7 +1224,452 @@ var Loira;
         util.logger = logger;
     })(util = Loira.util || (Loira.util = {}));
 })(Loira || (Loira = {}));
-//# sourceMappingURL=utils.js.map
+
+/// <reference path="utils.ts" />
+/// <reference path="events.ts" />
+/// <reference path="element.ts" />
+/// <reference path="canvas.ts" />
+/// <reference path="config.ts" />
+/// <reference path="common.ts" />
+var Loira;
+(function (Loira) {
+    var Key = Loira.util.Key;
+    var MouseEvent = Loira.event.MouseEvent;
+    var ObjectEvent = Loira.event.ObjectEvent;
+    var Mouse = /** @class */ (function () {
+        function Mouse(canvas) {
+            this.canvas = canvas;
+            /**
+             * @property {Boolean}  isDragged - Determina si el usuario esta arrastrando un objeto
+             */
+            this.isDragged = false;
+        }
+        Mouse.prototype.bind = function () {
+            var _this = this;
+            this.canvas._canvas['onmousewheel'] = function (evt) {
+                _this.canvas.tooltip.style.display = 'none';
+                _this.onWheel(evt);
+            };
+            this.canvas._canvas.onmousedown = function (evt) {
+                _this.onDown(evt);
+            };
+            this.canvas._canvas.onmousemove = function (evt) {
+                _this.onMove(evt);
+            };
+            this.canvas._canvas.onmouseup = function (evt) {
+                _this.onUp(evt);
+            };
+            this.canvas._canvas.onmouseleave = function (evt) {
+                _this.onLeave();
+            };
+            this.canvas._canvas.oncontextmenu = function (evt) {
+                _this.onContextMenu(evt);
+                return false;
+            };
+            /**
+             * Capture the global mouse move event for
+             */
+            document.addEventListener('mousemove', function (evt) {
+                _this.canvas.tooltip.style.display = 'none';
+                _this.onMoveGlobal(evt);
+            });
+            document.addEventListener('mouseup', function (evt) {
+                _this.onUpGlobal();
+            });
+        };
+        Mouse.prototype.onDownLocal = function (evt, isDoubleClick) {
+            var canvas = this.canvas;
+            var real = canvas._getMouse(evt);
+            canvas._tmp.pointer = real;
+            if (isDoubleClick) {
+                /**
+                 * Evento que encapsula doble click sobre el canvas
+                 *
+                 * @event mouse:dblclick
+                 * @type { object }
+                 * @property {int} x - Posicion x del puntero
+                 * @property {int} y - Posicion y del puntero
+                 * @property {string} type - Tipo de evento
+                 */
+                canvas.emit('mouse:dblclick', new MouseEvent(real.x, real.y));
+            }
+            else {
+                /**
+                 * Evento que encapsula un click sobre el canvas
+                 *
+                 * @event mouse:down
+                 * @type { object }
+                 * @property {int} x - Posicion x del puntero
+                 * @property {int} y - Posicion y del puntero
+                 * @property {string} type - Tipo de evento
+                 */
+                canvas.emit('mouse:down', new MouseEvent(real.x, real.y));
+            }
+            if (!isDoubleClick && !canvas.readOnly) {
+                this.isDragged = true;
+                canvas._canvas.style.cursor = 'move';
+            }
+            if (canvas._scrollBar.checkCollision(real.x, real.y)) {
+                canvas._tmp.globalPointer = { x: evt.pageX, y: evt.pageY };
+                this.isDragged = true;
+                return;
+            }
+            if (canvas.selected.length == 1 && !canvas.readOnly) {
+                var selected = canvas.selected[0];
+                canvas._tmp.transform = selected.getSelectedCorner(real.x, real.y);
+                if (canvas._tmp.transform || selected.callCustomButton(real.x, real.y)) {
+                    switch (canvas._tmp.transform) {
+                        case 'tc':
+                        case 'bc':
+                            canvas._canvas.style.cursor = 'ns-resize';
+                            break;
+                        case 'ml':
+                        case 'mr':
+                            canvas._canvas.style.cursor = 'ew-resize';
+                            break;
+                    }
+                    return;
+                }
+                else {
+                    if (canvas.keyboard.lastKey !== Key.SHIFT) {
+                        canvas.clearSelected();
+                        canvas.emit('object:unselected', new MouseEvent(real.x, real.y));
+                    }
+                }
+            }
+            var item;
+            var atLeastOneSelected = false;
+            for (var i = canvas.items.length - 1; i >= 0; i--) {
+                item = canvas.items[i];
+                if (item.checkCollision(real.x, real.y)) {
+                    atLeastOneSelected = true;
+                    if (item.isSelected) {
+                        if (canvas.keyboard.lastKey === Key.SHIFT) {
+                            canvas.clearSelected(item);
+                            canvas.emit('object:unselected', new ObjectEvent(item));
+                        }
+                        break;
+                    }
+                    canvas.appendSelected(item, canvas.keyboard.lastKey !== Key.SHIFT);
+                    if (item.baseType !== 'relation') {
+                        if (isDoubleClick) {
+                            /**
+                             * Evento que encapsula doble click sobre un objeto
+                             *
+                             * @event object:dblclick
+                             * @type { object }
+                             * @property {object} selected - Objeto seleccionado
+                             * @property {string} type - Tipo de evento
+                             */
+                            canvas.emit('object:dblclick', new ObjectEvent(item));
+                        }
+                        else {
+                            Loira.util.logger(Loira.LogLevel.INFO, 'down');
+                            /**
+                             * Evento que encapsula un click sobre un objeto
+                             *
+                             * @event object:select
+                             * @type { object }
+                             * @property {object} selected - Objeto seleccionado
+                             * @property {string} type - Tipo de evento
+                             */
+                            canvas.emit('object:selected', new ObjectEvent(item));
+                        }
+                        break;
+                    }
+                    else {
+                        if (isDoubleClick) {
+                            /**
+                             * Evento que encapsula doble click sobre una relacion
+                             *
+                             * @event relation:dblclick
+                             * @type { object }
+                             * @property {object} selected - Objeto seleccionadonpm
+                             * @property {string} type - Tipo de evento
+                             */
+                            canvas.emit('relation:dblclick', new ObjectEvent(item));
+                        }
+                        else {
+                            /**
+                             * Evento que encapsula un click sobre una relacion
+                             *
+                             * @event relation:select
+                             * @type { object }
+                             * @property {object} selected - Objeto seleccionado
+                             * @property {string} type - Tipo de evento
+                             */
+                            canvas.emit('relation:selected', new ObjectEvent(item));
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!atLeastOneSelected) {
+                canvas.clearSelected();
+                canvas.emit('object:unselected', new ObjectEvent(null));
+            }
+        };
+        ;
+        Mouse.prototype.onDown = function (evt) {
+            Loira.util.logger(Loira.LogLevel.INFO, 'Mouse');
+            this.canvas.contextMenu.style.display = 'none';
+            this.onDownLocal(evt, false);
+        };
+        ;
+        Mouse.prototype.onMove = function (evt) {
+            var canvas = this.canvas;
+            var _this = this;
+            clearTimeout(this.stopTimeout);
+            this.stopTimeout = setTimeout(function () {
+                _this.onStop(evt);
+            }, 500);
+            if (this.canvas.readOnly && !this.canvas._scrollBar.isSelectable()) {
+                return;
+            }
+            if (this.isDragged) {
+                var real = canvas._getMouse(evt);
+                var x_1 = real.x - canvas._tmp.pointer.x;
+                var y_1 = real.y - canvas._tmp.pointer.y;
+                if (!canvas._scrollBar.isSelectable()) {
+                    /**
+                     * Evento que encapsula el movimiento del mouse sobre el canvas
+                     *
+                     * @event mouse:move
+                     * @type { object }
+                     * @property {int} x - Posicion x del puntero
+                     * @property {int} y - Posicion y del puntero
+                     * @property {string} type - Tipo de evento
+                     */
+                    canvas.emit('mouse:move', new MouseEvent(real.x, real.y));
+                    if (canvas.selected) {
+                        if (canvas._tmp.transform) {
+                            if (canvas.selected[0].baseType !== 'relation') {
+                                x_1 = Math.floor(x_1);
+                                y_1 = Math.floor(y_1);
+                                switch (canvas._tmp.transform) {
+                                    case 'tc':
+                                        canvas.selected[0].y += y_1;
+                                        canvas.selected[0].height -= y_1;
+                                        break;
+                                    case 'bc':
+                                        canvas.selected[0].height += y_1;
+                                        break;
+                                    case 'ml':
+                                        canvas.selected[0].x += x_1;
+                                        canvas.selected[0].width -= x_1;
+                                        break;
+                                    case 'mr':
+                                        canvas.selected[0].width += x_1;
+                                        break;
+                                }
+                            }
+                            else {
+                                canvas.selected[0].movePoint(parseInt(canvas._tmp.transform), x_1, y_1);
+                            }
+                        }
+                        else {
+                            canvas.iterateSelected(function (selected) {
+                                if (selected.draggable) {
+                                    selected.x += x_1;
+                                    selected.y += y_1;
+                                    /**
+                                     * Evento que encapsula el arrastre de un objeto
+                                     *
+                                     * @event object:dragging
+                                     * @type { object }
+                                     * @property {object} selected - Objeto seleccionado
+                                     * @property {string} type - Tipo de evento
+                                     */
+                                    canvas.emit('object:dragging', new ObjectEvent(selected));
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        // TODO Verificar cuando se complete el canvas
+                        /*if (_this._config.dragCanvas){
+                         if (_this._canvas && _this._canvasContainer) {
+                         x = x === 0? x : x/Math.abs(x);
+                         y =  y === 0? y : y/Math.abs(y);
+
+                         _this.container.scrollLeft -= _this._zoom.scrollX*x;
+                         _this.container.scrollTop -= _this._zoom.scrollY*y;
+
+                         _this._canvasContainer.x = Math.floor(_this.container.scrollLeft);
+                         _this._canvasContainer.y = Math.floor(_this.container.scrollTop);
+                         }
+                         }*/
+                    }
+                    canvas._tmp.pointer = real;
+                }
+            }
+        };
+        ;
+        Mouse.prototype.onUp = function (evt) {
+            var real = this.canvas._getMouse(evt);
+            this.canvas._canvas.style.cursor = 'default';
+            this.isDragged = false;
+            /**
+             * Evento que encapsula la liberacion del mouse sobre el canvas
+             *
+             * @event mouse:up
+             * @type { object }
+             * @property {int} x - Posicion x del puntero
+             * @property {int} y - Posicion y del puntero
+             * @property {string} type - Tipo de evento
+             */
+            this.canvas.emit('mouse:up', new MouseEvent(real.x, real.y));
+            var _canvas = this.canvas;
+            this.canvas.iterateSelected(function (selected) {
+                /**
+                 * Evento que encapsula la liberacion de un objeto
+                 *
+                 * @event object:released
+                 * @type { object }
+                 * @property {object} selected - Objeto seleccionado
+                 * @property {string} type - Tipo de evento
+                 */
+                _canvas.emit('object:released', new ObjectEvent(selected));
+                _canvas._tmp.transform = null;
+                selected.recalculateBorders();
+            });
+        };
+        ;
+        Mouse.prototype.onLeave = function () {
+            this.isDragged = false;
+            this.canvas._canvas.style.cursor = 'default';
+        };
+        Mouse.prototype.onWheel = function (evt) {
+            if (evt.ctrlKey) {
+                this.canvas._zoom.update(evt.deltaY);
+            }
+            else {
+                this.canvas._scrollBar.addMovementWheel(evt.shiftKey, (evt.deltaY / Math.abs(evt.deltaY)));
+            }
+            return false;
+        };
+        Mouse.prototype.onMoveGlobal = function (evt) {
+            if (this.canvas._scrollBar.isSelectable()) {
+                this.canvas._scrollBar.dragScroll(evt.pageX - this.canvas._tmp.globalPointer.x, evt.pageY - this.canvas._tmp.globalPointer.y);
+                this.canvas._tmp.globalPointer = { x: evt.pageX, y: evt.pageY };
+            }
+        };
+        Mouse.prototype.onUpGlobal = function () {
+            this.canvas._scrollBar.selected = null;
+        };
+        Mouse.prototype.onStop = function (evt) {
+            var point = this.canvas._getMouse(evt);
+            var element = this.canvas.getElementByPosition(point.x, point.y);
+            var canvas = this.canvas;
+            if (element) {
+                var tmp = element.getTooltip(point.x, point.y);
+                if (typeof tmp === 'string') {
+                    canvas.tooltip.innerHTML = tmp;
+                }
+                else {
+                    canvas.tooltip.appendChild(tmp);
+                }
+                canvas.tooltip.style.top = (evt.clientY + 30) + 'px';
+                canvas.tooltip.style.left = evt.clientX + 'px';
+                canvas.tooltip.style.display = 'block';
+                canvas.tooltip.style.opacity = '1';
+            }
+        };
+        Mouse.prototype.onContextMenu = function (evt) {
+            var canvas = this.canvas;
+            canvas.contextMenu.style.display = 'none';
+            var point = canvas._getMouse(evt);
+            var element = canvas.getElementByPosition(point.x, point.y);
+            if (element) {
+                var menu = element.getMenu(point.x, point.y);
+                if (!menu) {
+                    return false;
+                }
+                var menuItem = void 0;
+                canvas.contextMenu.innerHTML = '';
+                var _loop_1 = function (item) {
+                    menuItem = document.createElement('li');
+                    if (item) {
+                        menuItem.innerHTML = item.text;
+                        menuItem.onclick = function () {
+                            item.callback(this, element);
+                            canvas.contextMenu.style.display = 'none';
+                        };
+                    }
+                    else {
+                        menuItem.className = 'null-line';
+                    }
+                    canvas.contextMenu.appendChild(menuItem);
+                };
+                for (var _i = 0, menu_1 = menu; _i < menu_1.length; _i++) {
+                    var item = menu_1[_i];
+                    _loop_1(item);
+                }
+                canvas.contextMenu.style.top = evt.clientY + 'px';
+                canvas.contextMenu.style.left = evt.clientX + 'px';
+                canvas.contextMenu.style.display = 'block';
+                canvas.contextMenu.style.opacity = '1';
+            }
+        };
+        return Mouse;
+    }());
+    Loira.Mouse = Mouse;
+})(Loira || (Loira = {}));
+
+var Loira;
+(function (Loira) {
+    var Key = Loira.util.Key;
+    var Keyboard = /** @class */ (function () {
+        /**
+         * Class's constructor
+         * @param canvas Canvas selected
+         */
+        function Keyboard(canvas) {
+            this.canvas = canvas;
+            this.onKeyUp = function (evt) {
+                if (this.canvas.readOnly) {
+                    return;
+                }
+                this.LastKey = null;
+            };
+        }
+        Keyboard.prototype.bind = function () {
+            var _this = this;
+            var element = this.canvas._canvas;
+            element.onkeydown = function (evt) {
+                _this.onKeyDown(evt, false);
+            };
+            document.addEventListener('keydown', function (evt) {
+                _this.onKeyDown(evt, true);
+            });
+            element.onkeyup = function (evt) {
+                _this.onKeyUp(evt);
+            };
+            document.addEventListener('keyup', function (evt) {
+                _this.onKeyUp(evt);
+            });
+        };
+        Keyboard.prototype.onKeyDown = function (evt, isGlobal) {
+            if (evt.keyCode === Key.ALT) {
+                return;
+            }
+            this.lastKey = evt.keyCode;
+            if (!isGlobal) {
+                if (this.lastKey === Key.DELETE) {
+                    if (this.canvas.readOnly) {
+                        return;
+                    }
+                    this.canvas.removeSelected(false);
+                }
+            }
+        };
+        ;
+        return Keyboard;
+    }());
+    Loira.Keyboard = Keyboard;
+})(Loira || (Loira = {}));
+
+/// <reference path="menu.ts" />
 var Loira;
 (function (Loira) {
     var BaseOption = Loira.util.BaseOption;
@@ -1474,11 +1924,14 @@ var Loira;
     }());
     Loira.Element = Element;
 })(Loira || (Loira = {}));
-//# sourceMappingURL=element.js.map
+
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -2070,7 +2523,7 @@ var Loira;
         Common.ScrollBar = ScrollBar;
     })(Common = Loira.Common || (Loira.Common = {}));
 })(Loira || (Loira = {}));
-//# sourceMappingURL=common.js.map
+
 var Loira;
 (function (Loira) {
     var _fontSize = 12;
@@ -2131,11 +2584,14 @@ var Loira;
         Config.workflow = _workflow;
     })(Config = Loira.Config || (Loira.Config = {}));
 })(Loira || (Loira = {}));
-//# sourceMappingURL=config.js.map
+
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -2247,157 +2703,14 @@ var Relation;
     }(Common.Relation));
     Relation.Dependency = Dependency;
 })(Relation || (Relation = {}));
-//# sourceMappingURL=relations.js.map
-Loira.XmiParser = {
-    load : function(data, canvas){
-        var xmlDoc = null;
-        var element;
-        var key;
 
-        if (window.DOMParser) {
-            var parser = new DOMParser();
-            xmlDoc = parser.parseFromString(data, "text/xml");
-        } else {
-            xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-            xmlDoc.async = false;
-            xmlDoc.loadXML(data);
-        }
-        var elements = this._parse(xmlDoc);
-        var symbols = {};
-
-        for (key in elements.symbols){
-            if (elements.symbols.hasOwnProperty(key)){
-                element = elements.symbols[key];
-                if (element.type === 'UML:UseCase'){
-                    symbols[element.id] = new UseCase.UseCase({text: element.name});
-                } else if (element.type === 'UML:Actor'){
-                    symbols[element.id] = new Common.Actor({text: element.name});
-                }
-                canvas.add(symbols[element.id]);
-            }
-        }
-
-        for (key in elements.relations){
-            if (elements.relations.hasOwnProperty(key)){
-                element = elements.relations[key];
-                if (element.type === 'UML:Association'){
-                    var options = {};
-                    for (var i = 0; i < element.connection.length; i++){
-                        if (element.connection[i]['taggedValues']['ea_end'] === 'source'){
-                            options['start'] = symbols[element.connection[i]['type']];
-                        } else if (element.connection[i]['taggedValues']['ea_end'] === 'target'){
-                            options['end'] = symbols[element.connection[i]['type']];
-                        }
-                    }
-
-                    canvas.addRelation(new Relation.Association(options));
-                }
-            }
-        }
-
-        setTimeout(function(){
-            canvas.renderAll();
-        }, 50);
-    },
-    _parse : function(data){
-        var root = this._xmlToJson(data);
-        var items = root['XMI']['XMI.content']['UML:Model']['UML:Namespace.ownedElement']['UML:Package']['UML:Namespace.ownedElement'];
-        var symbols = {};
-        var relations = {};
-
-        for (var key in items){
-            if(items.hasOwnProperty(key)){
-                if (typeof items[key] !== 'string'){
-                    var id = items[key]['@attributes']['xmi.id'];
-
-                    if(typeof items[key]['UML:Association.connection'] !== 'undefined'){
-                        relations[id] = {
-                            isAbstract: items[key]['@attributes']['isAbstract'] === 'true',
-                            isLeaf: items[key]['@attributes']['isLeaf'] === 'true',
-                            isRoot: items[key]['@attributes']['isRoot'] === 'true',
-                            visibility: items[key]['@attributes']['visibility'],
-                            id: items[key]['@attributes']['xmi.id'],
-                            type: key,
-                            connection: []
-                        };
-
-                        for (var i = 0; i < items[key]['UML:Association.connection']['UML:AssociationEnd'].length; i++){
-                            var end = items[key]['UML:Association.connection']['UML:AssociationEnd'][i];
-
-                            var connection = {
-                                aggregation : end['@attributes']['aggregation'],
-                                changeable : end['@attributes']['changeable'],
-                                isNavigable : end['@attributes']['isNavigable'] === 'true',
-                                isOrdered : end['@attributes']['isOrdered'] === 'true',
-                                targetScope : end['@attributes']['targetScope'],
-                                type :  end['@attributes']['type'],
-                                visibility : end['@attributes']['visibility'],
-                                taggedValues : {}
-                            };
-
-                            for (var j = 0; j < end['UML:ModelElement.taggedValue']['UML:TaggedValue'].length; j++){
-                                var tagged = end['UML:ModelElement.taggedValue']['UML:TaggedValue'][j]['@attributes'];
-                                connection.taggedValues[tagged['tag']] = tagged['value'];
-                            }
-
-                            relations[id]['connection'].push(connection);
-                        }
-                    } else {
-                        symbols[id] = {
-                            isAbstract: items[key]['@attributes']['isAbstract'] === 'true',
-                            isLeaf: items[key]['@attributes']['isLeaf'] === 'true',
-                            isRoot: items[key]['@attributes']['isRoot'] === 'true',
-                            name: items[key]['@attributes']['name'],
-                            namespace: items[key]['@attributes']['namespace'],
-                            visibility: items[key]['@attributes']['visibility'],
-                            id: items[key]['@attributes']['xmi.id'],
-                            type: key
-                        };
-                    }
-                }
-            }
-        }
-
-        return {symbols: symbols, relations: relations};
-    },
-    _xmlToJson : function (xml) {
-        var obj = {};
-
-        if (xml.nodeType === 1) {
-            if (xml.attributes.length > 0) {
-                obj["@attributes"] = {};
-                for (var j = 0; j < xml.attributes.length; j++) {
-                    var attribute = xml.attributes.item(j);
-                    obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
-                }
-            }
-        } else if (xml.nodeType === 3) {
-            obj = xml.nodeValue;
-        }
-
-        if (xml.hasChildNodes()) {
-            for(var i = 0; i < xml.childNodes.length; i++) {
-                var item = xml.childNodes.item(i);
-                var nodeName = item.nodeName;
-                if (typeof(obj[nodeName]) === "undefined") {
-                    obj[nodeName] = this._xmlToJson(item);
-                } else {
-                    if (typeof(obj[nodeName].push) === "undefined") {
-                        var old = obj[nodeName];
-                        obj[nodeName] = [];
-                        obj[nodeName].push(old);
-                    }
-                    obj[nodeName].push(this._xmlToJson(item));
-                }
-            }
-        }
-        return obj;
-    }
-};
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -2501,11 +2814,14 @@ var UseCase;
     }(Common.Relation));
     UseCase_1.Include = Include;
 })(UseCase || (UseCase = {}));
-//# sourceMappingURL=usecase.js.map
+
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -2551,11 +2867,14 @@ var Box;
     }(Loira.Element));
     Box_1.Box = Box;
 })(Box || (Box = {}));
-//# sourceMappingURL=box.js.map
+
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -3263,11 +3582,14 @@ var Workflow;
     }(Workflow.Association));
     Workflow.ForkContinuity = ForkContinuity;
 })(Workflow || (Workflow = {}));
-//# sourceMappingURL=workflow.js.map
+
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -3775,4 +4097,5 @@ var OrgChart;
     }(Common.Relation));
     OrgChart.Relation = Relation;
 })(OrgChart || (OrgChart = {}));
-//# sourceMappingURL=orgchart.js.map
+
+//# sourceMappingURL=loira.js.map

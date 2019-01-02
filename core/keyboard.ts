@@ -1,4 +1,4 @@
-module Loira{
+namespace Loira{
     import Key = Loira.util.Key;
 
     export class Keyboard{

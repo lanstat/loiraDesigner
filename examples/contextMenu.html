@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script type="text/javascript" src="../build/min/loira.min.js"></script>
-    <link href="../build/styles/loira.min.css" rel="stylesheet">
+    <base href="../build/">
+    <link href="styles/loira.min.css" rel="stylesheet">
+    <script type="text/javascript" src="scripts/loira.min.js"></script>
     <style>
     </style>
 </head>
@@ -15,16 +16,16 @@
 </div>
 <script>
     window.onload = function(){
-        Loira.Config.assetsPath = '../build/assets/glyphs.png';
+        Loira.Config.assetsPath = 'assets/glyphs.png';
 
         var canvas = new Loira.Canvas('_canvas');
         var case1 = new UseCase.UseCase({x:190,y:200, text:'Right click'});
 
         case1.menu = [
-            {item:'Hola', callback: function(evt, item){
+            {text:'Hola', callback: function(evt, item){
                 console.log(item);
             }},
-            {item:'Mundo', callback: function(){
+            {text:'Mundo', callback: function(){
                 console.log('hello world');
             }}
         ];

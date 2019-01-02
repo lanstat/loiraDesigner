@@ -27,12 +27,13 @@
   },
   "homepage": "https://github.com/lanstat/loiraDesigner#readme",
   "devDependencies": {
-    "gulp": "3.9.1",
+    "gulp": "^3.9.1",
     "gulp-concat": "2.6.1",
     "gulp-eslint": "5.0.0",
     "gulp-load-plugins": "1.5.0",
     "gulp-load-utils": "0.0.4",
     "gulp-task-listing": "1.1.0",
+    "gulp-typescript": "^5.0.0",
     "gulp-uglify": "3.0.1",
     "gulp-util": "3.0.8",
     "jquery": "3.3.1",
@@ -40,6 +41,10 @@
     "karma-coverage": "1.1.2",
     "karma-phantomjs-launcher": "1.0.4",
     "karma-qunit": "2.1.0",
-    "qunitjs": "~2.4.1"
+    "qunitjs": "~2.4.1",
+    "typescript": "^3.2.2"
+  },
+  "dependencies": {
+    "gulp-sourcemaps": "^2.6.4"
   }
 }

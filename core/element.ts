@@ -1,4 +1,6 @@
-module Loira{
+/// <reference path="menu.ts" />
+
+namespace Loira{
     import BaseOption = Loira.util.BaseOption;
     import Region = Loira.util.Region;
     import Point = Loira.util.Point;

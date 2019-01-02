@@ -1,7 +1,4 @@
-/**
- * Created by juan.garson on 27/03/2017.
- */
-module Loira.drawable{
+namespace Loira.drawable{
     import Region = Loira.util.Region;
 
     /**

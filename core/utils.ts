@@ -1,11 +1,13 @@
+/// <reference path="common.ts" />
+
 /**
  * Clase base para la creacion de nuevos objetos dibujables
  *
  * @memberof Loira
  * @namespace util
  */
-module Loira.util{
-    import TypeLine = Common.TypeLine;
+namespace Loira.util{
+    import TypeLine = Loira.Common.TypeLine;
     export class BaseOption{
         x: number = 0;
         y: number = 0;

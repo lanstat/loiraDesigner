@@ -1,4 +1,4 @@
-module Loira.shape {
+namespace Loira.shape {
     import Point = Loira.util.Point;
 
     export enum HorizontalAlign {

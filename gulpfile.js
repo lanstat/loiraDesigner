@@ -3,26 +3,11 @@ var plug = require('gulp-load-plugins')();
 var karmaServer = require('karma').Server;
 var path = require('path');
 
-var paths = {
-    js: [
-        './core/events.js',
-        './core/drawable.js',
-        './core/shape.js',
-        './core/canvas.js',
-        './core/animation.js',
-        './core/controller.js',
-        './core/utils.js',
-        './core/element.js',
-        './core/common.js',
-        './core/config.js',
-        './core/relations.js',
-        './plugins/xmiparser.js',
-        './plugins/usecase.js',
-        './plugins/box.js',
-        './plugins/workflow.js',
-        './plugins/orgchart.js'
+var ts = require("gulp-typescript");
+var tsProject = ts.createProject("tsconfig.json");
+var sourcemaps = require('gulp-sourcemaps');
 
-    ],
+var paths = {
     build: './build'
 };
 
@@ -36,57 +21,46 @@ gulp.task('help', plug.taskListing);
  * @return {Stream}
  */
 gulp.task('jsmin', function() {
-    console.log('Empaquetando, minificando, y copiando los JS');
+    console.log('Packing, minifying, and copying the scripts');
 
-    return gulp
-        .src(paths.js)
+    return tsProject.src()
+        .pipe(tsProject())
+        .js
         .pipe(plug.concat('loira.min.js'))
         .pipe(plug.uglify({}))
-        .pipe(gulp.dest(paths.build+'/min'));
+        .pipe(gulp.dest(paths.build+'/scripts'));
 });
 
 gulp.task('js', function() {
-    console.log('Empaquetando, minificando, y copiando los JS');
+    console.log('Packing the scripts');
 
-    return gulp
-        .src(paths.js)
+    return tsProject.src()
+        .pipe(sourcemaps.init())
+        .pipe(tsProject())
+        .js
         .pipe(plug.concat('loira.js'))
-        .pipe(gulp.dest(paths.build+'/min'));
-});
-
-gulp.task('eslint', function() {
-    console.log('Realizando verificaciones de calidad de codigo');
-
-    return gulp
-        .src(paths.js)
-        .pipe(plug.eslint())
-        .pipe(plug.eslint.format())
-        .pipe(plug.eslint.failAfterError());
+        .pipe(sourcemaps.write('.'))
+        .pipe(gulp.dest(paths.build+'/scripts'));
 });
 
 gulp.task('copyAssets', function(){
-    console.log('Copiando assets');
+    console.log('Copying assets');
     return gulp
         .src('assets/**')
         .pipe(gulp.dest(paths.build+'/assets'));
 });
 
 gulp.task('copyStyles', function(){
-    console.log('Copiando estilos');
+    console.log('Copying styles');
     return gulp
         .src('styles/**')
         .pipe(plug.concat('loira.min.css'))
         .pipe(gulp.dest(paths.build+'/styles'));
 });
 
-gulp.task('copyJs', function(){
-    console.log('Copiando js');
-    return gulp
-        .src(['./core/*.js', './plugins/*.js'])
-        .pipe(gulp.dest(paths.build+'/js'));
-});
+gulp.task('default', ['js', 'copyAssets', 'copyStyles']);
 
-gulp.task('buildAll', ['jsmin', 'js', 'copyAssets', 'copyStyles']);
+gulp.task('dist', ['jsmin', 'copyAssets', 'copyStyles']);
 
 /**
  * Ejecuta las pruebas de la aplicacion

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Resize canvas</title>
-    <script type="text/javascript" src="../build/min/loira.min.js"></script>
-    <link href="../build/styles/loira.min.css" rel="stylesheet">
+    <base href="../build/">
+    <link href="styles/loira.min.css" rel="stylesheet">
+    <script type="text/javascript" src="scripts/loira.js"></script>
 </head>
 <body>
 <div style="margin-bottom: 10px">
@@ -17,7 +18,7 @@
 </div>
 <script>
     window.onload = function(){
-        Loira.Config.assetsPath = '../build/assets/glyphs.png';
+        Loira.Config.assetsPath = 'assets/glyphs.png';
 
         var canvas = new Loira.Canvas('_canvas');
         var case1 = new UseCase.UseCase({x:190,y:200, text:'Hello world'});

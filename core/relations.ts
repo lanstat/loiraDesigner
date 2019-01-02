@@ -4,7 +4,7 @@
  * @namespace Relation
  * @license Apache-2.0
  */
-module Relation{
+namespace Relation{
     import Common = Loira.Common;
 
     /**

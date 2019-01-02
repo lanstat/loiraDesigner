@@ -1,4 +1,4 @@
-module Loira{
+namespace Loira{
     import Region = Loira.util.Region;
 
     let _fontSize:number = 12;

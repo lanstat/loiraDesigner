@@ -1,4 +1,23 @@
 {
+    "files": [
+        "core/events.ts",
+        "core/drawable.ts",
+        "core/shape.ts",
+        "core/canvas.ts",
+        "core/animation.ts",
+        "core/controller.ts",
+        "core/utils.ts",
+        "core/mouse.ts",
+        "core/keyboard.ts",
+        "core/element.ts",
+        "core/common.ts",
+        "core/config.ts",
+        "core/relations.ts",
+        "plugins/usecase.ts",
+        "plugins/box.ts",
+        "plugins/workflow.ts",
+        "plugins/orgchart.ts"
+    ],
     "compilerOptions": {
         "target": "es5",
         "module": "commonjs",

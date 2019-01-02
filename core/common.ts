@@ -1,4 +1,4 @@
-module Loira.Common{
+namespace Loira.Common{
     import RelOption = Loira.util.RelOption;
     import Point = Loira.util.Point;
     import Line = Loira.util.Line;

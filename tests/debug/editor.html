@@ -1,6 +1,7 @@
 <html>
 <head>
-    <script type="text/javascript" src="../../LoiraDesigner.js"></script>
+    <link href="../../build/styles/loira.min.css" rel="stylesheet">
+    <script type="text/javascript" src="../../build/scripts/loira.js"></script>
     <style>
         #buttons{
             padding: 5px;
@@ -43,7 +44,7 @@
             canvas.renderAll();
         });
         document.getElementById('actor').addEventListener('click', function(){
-            canvas.add(new Common.Actor({x:150, y:150, text:' '}));
+            canvas.add(new Loira.Common.Actor({x:150, y:150, text:' '}));
             canvas.renderAll();
         });
         document.getElementById('assoc').addEventListener('click', function(){

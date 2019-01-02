@@ -1,6 +1,7 @@
 <html>
 <head>
-    <script type="text/javascript" src="../../LoiraDesigner.js"></script>
+    <link href="../../build/styles/loira.min.css" rel="stylesheet">
+    <script type="text/javascript" src="../../build/scripts/loira.js"></script>
     <style>
         #buttons{
             padding: 5px;
@@ -50,7 +51,9 @@
         });
 
         document.getElementById('showBox').addEventListener('click', function(){
-            myObject.show();
+            if(myObject){
+                myObject.show();
+            }
         });
 
         document.getElementById('delBox').addEventListener('click', function(){

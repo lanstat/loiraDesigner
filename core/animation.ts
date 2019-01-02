@@ -1,4 +1,4 @@
-module Loira {
+namespace Loira {
     export class Animation{
         private _isRunning: boolean;
         private _fps: number;
